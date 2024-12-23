@@ -44,13 +44,11 @@ class RolesAndPermissionsSeeder extends Seeder
 
             'all-task-time-logs',
             'create-task-time-log',
+            'edit-task-time-log',
+            'update-task-time-log',
             'delete-task-time-log',
 
-            'all_tickets',
-            'create_ticket',
-            'edit_ticket',
-            'update_ticket',
-            'delete_ticket',
+
         ];
 
         foreach ($permissions as $permission) {
@@ -63,6 +61,13 @@ class RolesAndPermissionsSeeder extends Seeder
         // roles
         $superAdmin = Role::create(['name' => 'superAdmin']);
         $superAdmin->givePermissionTo(Permission::all());
+
+        $accountant = Role::create(['name' => 'accountant']);
+        $accountant->givePermissionTo([
+            'all_users',
+            'create_user',
+        ]);
+
 
 
     }

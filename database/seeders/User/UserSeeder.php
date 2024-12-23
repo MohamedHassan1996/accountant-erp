@@ -19,13 +19,15 @@ class UserSeeder extends Seeder
         //$usersCount = max((int) $this->command->ask('How many users would you like?', 10),1);
 
         $user = User::create([
-            'name' => 'Mahmoud Saber',
+            'first_name' => 'Mahmoud',
+            'last_name' => 'Ahmed',
             'username'=> 'admin',
             'email'=> 'lTqFP@example.com',
             'status' => UserStatus::ACTIVE->value,
             'address' => 'جوجر',
             'phone' => '01018557045',
             'password' => 'M@Ns123456',
+            'per_hour_rate' => 20.00
         ]);
 
         $role = Role::findByName('superAdmin');

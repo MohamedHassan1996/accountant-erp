@@ -25,7 +25,7 @@ return new class extends Migration
             $table->foreignId('parameter_value_id')->constrained('parameter_values')->onDelete('cascade');
             $table->foreignId('client_id')->constrained('clients')->onDelete('cascade');
             $this->CreatedUpdatedByRelationship($table);
-            $this->$table->timestamps();
+            $table->timestamps();
             $table->softDeletes();
         });
     }
