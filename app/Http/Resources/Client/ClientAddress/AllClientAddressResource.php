@@ -25,7 +25,7 @@ class AllClientAddressResource extends JsonResource
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,
             'note' => $this->note,
-            'parameterName' => $this->parameter->parameter_value,
+            'parameterValueName' => $this->parameter?->parameter_value??"",
         ];
     }
 }

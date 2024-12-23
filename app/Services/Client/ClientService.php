@@ -9,7 +9,7 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class ClientService{
 
-    public function allClients(array $filters){
+    public function allClients(){
 
         $clients = QueryBuilder::for(Client::class)
         ->allowedFilters([
@@ -38,7 +38,7 @@ class ClientService{
     }
 
     public function editClient(string $clientId){
-        $client = Client::find($clientId);
+        $client = Client::with(['addresses', 'contacts'])->find($clientId);
 
         return $client;
 

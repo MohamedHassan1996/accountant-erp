@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Private\Client\ClientController;
 use App\Http\Controllers\Api\Private\Parameter\ParameterController;
 use App\Http\Controllers\Api\Private\Parameter\ParameterValueController;
 use App\Http\Controllers\Api\Private\Select\SelectController;
@@ -32,6 +33,30 @@ Route::prefix('v1/users')->group(function(){
     Route::put('update', [UserController::class, 'update']);
     Route::delete('delete', [UserController::class, 'delete']);
     Route::put('change-status', [UserController::class, 'changeStatus']);
+});
+
+Route::prefix('v1/clients')->group(function(){
+    Route::get('', [ClientController::class, 'index']);
+    Route::post('create', [ClientController::class, 'create']);
+    Route::get('edit', [ClientController::class, 'edit']);
+    Route::put('update', [ClientController::class, 'update']);
+    Route::delete('delete', [ClientController::class, 'delete']);
+});
+
+Route::prefix('v1/client-addresses')->group(function(){
+    Route::get('', [ClientController::class, 'index']);
+    Route::post('create', [ClientController::class, 'create']);
+    Route::get('edit', [ClientController::class, 'edit']);
+    Route::put('update', [ClientController::class, 'update']);
+    Route::delete('delete', [ClientController::class, 'delete']);
+});
+
+Route::prefix('v1/client-contacts')->group(function(){
+    Route::get('', [ClientController::class, 'index']);
+    Route::post('create', [ClientController::class, 'create']);
+    Route::get('edit', [ClientController::class, 'edit']);
+    Route::put('update', [ClientController::class, 'update']);
+    Route::delete('delete', [ClientController::class, 'delete']);
 });
 
 Route::prefix('v1/parameters')->group(function(){

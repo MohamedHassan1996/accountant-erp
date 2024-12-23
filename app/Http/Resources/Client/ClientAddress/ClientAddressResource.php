@@ -25,7 +25,7 @@ class ClientAddressResource extends JsonResource
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,
             'note' => $this->note,
-            'parameterValueId' => $this->parameter_value_id,
+            'parameterValueId' => $this->parameter_value_id??"",
             'clientId' => $this->client_id
         ];
 

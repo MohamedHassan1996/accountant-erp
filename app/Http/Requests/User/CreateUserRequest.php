@@ -43,6 +43,7 @@ class CreateUserRequest extends FormRequest
             ],
             'roleId'=> ['required', 'numeric', 'exists:roles,id'],
             'avatar' => ["sometimes", "nullable","image", "mimes:jpeg,jpg,png,gif", "max:2048"],
+            'perHourRate' => ['required'],
         ];
     }
 

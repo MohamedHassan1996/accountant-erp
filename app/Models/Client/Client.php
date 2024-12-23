@@ -22,4 +22,14 @@ class Client extends Model
         'note'
     ];
 
+    public function addresses()
+    {
+        return $this->hasMany(ClientAddress::class, 'client_id');
+    }
+
+    public function contacts()
+    {
+        return $this->hasMany(ClientContact::class, 'client_id');
+    }
+
 }

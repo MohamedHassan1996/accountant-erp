@@ -22,11 +22,11 @@ return new class extends Migration
             $table->string('phone')->nullable();
             $table->string('prefix', 5)->nullable();
             $table->text('note')->nullable();
-            $table->foreignId('parameter_value_id')->constrained('parameter_values')->onDelete('cascade');
+            $table->foreignId('parameter_value_id')->nullable()->constrained('parameter_values')->onDelete('cascade');
             $table->foreignId('client_id')->constrained('clients')->onDelete('cascade');
             $this->CreatedUpdatedByRelationship($table);
-            $table->timestamps();
             $table->softDeletes();
+            $table->timestamps();
         });
     }
 

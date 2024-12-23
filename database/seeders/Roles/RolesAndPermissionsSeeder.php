@@ -30,11 +30,11 @@ class RolesAndPermissionsSeeder extends Seeder
             'update_role',
             'delete_role',
 
-            'all_projects',
-            'create_project',
-            'edit_project',
-            'update_project',
-            'delete_project',
+            'all_clients',
+            'create_client',
+            'edit_client',
+            'update_client',
+            'delete_client',
 
             'all_tasks',
             'create_task',

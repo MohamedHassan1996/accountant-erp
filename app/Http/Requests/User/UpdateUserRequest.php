@@ -41,6 +41,7 @@ class UpdateUserRequest extends FormRequest
             ],
             'roleId'=> 'required',
             'avatar' => ["sometimes", "nullable","image", "mimes:jpeg,jpg,png,gif", "max:2048"],
+            'perHourRate' => ['required'],
         ];
     }
 

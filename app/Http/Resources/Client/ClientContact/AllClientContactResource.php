@@ -23,7 +23,7 @@ class AllClientContactResource extends JsonResource
             'prefix' => $this->prefix??"",
             'email' => $this->email??"",
             'note' => $this->note??"",
-            'parameterValueName' => $this->parameter->parameter_value, //TODO: check if it's needed
+            'parameterValueName' => $this->parameter?->parameter_value??"",
         ];
     }
 }

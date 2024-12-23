@@ -76,9 +76,7 @@ class UserController extends Controller
     {
         $user  =  $this->userService->editUser($request->userId);
 
-        return response()->json(
-            new AllUserDataResource($user)//new UserResource($user)
-        ,200);
+        return new AllUserDataResource($user);//new UserResource($user)
 
     }
 
