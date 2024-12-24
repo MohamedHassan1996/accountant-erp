@@ -48,7 +48,7 @@ class Handler extends ExceptionHandler
 
         $this->renderable(function (UnauthorizedException $e, $request) {
             return response()->json([
-                'message' => 'غير مصرح لك بالدخول',
+                'message' => 'non autorizzato',
                 'status'  => 403,
             ], 403);
         });
