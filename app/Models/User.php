@@ -53,7 +53,7 @@ class User extends Authenticatable implements JWTSubject
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'status' => UserStatus::class
+        'status' => UserStatus::class,
     ];
 
     public function setPasswordAttribute($value)

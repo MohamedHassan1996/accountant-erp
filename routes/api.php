@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\Private\Client\ClientAddressController;
 use App\Http\Controllers\Api\Private\Client\ClientContactController;
 use App\Http\Controllers\Api\Private\Client\ClientController;
+use App\Http\Controllers\Api\Private\Client\ClientServiceCategoryDiscountController;
 use App\Http\Controllers\Api\Private\Parameter\ParameterController;
 use App\Http\Controllers\Api\Private\Parameter\ParameterValueController;
 use App\Http\Controllers\Api\Private\Select\SelectController;
@@ -69,6 +70,15 @@ Route::prefix('v1/service-categories')->group(function(){
     Route::put('update', [ServiceCategoryController::class, 'update']);
     Route::delete('delete', [ServiceCategoryController::class, 'delete']);
 });
+
+Route::prefix('v1/client-service-discounts')->group(function(){
+    Route::get('', [ClientServiceCategoryDiscountController::class, 'index']);
+    Route::post('create', [ClientServiceCategoryDiscountController::class, 'create']);
+    Route::get('edit', [ClientServiceCategoryDiscountController::class, 'edit']);
+    Route::put('update', [ClientServiceCategoryDiscountController::class, 'update']);
+    Route::delete('delete', [ClientServiceCategoryDiscountController::class, 'delete']);
+});
+
 
 Route::prefix('v1/parameters')->group(function(){
     Route::get('', [ParameterValueController::class, 'index']);

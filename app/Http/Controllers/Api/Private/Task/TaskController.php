@@ -1,19 +1,18 @@
 <?php
 
-namespace App\Http\Controllers\Api\Private\ServiceCategory;
+namespace App\Http\Controllers\Api\Private\Task;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ServiceCategory\CreateServiceCategoryRequest;
 use App\Http\Requests\ServiceCategory\UpdateServiceCategoryRequest;
-use App\Http\Resources\ServiceCategory\AllServiceCategoryCollection;
+use App\Http\Resources\ServiceCategory\AllServiceCategoryResource;
 use App\Http\Resources\ServiceCategory\ServiceCategoryResource;
 use App\Services\ServiceCategory\ServiceCategoryService;
 use Illuminate\Http\Request;
-use App\Utils\PaginateCollection;
 use Illuminate\Support\Facades\DB;
 
 
-class ServiceCategoryController extends Controller
+class TaskController extends Controller
 {
     protected $serviceCategoryService;
 
@@ -35,9 +34,7 @@ class ServiceCategoryController extends Controller
     {
         $allServiceCategorys = $this->serviceCategoryService->allServiceCategories();
 
-        return response()->json(
-            new AllServiceCategoryCollection(PaginateCollection::paginate($allServiceCategorys, $request->pageSize?$request->pageSize:10))
-        );
+        return AllServiceCategoryResource::collection($allServiceCategorys);
 
     }
 
