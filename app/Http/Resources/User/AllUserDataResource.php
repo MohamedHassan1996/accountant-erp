@@ -22,6 +22,8 @@ class AllUserDataResource extends JsonResource
 
         return [
             'userId' => $this->id,
+            'firstName' => $this->first_name??"",
+            'lastName' => $this->last_name??"",
             'name' => $this->first_name." ".$this->last_name,
             'username' => $this->username??"",
             'phone' => $this->phone??"",
@@ -29,6 +31,8 @@ class AllUserDataResource extends JsonResource
             'status' => $this->status,
             'avatar' => $this->avatar?Storage::disk('public')->url($this->avatar):"",
             'roleId' => RoleResource::collection($this->whenLoaded('roles'))[0]->id,
+            'perHourRate' => $this->per_hour_rate??0,
+            'email' => $this->email??''
         ];
     }
 }
