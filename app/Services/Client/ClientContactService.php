@@ -42,16 +42,16 @@ class ClientContactService{
 
     }
 
-    public function editContact(string $phoneId){
-        $phone = ClientContact::find($phoneId);
+    public function editContact(string $clientContactId){
+        $contact = ClientContact::find($clientContactId);
 
-        return $phone;
+        return $contact;
 
     }
 
     public function updateContact(array $phoneData){
 
-        $phone = ClientContact::find($phoneData['phoneId']);
+        $phone = ClientContact::find($phoneData['clientContactId']);
 
         $phone->fill([
             'first_name' => $phoneData['firstName'],
@@ -69,8 +69,8 @@ class ClientContactService{
 
     }
 
-    public function deleteContact(string $phoneId){
-        $phone = ClientContact::find($phoneId);
+    public function deleteContact(string $clientContactId){
+        $phone = ClientContact::find($clientContactId);
         $phone->delete();
     }
 

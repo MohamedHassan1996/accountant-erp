@@ -32,7 +32,7 @@ class ClientAddressController extends Controller
      */
     public function index(Request $request)
     {
-        $allClientAddreses = $this->clientAddressService->allAddresses($request->clientId);
+        $allClientAddreses = $this->clientAddressService->allAddresses($request->all());
 
         return AllClientAddressResource::collection($allClientAddreses);
 

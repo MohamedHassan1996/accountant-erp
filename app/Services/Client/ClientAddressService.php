@@ -44,8 +44,8 @@ class ClientAddressService{
 
     }
 
-    public function editAddress(string $addressId){
-        $address = ClientAddress::find($addressId);
+    public function editAddress(string $clientAddressId){
+        $address = ClientAddress::find($clientAddressId);
 
         return $address;
 
@@ -53,7 +53,7 @@ class ClientAddressService{
 
     public function updateAddress(array $addressData){
 
-        $address = ClientAddress::find($addressData['addressId']);
+        $address = ClientAddress::find($addressData['clientAddressId']);
 
         $address->fill([
             'address' => $addressData['address'],
@@ -73,8 +73,8 @@ class ClientAddressService{
 
     }
 
-    public function deleteAddress(string $addressId){
-        $address = ClientAddress::find($addressId);
+    public function deleteAddress(string $clientAddressId){
+        $address = ClientAddress::find($clientAddressId);
         $address->delete();
     }
 

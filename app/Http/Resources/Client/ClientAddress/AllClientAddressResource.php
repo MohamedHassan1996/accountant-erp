@@ -16,7 +16,7 @@ class AllClientAddressResource extends JsonResource
     {
 
         return [
-            'addressId' => $this->id,
+            'clientAddressId' => $this->id,
             'address' => $this->address,
             'city' => $this->city,
             'province' => $this->province,

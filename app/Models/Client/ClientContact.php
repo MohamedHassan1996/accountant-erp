@@ -26,7 +26,7 @@ class ClientContact extends Model
 
     public function parameter(): HasOne
     {
-        return $this->hasOne(ParameterValue::class);
+        return $this->hasOne(ParameterValue::class, 'id', 'parameter_value_id');
     }
 
 

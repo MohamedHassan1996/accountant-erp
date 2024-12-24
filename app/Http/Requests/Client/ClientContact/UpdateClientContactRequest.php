@@ -25,7 +25,7 @@ class UpdateClientContactRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'contactId' => ['required'],
+            'clientContactId' => ['required'],
             'firstName' => 'required|string',
             'lastName' => 'required|string',
             'phone' => ['nullable'],

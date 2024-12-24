@@ -24,7 +24,7 @@ class UpdateClientAddressRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'addressId' => 'required',
+            'clientAddressId' => 'required',
             'address' => ['required'],
             'province' => ['nullable'],
             'cap' => ['nullable'],

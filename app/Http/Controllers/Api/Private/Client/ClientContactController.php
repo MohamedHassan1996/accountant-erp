@@ -32,7 +32,7 @@ class ClientContactController extends Controller
      */
     public function index(Request $request)
     {
-        $allClientContacts = $this->clientContactService->allContacts($request->clientId);
+        $allClientContacts = $this->clientContactService->allContacts($request->all());
 
         return AllClientContactResource::collection($allClientContacts);
 
