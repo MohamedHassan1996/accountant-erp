@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Private\Client\ClientController;
 use App\Http\Controllers\Api\Private\Parameter\ParameterController;
 use App\Http\Controllers\Api\Private\Parameter\ParameterValueController;
 use App\Http\Controllers\Api\Private\Select\SelectController;
+use App\Http\Controllers\Api\Private\ServiceCategory\ServiceCategoryController;
 use App\Http\Controllers\Api\Private\User\UserController;
 use App\Http\Controllers\Api\Public\Auth\AuthController;
 use App\Models\Parameter\ParameterValue;
@@ -59,6 +60,14 @@ Route::prefix('v1/client-contacts')->group(function(){
     Route::get('edit', [ClientContactController::class, 'edit']);
     Route::put('update', [ClientContactController::class, 'update']);
     Route::delete('delete', [ClientContactController::class, 'delete']);
+});
+
+Route::prefix('v1/service-categories')->group(function(){
+    Route::get('', [ServiceCategoryController::class, 'index']);
+    Route::post('create', [ServiceCategoryController::class, 'create']);
+    Route::get('edit', [ServiceCategoryController::class, 'edit']);
+    Route::put('update', [ServiceCategoryController::class, 'update']);
+    Route::delete('delete', [ServiceCategoryController::class, 'delete']);
 });
 
 Route::prefix('v1/parameters')->group(function(){

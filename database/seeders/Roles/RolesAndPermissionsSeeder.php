@@ -36,6 +36,18 @@ class RolesAndPermissionsSeeder extends Seeder
             'update_client',
             'delete_client',
 
+            'all_client_addresses',
+            'create_client_address',
+            'edit_client_address',
+            'update_client_address',
+            'delete_client_address',
+
+            'all_client_contacts',
+            'create_client_contact',
+            'edit_client_contact',
+            'update_client_contact',
+            'delete_client_contact',
+
             'all_tasks',
             'create_task',
             'edit_task',

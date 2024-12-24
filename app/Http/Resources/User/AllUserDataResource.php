@@ -22,7 +22,7 @@ class AllUserDataResource extends JsonResource
 
         return [
             'userId' => $this->id,
-            'name' => $this->name??"",
+            'name' => $this->first_name." ".$this->last_name,
             'username' => $this->username??"",
             'phone' => $this->phone??"",
             'address' => $this->address??"",

@@ -18,11 +18,15 @@ class UserResource extends JsonResource
     {
         return [
             'userId' => $this->id,
-            'name' => $this->name?$this->name:"",
+            'firstName' => $this->first_name??"",
+            'lastName' => $this->last_name??"",
+            'username' => $this->username??"",
             'phone' => $this->phone?$this->phone:"",
             'address' => $this->address?$this->address:"",
             'status' => $this->status,
             'avatar' => $this->avatar?Storage::disk('public')->url($this->avatar):"",
+            'perHourRate' => $this->per_hour_rate??0,
+            'email' => $this->email??''
         ];
     }
 }

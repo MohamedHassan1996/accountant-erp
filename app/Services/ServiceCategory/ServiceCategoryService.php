@@ -10,7 +10,7 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class ServiceCategoryService{
 
-    public function allServiceCategorys(array $filters){
+    public function allServiceCategories(){
 
         $serviceCategories = QueryBuilder::for(ServiceCategory::class)
         ->allowedFilters([

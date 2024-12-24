@@ -19,7 +19,7 @@ class ClientAddressController extends Controller
     public function __construct(ClientAddressService $clientAddressService)
     {
         $this->middleware('auth:api');
-        // $this->middleware('permission:all_client_addresss', ['only' => ['allClientAddresss']]);
+        // $this->middleware('permission:all_client_addressses', ['only' => ['allClientAddresss']]);
         // $this->middleware('permission:create_client_address', ['only' => ['create']]);
         // $this->middleware('permission:edit_client_address', ['only' => ['edit']]);
         // $this->middleware('permission:update_client_address', ['only' => ['update']]);
