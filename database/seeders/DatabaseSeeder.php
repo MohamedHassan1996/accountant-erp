@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
+use Database\Seeders\Parameter\ParameterSeeder;
 use Database\Seeders\Roles\RolesAndPermissionsSeeder;
 use Database\Seeders\User\UserSeeder;
 use Illuminate\Database\Seeder;
@@ -24,6 +25,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RolesAndPermissionsSeeder::class,
             UserSeeder::class,
+            ParameterSeeder::class
         ]);
     }
 }
