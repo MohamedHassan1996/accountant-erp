@@ -48,6 +48,18 @@ class RolesAndPermissionsSeeder extends Seeder
             'update_client_contact',
             'delete_client_contact',
 
+            'all_client_service_discounts',
+            'create_client_service_discount',
+            'edit_client_service_discount',
+            'update_client_service_discount',
+            'delete_client_service_discount',
+
+            'all_service_categories',
+            'create_service_category',
+            'edit_service_category',
+            'update_service_category',
+            'delete_service_category',
+
             'all_tasks',
             'create_task',
             'edit_task',

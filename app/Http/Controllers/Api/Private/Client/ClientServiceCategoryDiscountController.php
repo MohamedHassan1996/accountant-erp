@@ -19,11 +19,11 @@ class ClientServiceCategoryDiscountController extends Controller
     public function __construct(ClientServiceDiscountService $clientServiceDiscountService)
     {
         $this->middleware('auth:api');
-        // $this->middleware('permission:all_client_contacts', ['only' => ['allClientServiceDiscounts']]);
-        // $this->middleware('permission:create_client_contact', ['only' => ['create']]);
-        // $this->middleware('permission:edit_client_contact', ['only' => ['edit']]);
-        // $this->middleware('permission:update_client_contact', ['only' => ['update']]);
-        // $this->middleware('permission:delete_client_contact', ['only' => ['delete']]);
+        $this->middleware('permission:all_client_service_discounts', ['only' => ['index']]);
+        $this->middleware('permission:create_client_service_discount', ['only' => ['create']]);
+        $this->middleware('permission:edit_client_service_discount', ['only' => ['edit']]);
+        $this->middleware('permission:update_client_service_discount', ['only' => ['update']]);
+        $this->middleware('permission:delete_client_service_discount', ['only' => ['delete']]);
         $this->clientServiceDiscountService = $clientServiceDiscountService;
     }
 

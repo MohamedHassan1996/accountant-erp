@@ -19,11 +19,11 @@ class ClientContactController extends Controller
     public function __construct(ClientContactService $clientContactService)
     {
         $this->middleware('auth:api');
-        // $this->middleware('permission:all_client_contacts', ['only' => ['allClientContacts']]);
-        // $this->middleware('permission:create_client_contact', ['only' => ['create']]);
-        // $this->middleware('permission:edit_client_contact', ['only' => ['edit']]);
-        // $this->middleware('permission:update_client_contact', ['only' => ['update']]);
-        // $this->middleware('permission:delete_client_contact', ['only' => ['delete']]);
+        $this->middleware('permission:all_client_contacts', ['only' => ['index']]);
+        $this->middleware('permission:create_client_contact', ['only' => ['create']]);
+        $this->middleware('permission:edit_client_contact', ['only' => ['edit']]);
+        $this->middleware('permission:update_client_contact', ['only' => ['update']]);
+        $this->middleware('permission:delete_client_contact', ['only' => ['delete']]);
         $this->clientContactService = $clientContactService;
     }
 

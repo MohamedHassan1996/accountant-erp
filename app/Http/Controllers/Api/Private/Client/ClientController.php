@@ -24,11 +24,11 @@ class ClientController extends Controller
     public function __construct(ClientService $clientService, ClientAddressService $clientAddressService, ClientContactService $clientContactService)
     {
         $this->middleware('auth:api');
-        // $this->middleware('permission:all_clients', ['only' => ['allClients']]);
-        // $this->middleware('permission:create_client', ['only' => ['create']]);
-        // $this->middleware('permission:edit_client', ['only' => ['edit']]);
-        // $this->middleware('permission:update_client', ['only' => ['update']]);
-        // $this->middleware('permission:delete_client', ['only' => ['delete']]);
+        $this->middleware('permission:all_clients', ['only' => ['index']]);
+        $this->middleware('permission:create_client', ['only' => ['create']]);
+        $this->middleware('permission:edit_client', ['only' => ['edit']]);
+        $this->middleware('permission:update_client', ['only' => ['update']]);
+        $this->middleware('permission:delete_client', ['only' => ['delete']]);
         $this->clientService = $clientService;
         $this->clientAddressService = $clientAddressService;
         $this->clientContactService = $clientContactService;

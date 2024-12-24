@@ -28,7 +28,7 @@ class UpdateClientServiceDiscountRequest extends FormRequest
     {
         return [
             'clientServiceDiscountId' => ['required'],
-            'serviceId' => ['required'],
+            'serviceCategoryId' => ['required'],
             'discount' => ['required'],
             'type' => ['required', new Enum(ClientServiceDiscountType::class)],
             'isActive' => ['required', new Enum(ClientServiceDiscountStatus::class)],
