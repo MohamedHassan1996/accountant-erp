@@ -24,6 +24,8 @@ class ClientResource extends JsonResource
             'note' => $this->note??"",
             'phone' => $this->phone??"",
             'email' => $this->email??"",
+            'price' => $this->price??0,
+            'hoursPerMonth' => $this->hours_per_month??0,
             'addresses' => ClientAddressResource::collection($this->whenLoaded('addresses')),
             'contacts' => ClientContactResource::collection($this->whenLoaded('contacts')),
         ];

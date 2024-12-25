@@ -19,7 +19,9 @@ class Client extends Model
         'note',
         'email',
         'phone',
-        'note'
+        'note',
+        'price',
+        'hours_per_month',
     ];
 
     public function addresses()
