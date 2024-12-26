@@ -28,7 +28,7 @@ class ClientAddress extends Model
 
     public function parameter(): BelongsTo
     {
-        return $this->belongsTo(parameterValue::class, 'id', 'parameter_value_id');
+        return $this->belongsTo(parameterValue::class);
     }
 
 
