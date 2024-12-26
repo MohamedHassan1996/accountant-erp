@@ -15,7 +15,7 @@ class ParameterService{
 
         $parameters = QueryBuilder::for(ParameterValue::class)
         ->allowedFilters([
-            AllowedFilter::custom('search', new FilterParameter()), // Add a custom search filter
+            //AllowedFilter::custom('search', new FilterParameter()), // Add a custom search filter
             //AllowedFilter::exact('parameterOrder', 'parameter_id'),
         ])
         ->parameterOrder($parameterOrder)
