@@ -2,7 +2,7 @@
 
 namespace App\Models\Client;
 
-use App\Models\Parameter\ParameterValue;
+use App\Models\Parameter\parameterValue;
 use App\Traits\CreatedUpdatedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -28,7 +28,7 @@ class ClientAddress extends Model
 
     public function parameter(): BelongsTo
     {
-        return $this->belongsTo(ParameterValue::class, 'id', 'parameter_value_id');
+        return $this->belongsTo(parameterValue::class, 'id', 'parameter_value_id');
     }
 
 
