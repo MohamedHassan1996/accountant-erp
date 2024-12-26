@@ -16,12 +16,13 @@ class AllTaskResource extends JsonResource
     {
 
         return [
-            'taskId' => $this->title,
+            'taskId' => $this->id,
             'title' => $this->title,
             'status' => $this->status,
-            'accountantName' => $this->user->name,
+            'accountantName' => $this->user->full_name,
             'clientName' => $this->client->ragione_sociale,
             'serviceCategoryName' => $this->serviceCategory->name,
+            'totalHours' => $this->total_hours
         ];
     }
 }

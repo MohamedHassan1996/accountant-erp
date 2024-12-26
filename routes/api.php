@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\Private\Parameter\ParameterController;
 use App\Http\Controllers\Api\Private\Parameter\ParameterValueController;
 use App\Http\Controllers\Api\Private\Select\SelectController;
 use App\Http\Controllers\Api\Private\ServiceCategory\ServiceCategoryController;
+use App\Http\Controllers\Api\Private\Task\TaskController;
 use App\Http\Controllers\Api\Private\User\UserController;
 use App\Http\Controllers\Api\Public\Auth\AuthController;
 use App\Models\Parameter\ParameterValue;
@@ -78,6 +79,15 @@ Route::prefix('v1/client-service-discounts')->group(function(){
     Route::put('update', [ClientServiceCategoryDiscountController::class, 'update']);
     Route::delete('delete', [ClientServiceCategoryDiscountController::class, 'delete']);
 });
+
+Route::prefix('v1/tasks')->group(function(){
+    Route::get('', [TaskController::class, 'index']);
+    Route::post('create', [TaskController::class, 'create']);
+    Route::get('edit', [TaskController::class, 'edit']);
+    Route::put('update', [TaskController::class, 'update']);
+    Route::delete('delete', [TaskController::class, 'delete']);
+});
+
 
 
 Route::prefix('v1/parameters')->group(function(){

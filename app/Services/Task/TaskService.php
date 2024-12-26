@@ -10,17 +10,15 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class TaskService{
 
-    public function allTaskes(array $filters){
+    public function allTasks(){
 
         $tasks = QueryBuilder::for(Task::class)
         ->allowedFilters([
-            //AllowedFilter::custom('search', new FilterTask()), // Add a custom search filter
-            //AllowedFilter::exact('taskType', 'task_type'),
+            AllowedFilter::custom('search', new FilterTask()), // Add a custom search filter
+            AllowedFilter::exact('userId', 'user_id'),
+            AllowedFilter::exact('status', 'status'),
+            AllowedFilter::exact('clientId', 'client_id'),
         ])
-        ->when(
-            $filters['clientId'] ?? null,
-            fn ($query) => $query->where('client_id', $filters['clientId'])
-        )
         ->get();
         return $tasks;
 
@@ -30,11 +28,12 @@ class TaskService{
 
         $task = Task::create([
             'title' => $taskData['title'],
+            'description' => $taskData['description'],
             'client_id' => $taskData['clientId'],
             'user_id' => $taskData['userId'],
             'service_category_id' => $taskData['serviceCategoryId'],
             'invoice_id' => $taskData['invoiceId']??null,
-            'status' => TaskStatus::from($taskData['type'])->value,
+            'status' => TaskStatus::from($taskData['status'])->value,
 
         ]);
 
@@ -55,11 +54,12 @@ class TaskService{
 
         $task->fill([
             'title' => $taskData['title'],
+            'description' => $taskData['description'],
             'client_id' => $taskData['clientId'],
             'user_id' => $taskData['userId'],
             'service_category_id' => $taskData['serviceCategoryId'],
             'invoice_id' => $taskData['invoiceId']??null,
-            'status' => TaskStatus::from($taskData['type'])->value,
+            'status' => TaskStatus::from($taskData['status'])->value,
         ]);
 
         $task->save();

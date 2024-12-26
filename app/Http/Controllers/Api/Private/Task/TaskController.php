@@ -3,28 +3,30 @@
 namespace App\Http\Controllers\Api\Private\Task;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\ServiceCategory\CreateServiceCategoryRequest;
-use App\Http\Requests\ServiceCategory\UpdateServiceCategoryRequest;
-use App\Http\Resources\ServiceCategory\AllServiceCategoryResource;
-use App\Http\Resources\ServiceCategory\ServiceCategoryResource;
-use App\Services\ServiceCategory\ServiceCategoryService;
+use App\Http\Requests\Task\CreateTaskRequest;
+use App\Http\Requests\Task\UpdateTaskRequest;
+use App\Http\Resources\Task\AllTaskCollection;
+use App\Http\Resources\Task\AllTaskResource;
+use App\Http\Resources\Task\TaskResource;
+use App\Services\Task\TaskService;
+use App\Utils\PaginateCollection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 
 class TaskController extends Controller
 {
-    protected $serviceCategoryService;
+    protected $taskService;
 
-    public function __construct(ServiceCategoryService $serviceCategoryService)
+    public function __construct(TaskService $taskService)
     {
         $this->middleware('auth:api');
-        // $this->middleware('permission:all_service_categories', ['only' => ['allServiceCategorys']]);
-        // $this->middleware('permission:create_service_category', ['only' => ['create']]);
-        // $this->middleware('permission:edit_service_category', ['only' => ['edit']]);
-        // $this->middleware('permission:update_service_category', ['only' => ['update']]);
-        // $this->middleware('permission:delete_service_category', ['only' => ['delete']]);
-        $this->serviceCategoryService = $serviceCategoryService;
+        $this->middleware('permission:all_tasks', ['only' => ['index']]);
+        $this->middleware('permission:create_task', ['only' => ['create']]);
+        $this->middleware('permission:edit_task', ['only' => ['edit']]);
+        $this->middleware('permission:update_task', ['only' => ['update']]);
+        $this->middleware('permission:delete_task', ['only' => ['delete']]);
+        $this->taskService = $taskService;
     }
 
     /**
@@ -32,24 +34,24 @@ class TaskController extends Controller
      */
     public function index(Request $request)
     {
-        $allServiceCategorys = $this->serviceCategoryService->allServiceCategories();
+        $allTasks = $this->taskService->allTasks();
 
-        return AllServiceCategoryResource::collection($allServiceCategorys);
-
+        return response()->json(
+            new AllTaskCollection(PaginateCollection::paginate($allTasks, $request->pageSize?$request->pageSize:10))
+        );
     }
 
     /**
      * Show the form for creating a new resource.
      */
 
-    public function create(CreateServiceCategoryRequest $createServiceCategoryRequest)
+    public function create(CreateTaskRequest $createTaskRequest)
     {
 
         try {
             DB::beginTransaction();
 
-            $data = $createServiceCategoryRequest->validated();
-            $serviceCategory = $this->serviceCategoryService->createServiceCategory($data);
+            $this->taskService->createTask($createTaskRequest->validated());
 
             DB::commit();
 
@@ -71,9 +73,9 @@ class TaskController extends Controller
 
     public function edit(Request $request)
     {
-        $serviceCategory  =  $this->serviceCategoryService->editServiceCategory($request->serviceCategoryId);
+        $task  =  $this->taskService->editTask($request->taskId);
 
-        return new ServiceCategoryResource($serviceCategory);//new ServiceCategoryResource($serviceCategory)
+        return new TaskResource($task);
 
 
     }
@@ -81,12 +83,12 @@ class TaskController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateServiceCategoryRequest $updateServiceCategoryRequest)
+    public function update(UpdateTaskRequest $updateTaskRequest)
     {
 
         try {
             DB::beginTransaction();
-            $this->serviceCategoryService->updateServiceCategory($updateServiceCategoryRequest->validated());
+            $this->taskService->updateTask($updateTaskRequest->validated());
             DB::commit();
             return response()->json([
                  'message' => __('messages.success.updated')
@@ -107,7 +109,7 @@ class TaskController extends Controller
 
         try {
             DB::beginTransaction();
-            $this->serviceCategoryService->deleteServiceCategory($request->serviceCategoryId);
+            $this->taskService->deleteTask($request->taskId);
             DB::commit();
             return response()->json([
                 'message' => __('messages.success.deleted')
