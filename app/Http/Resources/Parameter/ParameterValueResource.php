@@ -15,9 +15,9 @@ class ParameterValueResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'parameterValueGuid' => $this->guid,
-            'parameterValueName' => $this->parameter_value,
-            'parameterValueDescription' => $this->description??""
+            'parameterValueId' => $this->id,
+            'parameterValue' => $this->parameter_value,
+            'description' => $this->description??""
         ];
     }
 }

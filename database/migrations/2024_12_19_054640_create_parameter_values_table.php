@@ -16,6 +16,7 @@ return new class extends Migration
         Schema::create('parameter_values', function (Blueprint $table) {
             $table->id();
             $table->string('parameter_value');
+            $table->tinyInteger('parameter_order');
             $table->string('description')->nullable();
             $table->unsignedBigInteger('parameter_id')->nullable()->index();
             $table->foreign('parameter_id')->references('id')->on('parameters')->onUpdate('cascade');

@@ -57,7 +57,7 @@ class ParameterValueController extends Controller
      */
     public function edit(Request $request)
     {
-        $parameter = $this->parameterService->editParameter($request->parameterValueGuid);
+        $parameter = $this->parameterService->editParameter($request->parameterValueId);
 
         return response()->json(new ParameterValueResource($parameter));
     }

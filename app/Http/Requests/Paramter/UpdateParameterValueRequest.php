@@ -27,7 +27,6 @@ class UpdateParameterValueRequest extends FormRequest
             'parameterValueId'=> 'required',
             'parameterValue'=> 'required',
             'description' => '',
-            'parameterOrder'=> 'required',
 
         ];
     }
