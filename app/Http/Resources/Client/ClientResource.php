@@ -2,8 +2,8 @@
 
 namespace App\Http\Resources\Client;
 
-use App\Http\Resources\Client\ClientAddress\ClientAddressResource;
-use App\Http\Resources\Client\ClientContact\ClientContactResource;
+use App\Http\Resources\Client\ClientAddress\AllClientAddressResource;
+use App\Http\Resources\Client\ClientContact\AllClientContactResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -26,8 +26,8 @@ class ClientResource extends JsonResource
             'email' => $this->email??"",
             'price' => $this->price??0,
             'hoursPerMonth' => $this->hours_per_month??0,
-            'addresses' => ClientAddressResource::collection($this->whenLoaded('addresses')),
-            'contacts' => ClientContactResource::collection($this->whenLoaded('contacts')),
+            'addresses' => AllClientAddressResource::collection($this->whenLoaded('addresses')),
+            'contacts' => AllClientContactResource::collection($this->whenLoaded('contacts')),
         ];
     }
 }

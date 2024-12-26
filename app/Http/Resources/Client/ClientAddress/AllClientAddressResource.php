@@ -15,6 +15,7 @@ class AllClientAddressResource extends JsonResource
     public function toArray(Request $request): array
     {
 
+
         return [
             'clientAddressId' => $this->id,
             'address' => $this->address,

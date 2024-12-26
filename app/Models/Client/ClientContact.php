@@ -27,7 +27,7 @@ class ClientContact extends Model
 
     public function parameter(): BelongsTo
     {
-        return $this->belongsTo(ParameterValue::class);
+        return $this->belongsTo(ParameterValue::class, 'parameter_value_id');
     }
 
 
