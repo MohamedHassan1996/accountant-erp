@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\Private\Parameter\ParameterValueController;
 use App\Http\Controllers\Api\Private\Select\SelectController;
 use App\Http\Controllers\Api\Private\ServiceCategory\ServiceCategoryController;
 use App\Http\Controllers\Api\Private\Task\TaskController;
+use App\Http\Controllers\Api\Private\Task\TaskTimeLogController;
 use App\Http\Controllers\Api\Private\User\UserController;
 use App\Http\Controllers\Api\Public\Auth\AuthController;
 use App\Models\Parameter\ParameterValue;
@@ -88,7 +89,13 @@ Route::prefix('v1/tasks')->group(function(){
     Route::delete('delete', [TaskController::class, 'delete']);
 });
 
-
+Route::prefix('v1/task-time-logs')->group(function(){
+    Route::get('', [TaskTimeLogController::class, 'index']);
+    Route::post('create', [TaskTimeLogController::class, 'create']);
+    Route::get('edit', [TaskTimeLogController::class, 'edit']);
+    Route::put('update', [TaskTimeLogController::class, 'update']);
+    Route::delete('delete', [TaskTimeLogController::class, 'delete']);
+});
 
 Route::prefix('v1/parameters')->group(function(){
     Route::get('', [ParameterValueController::class, 'index']);

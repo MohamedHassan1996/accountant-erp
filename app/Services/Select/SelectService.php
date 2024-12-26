@@ -43,6 +43,7 @@ class SelectService
     {
         $selectServiceMap = [
             'users' => ['getAllUsers', UserSelectService::class],
+            'clients' => ['getAllClients', ClientSelectService::class],
             'roles' => ['getAllRoles', RoleSelectService::class],
             'permissions' => ['getAllPermissions', PermissionSelectService::class],
             'parameters' => ['getAllParameters', ParameterSelectService::class],

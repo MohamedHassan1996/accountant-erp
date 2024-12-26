@@ -16,6 +16,7 @@ class TaskTimeLogService{
         ->allowedFilters([
             //AllowedFilter::custom('search', new FilterTaskTimeLog()), // Add a custom search filter
         ])
+        ->where('task_id', $filters['taskId'])
         ->get();
         return $taskTimeLogs;
 
