@@ -16,18 +16,32 @@ class SelectService
         $selectData = [];
 
         foreach ($selectsArr as $select) {
+
+
             $selectServiceData = $this->resolveSelectService($select);
 
+            //dd($selectServiceData);
             if ($selectServiceData) {
                 [$method, $selectServiceClass, $paramValue] = $selectServiceData;
 
                 $selectService = new $selectServiceClass(); // Instantiate the service class
-                if (isset($paramValue)) {
+                if(explode('=', $select)[0] == 'parameters'){
+                    $selectData[] = [
+                        'label' => explode('=', $select)[0] . "" . explode('=', $select)[1],
+                        'options' => $selectService->$method($paramValue)
+                    ];
+                }elseif(explode('=', $select)[0] == 'claimTextSelect'){
+
+                    $selectData[] = [
+                        'label' => explode('=', $select)[0] . "" . str_replace(['{', '}'], '', explode('=', $select)[1]),
+                        'options' => $selectService->$method($paramValue)
+                    ];
+                }elseif (isset($paramValue)) {
                     $selectData[] = [
                         'label' => explode("=", $select)[0],
                         'options' => $selectService->$method($paramValue)
                     ];
-                } else {
+                }else {
                     $selectData[] = [
                         'label' => $select,
                         'options' => $selectService->$method()
@@ -52,10 +66,9 @@ class SelectService
 
         $paramValue = null; // Initialize paramValue
 
-        // Check if parameter is provided directly
-        if (preg_match('/(\w+)=(\d+)/', $select, $matches)) {
+        if (preg_match('/(\w+)=(?:(\b[0-9A-Fa-f\-]{36}\b)|\{([a-zA-Z]+)\}|(\d+))/', $select, $matches)) {
             $select = $matches[1];
-            $paramValue = (int)$matches[2];
+            $paramValue = !empty($matches[2]) ? $matches[2] : (!empty($matches[3]) ? $matches[3] : $matches[4]);
         }
 
         if (array_key_exists($select, $selectServiceMap)) {
