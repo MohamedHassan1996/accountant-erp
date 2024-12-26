@@ -6,6 +6,7 @@ use App\Models\Parameter\ParameterValue;
 use App\Traits\CreatedUpdatedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -24,9 +25,9 @@ class ClientContact extends Model
         'parameter_id'
     ];
 
-    public function parameter(): HasOne
+    public function parameter(): BelongsTo
     {
-        return $this->hasOne(ParameterValue::class, 'id', 'parameter_value_id');
+        return $this->belongsTo(ParameterValue::class, 'id', 'parameter_value_id');
     }
 
 
