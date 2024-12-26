@@ -3,10 +3,8 @@
 namespace App\Services\Parameter;
 
 use App\Filters\Parameter\FilterParameter;
-use App\Http\Resources\Parameter\ParameterValueResource;
 use App\Models\Parameter\Parameter;
 use App\Models\Parameter\ParameterValue;
-use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class ParameterService{
@@ -26,10 +24,10 @@ class ParameterService{
 
     public function createParameter(array $parameterData){
 
-        $parameter = Parameter::find($parameterData['parameterOrder']);
+        $parameter = Parameter::where('parameter_order', $parameterData['parameterOrder'])->first();
 
         $paramteterValue = ParameterValue::create([
-            'parameter_id' => $parameterData['parameterOrder'],
+            'parameter_id' => $parameter->id,
             'parameter_order' => $parameterData['parameterOrder'],
             'parameter_value' => $parameterData['parameterValue'],
             'description' => $parameterData['description'],
