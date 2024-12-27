@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers\Api\Private\Task;
 
+use App\Enums\Task\TaskStatus;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Task\TaskLogTime\CreateTaskTimeLogRequest;
-use App\Http\Requests\Task\TaskLogTime\UpdateTaskTimeLogRequest;
-use App\Http\Resources\Task\TaskResource;
-use App\Http\Resources\Task\TaskTimeLog\AllTaskTimeLogCollection;
+use App\Http\Requests\Task\TaskTimeLog\UpdateTaskTimeLogRequest;
+use App\Http\Requests\Task\TaskTimeLog\CreateTaskTimeLogRequest;
 use App\Http\Resources\Task\TaskTimeLog\AllTaskTimeLogResource;
+use App\Http\Resources\Task\TaskTimeLog\TaskTimeLogResource;
+use App\Models\Task\Task;
 use App\Services\Task\TaskTimeLogService;
-use App\Utils\PaginateCollection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -21,11 +21,11 @@ class TaskTimeLogController extends Controller
     public function __construct(TaskTimeLogService $taskTimeLogService)
     {
         $this->middleware('auth:api');
-        $this->middleware('permission:all_time_log_tasks', ['only' => ['index']]);
-        $this->middleware('permission:create_time_log', ['only' => ['create']]);
-        $this->middleware('permission:edit_time_log', ['only' => ['edit']]);
-        $this->middleware('permission:update_time_log', ['only' => ['update']]);
-        $this->middleware('permission:delete_time_log', ['only' => ['delete']]);
+        // $this->middleware('permission:all_time_log_tasks', ['only' => ['index']]);
+        // $this->middleware('permission:create_time_log', ['only' => ['create']]);
+        // $this->middleware('permission:edit_time_log', ['only' => ['edit']]);
+        // $this->middleware('permission:update_time_log', ['only' => ['update']]);
+        // $this->middleware('permission:delete_time_log', ['only' => ['delete']]);
         $this->taskTimeLogService = $taskTimeLogService;
     }
 
@@ -36,9 +36,7 @@ class TaskTimeLogController extends Controller
     {
         $allTimeLogs = $this->taskTimeLogService->allTaskTimeLogs($request->all());
 
-        return response()->json(
-            new AllTaskTimeLogCollection(PaginateCollection::paginate($allTimeLogs, $request->pageSize?$request->pageSize:10))
-        );
+        return AllTaskTimeLogResource::collection($allTimeLogs);
     }
 
     /**
@@ -51,7 +49,15 @@ class TaskTimeLogController extends Controller
         try {
             DB::beginTransaction();
 
-            $this->taskTimeLogService->createTaskTimeLog($createTaskTimeLogRequest->validated());
+            $taskTimeLog = $this->taskTimeLogService->createTaskTimeLog($createTaskTimeLogRequest->validated());
+
+            $task = Task::find($createTaskTimeLogRequest->taskId);
+
+            if($task->timeLogs()->count() == 1) {
+                $task->update([
+                    'status' => TaskStatus::IN_PROGRESS->value
+                ]);
+            }
 
             DB::commit();
 
@@ -73,9 +79,9 @@ class TaskTimeLogController extends Controller
 
     public function edit(Request $request)
     {
-        $task  =  $this->taskTimeLogService->editTaskTimeLog($request->taskTimeLogId);
+        $taskTimeLog  =  $this->taskTimeLogService->editTaskTimeLog($request->taskTimeLogId);
 
-        return new TaskResource($task);
+        return new TaskTimeLogResource($taskTimeLog);
 
 
     }

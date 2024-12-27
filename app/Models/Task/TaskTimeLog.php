@@ -25,5 +25,8 @@ class TaskTimeLog extends Model
 
     protected $casts = [
         'status' => TaskTimeLogType::class,
+        'start_at' => 'datetime',
+        'end_at' => 'datetime',
     ];
+
 }

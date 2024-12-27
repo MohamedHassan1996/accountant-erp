@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Task\TaskLogTime;
+namespace App\Http\Requests\Task\TaskTimeLog;
 
 use App\Enums\Task\TaskTimeLogType;
 use Illuminate\Foundation\Http\FormRequest;
@@ -28,11 +28,11 @@ class UpdateTaskTimeLogRequest extends FormRequest
         return [
             'taskTimeLogId' => 'required',
             'startAt' => 'required',
-            'endAt' => 'required',
+            'endAt' => 'nullable',
             'type' => ['required', new Enum(TaskTimeLogType::class)],
             'comment' => ['nullable'],
             'taskId' => 'required',
-            'timeLogId' => 'nullable',
+            'parentTimeLogId' => 'nullable',
             'userId' => 'required',
         ];
     }

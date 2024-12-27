@@ -4,10 +4,12 @@ use App\Http\Controllers\Api\Private\Client\ClientAddressController;
 use App\Http\Controllers\Api\Private\Client\ClientContactController;
 use App\Http\Controllers\Api\Private\Client\ClientController;
 use App\Http\Controllers\Api\Private\Client\ClientServiceCategoryDiscountController;
+use App\Http\Controllers\Api\Private\Invoice\InvoiceController;
 use App\Http\Controllers\Api\Private\Parameter\ParameterController;
 use App\Http\Controllers\Api\Private\Parameter\ParameterValueController;
 use App\Http\Controllers\Api\Private\Select\SelectController;
 use App\Http\Controllers\Api\Private\ServiceCategory\ServiceCategoryController;
+use App\Http\Controllers\Api\Private\Task\ActiveTaskController;
 use App\Http\Controllers\Api\Private\Task\TaskController;
 use App\Http\Controllers\Api\Private\Task\TaskTimeLogController;
 use App\Http\Controllers\Api\Private\User\UserController;
@@ -87,6 +89,7 @@ Route::prefix('v1/tasks')->group(function(){
     Route::get('edit', [TaskController::class, 'edit']);
     Route::put('update', [TaskController::class, 'update']);
     Route::delete('delete', [TaskController::class, 'delete']);
+    Route::put('change-status', [TaskController::class, 'changeStatus']);
 });
 
 Route::prefix('v1/task-time-logs')->group(function(){
@@ -95,6 +98,16 @@ Route::prefix('v1/task-time-logs')->group(function(){
     Route::get('edit', [TaskTimeLogController::class, 'edit']);
     Route::put('update', [TaskTimeLogController::class, 'update']);
     Route::delete('delete', [TaskTimeLogController::class, 'delete']);
+});
+
+Route::prefix('v1/user-active-tasks')->group(function(){
+    Route::get('', [ActiveTaskController::class, 'index']);
+    Route::put('update', [ActiveTaskController::class, 'update']);
+});
+
+Route::prefix('v1/invoices')->group(function(){
+    Route::get('', [InvoiceController::class, 'index']);
+    Route::post('create', [InvoiceController::class, 'create']);
 });
 
 Route::prefix('v1/parameters')->group(function(){

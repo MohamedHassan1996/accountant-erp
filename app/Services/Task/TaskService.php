@@ -73,4 +73,11 @@ class TaskService{
         $task->delete();
     }
 
+    public function changeStatus(string $taskId, int $status){
+        $task = Task::find($taskId);
+        $task->update([
+            'status' => TaskStatus::from($status)->value
+        ]);
+    }
+
 }

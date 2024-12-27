@@ -123,4 +123,23 @@ class TaskController extends Controller
 
     }
 
+    public function changeStatus(Request $request)
+    {
+
+        try {
+            DB::beginTransaction();
+            $this->taskService->changeStatus($request->taskId, $request->status);
+            DB::commit();
+            return response()->json([
+                'message' => __('messages.success.updated')
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+
+
+    }
+
 }
