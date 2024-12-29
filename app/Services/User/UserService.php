@@ -90,7 +90,7 @@ class UserService{
         $user->address = $userData['address'];
         $user->per_hour_rate = $userData['perHourRate'];
 
-        if($userData['password']){
+        if(isset($userData['password'])){
             $user->password = $userData['password'];
         }
 
