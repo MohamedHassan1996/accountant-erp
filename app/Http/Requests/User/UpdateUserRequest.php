@@ -28,8 +28,9 @@ class UpdateUserRequest extends FormRequest
     {
         return [
             'userId' => 'required',
-            'name' => 'required',
             'username'=> ['required', "unique:users,username,{$this->userId}"],
+            'firstName' => 'required',
+            'lastName' => 'required',
             'email'=> ['required', "unique:users,email,{$this->userId}"],
             'phone' => 'nullable',
             'address' => 'nullable',

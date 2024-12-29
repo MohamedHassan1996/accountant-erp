@@ -2,20 +2,19 @@
 
 namespace App\Http\Controllers\Api\Private\Invoice;
 
+use App\Enums\Client\ClientServiceDiscountStatus;
+use App\Enums\ServiceCategory\ServiceCategoryAddToInvoiceStatus;
 use App\Enums\Task\TaskStatus;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Task\CreateTaskRequest;
 use App\Http\Requests\Task\UpdateTaskRequest;
-use App\Http\Resources\Task\AllTaskCollection;
-use App\Http\Resources\Task\AllTaskResource;
+use App\Http\Resources\Invoice\AllInvoiceCollection;
 use App\Http\Resources\Task\TaskResource;
+use App\Models\Client\ClientServiceDiscount;
 use App\Models\Invoice\Invoice;
 use App\Services\Task\TaskService;
 use App\Utils\PaginateCollection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-
-use function PHPSTORM_META\map;
 
 class InvoiceController extends Controller
 {
@@ -37,10 +36,18 @@ class InvoiceController extends Controller
      */
     public function index(Request $request)
     {
+        $filters = $request->filter ?? null;
+
         $allInvoices = DB::table('tasks')
             ->leftJoin('invoices', 'invoices.id', '=', 'tasks.invoice_id')
             ->leftJoin('clients', 'tasks.client_id', '=', 'clients.id')
-            ->where('tasks.client_id', $request->clientId)
+            ->leftJoin('service_categories', 'tasks.service_category_id', '=', 'service_categories.id')
+            ->when($filters['clientId'] ?? null, function ($query) use ($filters) {
+                return $query->where('tasks.client_id', $filters['clientId']);
+            })
+            ->when($filters['unassigned']?? null, function ($query) use ($filters) {
+                return $query->where('tasks.invoice_id', $filters['unassigned'] == 'true' ? null : '!=', null);
+            })
             ->where('tasks.status', TaskStatus::DONE->value)
             ->select([
                 'invoices.id as invoiceId',
@@ -50,27 +57,67 @@ class InvoiceController extends Controller
                 'tasks.id as taskId',
                 'tasks.title as taskTitle',
                 'tasks.invoice_id as invoiceId',
+                'service_categories.id as serviceCategoryId',
+                'service_categories.name as serviceCategoryName',
+                'service_categories.price as serviceCategoryPrice',
+                'service_categories.add_to_invoice as serviceCategoryAddToInvoice'
             ])
             ->get();
-            $formattedData = [];
-            foreach ($allInvoices as $index => $invoice) {
-                if(!in_array($invoice->invoiceId != null? $invoice->invoiceId: "unassigned##{$invoice->clientId}", array_column($formattedData, 'key'))) {
-                    $formattedData[] = [
-                        'key' => $invoice->invoiceId != null? $invoice->invoiceId: "unassigned##{$invoice->clientId}",
-                        'invoiceNumber' => $invoice->invoiceNumber??"",
-                        'clientName' => $invoice->clientName??"",
-                        'tasks' => []
-                    ];
-                }
-                $search = array_search($invoice->invoiceId != null? $invoice->invoiceId: "unassigned##{$invoice->clientId}", array_column($formattedData, 'key'));
-                $formattedData[$search]['tasks'][] = [
-                    'taskId' => $invoice->taskId,
-                    'taskTitle' => $invoice->taskTitle
+
+        // Format the data
+        $formattedData = [];
+        foreach ($allInvoices as $invoice) {
+            $key = $invoice->invoiceId != null
+                ? $invoice->invoiceId
+                : "unassigned##{$invoice->clientId}";
+
+            if (!in_array($key, array_column($formattedData, 'key'))) {
+                $formattedData[] = [
+                    'key' => $key,
+                    'invoiceId' => $invoice->invoiceId??"",
+                    'invoiceNumber' => $invoice->invoiceNumber ?? "",
+                    'clientName' => $invoice->clientName ?? "",
+                    'tasks' => [],
+                    'totalPrice' => 0,
+                    'totalPriceAfterDiscount' => 0
                 ];
             }
-            return response()->json($formattedData);
 
+            $search = array_search($key, array_column($formattedData, 'key'));
+
+            $servicePrice = $invoice->serviceCategoryAddToInvoice == ServiceCategoryAddToInvoiceStatus::ADD->value ? $invoice->serviceCategoryPrice : 0;
+
+            $clientDiscount = ClientServiceDiscount::where('client_id', $invoice->clientId)
+                ->where('service_category_id', $invoice->serviceCategoryId)
+                ->where('is_active', ClientServiceDiscountStatus::ACTIVE->value)
+                ->first();
+
+            $formattedData[$search]['totalPrice'] += $servicePrice;
+            $formattedData[$search]['totalPriceAfterDiscount'] += $servicePrice;
+
+            $servicePriceAfterDiscount = $servicePrice;
+
+            if ($clientDiscount && $servicePrice > 0) {
+                $servicePriceAfterDiscount = $servicePrice - ($servicePrice * ($clientDiscount->discount / 100));
+                $formattedData[$search]['totalPriceAfterDiscount'] += $servicePriceAfterDiscount;
+            }
+
+            $formattedData[$search]['tasks'][] = [
+                'taskId' => $invoice->taskId,
+                'taskTitle' => $invoice->taskTitle,
+                'serviceCategoryName' => $invoice->serviceCategoryName,
+                'price' => $servicePrice,
+                'priceAfterDiscount' => $servicePriceAfterDiscount
+            ];
+        }
+
+        // Paginate the formatted data
+        $pageSize = $request->pageSize ?? 10;
+        $paginatedData = PaginateCollection::paginate(collect($formattedData), $pageSize);
+
+        return response()->json(new AllInvoiceCollection($paginatedData), 200);
     }
+
 
     /**
      * Show the form for creating a new resource.

@@ -17,12 +17,13 @@ return new class extends Migration
         Schema::create('tasks', function (Blueprint $table) {
             $table->id();
             $table->string('number')->unique();
+            $table->text('description')->nullable();
             $table->string('title')->nullable();
             $table->tinyInteger('status')->default(TaskStatus::TO_WORK);
             $table->foreignId('client_id')->constrained('clients')->onDelete('cascade');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('service_category_id')->constrained('service_categories')->onDelete('cascade');
-            $table->foreignId('invoice_id')->constrained('invoices')->onDelete('cascade');
+            $table->foreignId('invoice_id')->nullable()->constrained('invoices')->onDelete('cascade');
             $this->CreatedUpdatedByRelationship($table);
             $table->softDeletes();
             $table->timestamps();
