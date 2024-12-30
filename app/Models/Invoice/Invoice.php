@@ -21,7 +21,7 @@ class Invoice extends Model
     {
         parent::boot();
         static::creating(function ($model) {
-            $model->number = 'IN' . generateUniqNumber();
+            $model->number = 'IN_' . generateUniqNumber();
         });
     }
 

@@ -62,7 +62,11 @@ class TaskTimeLogController extends Controller
             DB::commit();
 
             return response()->json([
-                'message' => __('messages.success.created')
+                'message' => __('messages.success.created'),
+                'data' => [
+                    'taskTimeLogId' => $taskTimeLog->id,
+                    'taskId' => $taskTimeLog->task_id,
+                ]
             ], 200);
 
         } catch (\Exception $e) {

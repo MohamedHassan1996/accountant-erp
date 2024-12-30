@@ -28,7 +28,7 @@ class TaskService{
 
         $task = Task::create([
             'title' => $taskData['title'],
-            'description' => $taskData['description'],
+            'description' => $taskData['description']??"",
             'client_id' => $taskData['clientId'],
             'user_id' => $taskData['userId'],
             'service_category_id' => $taskData['serviceCategoryId'],
@@ -54,7 +54,7 @@ class TaskService{
 
         $task->fill([
             'title' => $taskData['title'],
-            'description' => $taskData['description'],
+            'description' => $taskData['description']??"",
             'client_id' => $taskData['clientId'],
             'user_id' => $taskData['userId'],
             'service_category_id' => $taskData['serviceCategoryId'],

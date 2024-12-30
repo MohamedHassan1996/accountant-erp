@@ -34,7 +34,7 @@ class Task extends Model
     {
         parent::boot();
         static::creating(function ($model) {
-            $model->number = 'T' . generateUniqNumber();
+            $model->number = 'T_' . generateUniqNumber();
         });
     }
 
