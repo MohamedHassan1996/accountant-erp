@@ -3,6 +3,7 @@
 namespace App\Models\Task;
 
 use App\Enums\Task\TaskStatus;
+use App\Enums\Task\TaskTimeLogType;
 use App\Models\Client\Client;
 use App\Models\ServiceCategory\ServiceCategory;
 use App\Models\User;
@@ -58,20 +59,39 @@ class Task extends Model
     }
     public function getTotalHoursAttribute()
     {
-        $totalMinutes = $this->timeLogs()
-            ->whereNotNull('end_at') // Exclude logs where end_at is null
-            ->get()
-            ->sum(function ($log) {
-                return $log->start_at && $log->end_at
-                    ? $log->end_at->diffInMinutes($log->start_at)
-                    : 0;
-            });
+        $backTimeLogs = $this->timeLogs()
+        ->where('type', \App\Enums\Task\TaskTimeLogType::BACK_TIME_LOG->value)
+        ->whereNotNull('end_at')
+        ->get();
 
-        // Convert total minutes to decimal hours
-        $totalHours = $totalMinutes / 60;
+    if ($backTimeLogs->isNotEmpty()) {
+        $totalMinutes = $backTimeLogs->sum(function ($log) {
+            return $log->start_at && $log->end_at
+                ? $log->end_at->diffInMinutes($log->start_at)
+                : 0;
+        });
 
-        // Format to 1 decimal place
-        return $totalHours == 0 ? 0 : number_format($totalHours, 2);
+        return number_format($totalMinutes / 60, 2);
+    }
+
+    // If no BACK_TIME_LOG, calculate TIME_LOG
+    $timeLogs = $this->timeLogs()
+        ->where('type', TaskTimeLogType::TIME_LOG->value)
+        ->whereNotNull('end_at')
+        ->get();
+
+    $totalMinutes = $timeLogs->sum(function ($log) {
+        return $log->start_at && $log->end_at
+            ? $log->end_at->diffInMinutes($log->start_at)
+            : 0;
+    });
+
+    return $totalMinutes == 0 ? 0 : number_format($totalMinutes / 60, 2);
+    }
+
+    public function getTotalPriceAfterDiscountAttribute()
+    {
+        return $this->client->getClientDiscount($this->service_category_id);
     }
 
 }

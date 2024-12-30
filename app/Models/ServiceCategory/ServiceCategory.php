@@ -21,4 +21,12 @@ class ServiceCategory extends Model
     protected $casts = [
         'add_to_invoice' => ServiceCategoryAddToInvoiceStatus::class
     ];
+
+    public function getPrice()
+    {
+        if ($this->add_to_invoice == ServiceCategoryAddToInvoiceStatus::REMOVE) {
+            return 0;
+        }
+        return $this->price;
+    }
 }

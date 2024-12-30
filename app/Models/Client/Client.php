@@ -2,11 +2,14 @@
 
 namespace App\Models\Client;
 
+use App\Enums\Client\ClientServiceDiscountStatus;
+use App\Enums\Client\ClientServiceDiscountType;
+use App\Enums\ServiceCategory\ServiceCategoryAddToInvoiceStatus;
+use App\Models\ServiceCategory\ServiceCategory;
 use App\Traits\CreatedUpdatedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Str;
 
 class Client extends Model
 {
@@ -32,6 +35,27 @@ class Client extends Model
     public function contacts()
     {
         return $this->hasMany(ClientContact::class, 'client_id');
+    }
+
+    public function getClientDiscount($serviceId)
+    {
+        $discount = ClientServiceDiscount::where('client_id', $this->id)->where('service_category_id', $serviceId)->where('is_active', ClientServiceDiscountStatus::ACTIVE)->latest()->first();
+
+        $service = ServiceCategory::find($serviceId);
+
+        if ($service->add_to_invoice == ServiceCategoryAddToInvoiceStatus::REMOVE) {
+            return 0;
+        }
+
+        if ($discount) {
+            if ($discount->type == ClientServiceDiscountType::PERCENTAGE) {
+                return $service->price - (($discount->discount / 100) * $service->price);
+            } else {
+                return $service->price - $discount->discount;
+            }
+        } else {
+            return $service->price;
+        }
     }
 
 }

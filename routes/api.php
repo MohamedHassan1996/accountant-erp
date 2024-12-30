@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\Private\Parameter\ParameterValueController;
 use App\Http\Controllers\Api\Private\Select\SelectController;
 use App\Http\Controllers\Api\Private\ServiceCategory\ServiceCategoryController;
 use App\Http\Controllers\Api\Private\Task\ActiveTaskController;
+use App\Http\Controllers\Api\Private\Task\AdminTaskController;
 use App\Http\Controllers\Api\Private\Task\TaskController;
 use App\Http\Controllers\Api\Private\Task\TaskTimeLogController;
 use App\Http\Controllers\Api\Private\User\UserController;
@@ -90,6 +91,10 @@ Route::prefix('v1/tasks')->group(function(){
     Route::put('update', [TaskController::class, 'update']);
     Route::delete('delete', [TaskController::class, 'delete']);
     Route::put('change-status', [TaskController::class, 'changeStatus']);
+});
+
+Route::prefix('v1/admin-tasks')->group(function(){
+    Route::get('', [AdminTaskController::class, 'index']);
 });
 
 Route::prefix('v1/task-time-logs')->group(function(){
