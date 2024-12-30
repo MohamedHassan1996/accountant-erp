@@ -20,11 +20,11 @@ class AdminTaskController extends Controller
     public function __construct(TaskService $taskService)
     {
         $this->middleware('auth:api');
-        $this->middleware('permission:all_tasks', ['only' => ['index']]);
-        $this->middleware('permission:create_task', ['only' => ['create']]);
-        $this->middleware('permission:edit_task', ['only' => ['edit']]);
-        $this->middleware('permission:update_task', ['only' => ['update']]);
-        $this->middleware('permission:delete_task', ['only' => ['delete']]);
+        $this->middleware('permission:all_admin_tasks', ['only' => ['index']]);
+        // $this->middleware('permission:create_task', ['only' => ['create']]);
+        // $this->middleware('permission:edit_task', ['only' => ['edit']]);
+        // $this->middleware('permission:update_task', ['only' => ['update']]);
+        // $this->middleware('permission:delete_task', ['only' => ['delete']]);
         $this->taskService = $taskService;
     }
 
@@ -44,101 +44,101 @@ class AdminTaskController extends Controller
      * Show the form for creating a new resource.
      */
 
-    public function create(CreateTaskRequest $createTaskRequest)
-    {
+    // public function create(CreateTaskRequest $createTaskRequest)
+    // {
 
-        try {
-            DB::beginTransaction();
+    //     try {
+    //         DB::beginTransaction();
 
-            $this->taskService->createTask($createTaskRequest->validated());
+    //         $this->taskService->createTask($createTaskRequest->validated());
 
-            DB::commit();
+    //         DB::commit();
 
-            return response()->json([
-                'message' => __('messages.success.created')
-            ], 200);
+    //         return response()->json([
+    //             'message' => __('messages.success.created')
+    //         ], 200);
 
-        } catch (\Exception $e) {
-            DB::rollBack();
-            throw $e;
-        }
-
-
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-
-    public function edit(Request $request)
-    {
-        $task  =  $this->taskService->editTask($request->taskId);
-
-        return new TaskResource($task);
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         throw $e;
+    //     }
 
 
-    }
+    // }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateTaskRequest $updateTaskRequest)
-    {
+    // /**
+    //  * Show the form for editing the specified resource.
+    //  */
 
-        try {
-            DB::beginTransaction();
-            $this->taskService->updateTask($updateTaskRequest->validated());
-            DB::commit();
-            return response()->json([
-                 'message' => __('messages.success.updated')
-            ], 200);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            throw $e;
-        }
+    // public function edit(Request $request)
+    // {
+    //     $task  =  $this->taskService->editTask($request->taskId);
+
+    //     return new TaskResource($task);
 
 
-    }
+    // }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function delete(Request $request)
-    {
+    // /**
+    //  * Update the specified resource in storage.
+    //  */
+    // public function update(UpdateTaskRequest $updateTaskRequest)
+    // {
 
-        try {
-            DB::beginTransaction();
-            $this->taskService->deleteTask($request->taskId);
-            DB::commit();
-            return response()->json([
-                'message' => __('messages.success.deleted')
-            ], 200);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            throw $e;
-        }
-
-
-    }
-
-    public function changeStatus(Request $request)
-    {
-
-        try {
-            DB::beginTransaction();
-            $this->taskService->changeStatus($request->taskId, $request->status);
-            DB::commit();
-            return response()->json([
-                'message' => __('messages.success.updated')
-            ], 200);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            throw $e;
-        }
+    //     try {
+    //         DB::beginTransaction();
+    //         $this->taskService->updateTask($updateTaskRequest->validated());
+    //         DB::commit();
+    //         return response()->json([
+    //              'message' => __('messages.success.updated')
+    //         ], 200);
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         throw $e;
+    //     }
 
 
-    }
+    // }
+
+    // /**
+    //  * Remove the specified resource from storage.
+    //  */
+    // public function delete(Request $request)
+    // {
+
+    //     try {
+    //         DB::beginTransaction();
+    //         $this->taskService->deleteTask($request->taskId);
+    //         DB::commit();
+    //         return response()->json([
+    //             'message' => __('messages.success.deleted')
+    //         ], 200);
+
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         throw $e;
+    //     }
+
+
+    // }
+
+    // public function changeStatus(Request $request)
+    // {
+
+    //     try {
+    //         DB::beginTransaction();
+    //         $this->taskService->changeStatus($request->taskId, $request->status);
+    //         DB::commit();
+    //         return response()->json([
+    //             'message' => __('messages.success.updated')
+    //         ], 200);
+
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         throw $e;
+    //     }
+
+
+    // }
 
 }

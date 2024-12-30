@@ -23,11 +23,11 @@ class InvoiceController extends Controller
     public function __construct(TaskService $taskService)
     {
         $this->middleware('auth:api');
-        // $this->middleware('permission:all_tasks', ['only' => ['index']]);
-        // $this->middleware('permission:create_task', ['only' => ['create']]);
-        // $this->middleware('permission:edit_task', ['only' => ['edit']]);
-        // $this->middleware('permission:update_task', ['only' => ['update']]);
-        // $this->middleware('permission:delete_task', ['only' => ['delete']]);
+        $this->middleware('permission:all_invoices', ['only' => ['index']]);
+        $this->middleware('permission:create_invoice', ['only' => ['create']]);
+        // $this->middleware('permission:edit_invoice', ['only' => ['edit']]);
+        // $this->middleware('permission:update_invoice', ['only' => ['update']]);
+        // $this->middleware('permission:delete_invoice', ['only' => ['delete']]);
         $this->taskService = $taskService;
     }
 

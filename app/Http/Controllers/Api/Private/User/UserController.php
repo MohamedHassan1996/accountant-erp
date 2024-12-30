@@ -20,7 +20,7 @@ class UserController extends Controller
     public function __construct(UserService $userService)
     {
         $this->middleware('auth:api');
-        $this->middleware('permission:all_users', ['only' => ['allUsers']]);
+        $this->middleware('permission:all_users', ['only' => ['index']]);
         $this->middleware('permission:create_user', ['only' => ['create']]);
         $this->middleware('permission:edit_user', ['only' => ['edit']]);
         $this->middleware('permission:update_user', ['only' => ['update']]);

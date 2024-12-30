@@ -66,11 +66,28 @@ class RolesAndPermissionsSeeder extends Seeder
             'update_task',
             'delete_task',
 
-            'all-task-time-logs',
-            'create-task-time-log',
-            'edit-task-time-log',
-            'update-task-time-log',
-            'delete-task-time-log',
+            'all_admin_tasks',
+
+            'all_task_time_logs',
+            'create_task_time_log',
+            'edit_task_time_log',
+            'update_task_time_log',
+            'delete_task_time_log',
+
+            'all_invoices',
+            'create_invoice',
+            'edit_invoice',
+            'update_invoice',
+            'delete_invoice',
+
+            'all_parameters',
+            'create_parameter',
+            'edit_parameter',
+            'update_parameter',
+            'delete_parameter',
+
+            'all_active_tasks',
+            'update_active_task',
 
 
         ];

@@ -21,11 +21,11 @@ class TaskTimeLogController extends Controller
     public function __construct(TaskTimeLogService $taskTimeLogService)
     {
         $this->middleware('auth:api');
-        // $this->middleware('permission:all_time_log_tasks', ['only' => ['index']]);
-        // $this->middleware('permission:create_time_log', ['only' => ['create']]);
-        // $this->middleware('permission:edit_time_log', ['only' => ['edit']]);
-        // $this->middleware('permission:update_time_log', ['only' => ['update']]);
-        // $this->middleware('permission:delete_time_log', ['only' => ['delete']]);
+        $this->middleware('permission:all_task_time_logs', ['only' => ['index']]);
+        $this->middleware('permission:create_task_time_log', ['only' => ['create']]);
+        $this->middleware('permission:edit_task_time_log', ['only' => ['edit']]);
+        $this->middleware('permission:update_task_time_log', ['only' => ['update']]);
+        $this->middleware('permission:delete_task_time_log', ['only' => ['delete']]);
         $this->taskTimeLogService = $taskTimeLogService;
     }
 

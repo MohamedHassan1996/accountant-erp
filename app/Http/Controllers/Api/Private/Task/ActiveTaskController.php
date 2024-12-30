@@ -20,8 +20,8 @@ class ActiveTaskController extends Controller
     public function __construct()
     {
         $this->middleware('auth:api');
-        // $this->middleware('permission:all_tasks', ['only' => ['index']]);
-        // $this->middleware('permission:create_task', ['only' => ['create']]);
+        $this->middleware('permission:all_active_tasks', ['only' => ['index']]);
+        $this->middleware('permission:update_active_task', ['only' => ['create']]);
         // $this->middleware('permission:edit_task', ['only' => ['edit']]);
         // $this->middleware('permission:update_task', ['only' => ['update']]);
         // $this->middleware('permission:delete_task', ['only' => ['delete']]);

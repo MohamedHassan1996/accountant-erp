@@ -18,6 +18,12 @@ class ParameterValueController extends Controller
     public function __construct(ParameterService $parameterService)
     {
         $this->middleware('auth:api');
+        $this->middleware('permission:all_parameters', ['only' => ['index']]);
+        $this->middleware('permission:create_parameter', ['only' => ['create']]);
+        $this->middleware('permission:edit_parameter', ['only' => ['edit']]);
+        $this->middleware('permission:update_parameter', ['only' => ['update']]);
+        $this->middleware('permission:delete_parameter', ['only' => ['delete']]);
+
         $this->parameterService = $parameterService;
     }
     /**

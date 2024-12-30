@@ -20,11 +20,11 @@ class ServiceCategoryController extends Controller
     public function __construct(ServiceCategoryService $serviceCategoryService)
     {
         $this->middleware('auth:api');
-        // $this->middleware('permission:all_service_categories', ['only' => ['allServiceCategorys']]);
-        // $this->middleware('permission:create_service_category', ['only' => ['create']]);
-        // $this->middleware('permission:edit_service_category', ['only' => ['edit']]);
-        // $this->middleware('permission:update_service_category', ['only' => ['update']]);
-        // $this->middleware('permission:delete_service_category', ['only' => ['delete']]);
+        $this->middleware('permission:all_service_categories', ['only' => ['allServiceCategorys']]);
+        $this->middleware('permission:create_service_category', ['only' => ['create']]);
+        $this->middleware('permission:edit_service_category', ['only' => ['edit']]);
+        $this->middleware('permission:update_service_category', ['only' => ['update']]);
+        $this->middleware('permission:delete_service_category', ['only' => ['delete']]);
         $this->serviceCategoryService = $serviceCategoryService;
     }
 
