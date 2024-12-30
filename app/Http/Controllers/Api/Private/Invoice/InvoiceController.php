@@ -76,6 +76,7 @@ class InvoiceController extends Controller
                     'key' => $key,
                     'invoiceId' => $invoice->invoiceId??"",
                     'invoiceNumber' => $invoice->invoiceNumber ?? "",
+                    'clientId' => $invoice->clientId ?? "",
                     'clientName' => $invoice->clientName ?? "",
                     'tasks' => [],
                     'totalPrice' => 0,
