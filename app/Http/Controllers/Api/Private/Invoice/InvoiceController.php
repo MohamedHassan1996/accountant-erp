@@ -135,7 +135,7 @@ class InvoiceController extends Controller
                 'client_id' => $createTaskRequest->clientId,
             ]);
 
-            foreach ($createTaskRequest->tasks as $task) {
+            foreach ($createTaskRequest->taskIds as $task) {
                 $task = Task::find($task['taskId']);
                 $task->invoice_id = $invoice->id;
                 $task->save();
