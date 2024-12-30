@@ -101,7 +101,7 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // roles
         $superAdmin = Role::create(['name' => 'superAdmin']);
-        $superAdmin->givePermissionTo(Permission::all());
+        $superAdmin->givePermissionTo(Permission::where('name', '!=', 'all_tasks')->get());
 
         $accountant = Role::create(['name' => 'accountant']);
         $accountant->givePermissionTo([
