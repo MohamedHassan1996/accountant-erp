@@ -11,6 +11,7 @@ use App\Http\Resources\Invoice\AllInvoiceCollection;
 use App\Http\Resources\Task\TaskResource;
 use App\Models\Client\ClientServiceDiscount;
 use App\Models\Invoice\Invoice;
+use App\Models\Task\Task;
 use App\Services\Task\TaskService;
 use App\Utils\PaginateCollection;
 use Illuminate\Http\Request;
@@ -134,16 +135,11 @@ class InvoiceController extends Controller
                 'client_id' => $createTaskRequest->clientId,
             ]);
 
-            $invoiceDetails = array_map(function ($taskId) use ($invoice) {
-                return [
-                    'invoice_id' => $invoice->id,
-                    'task_id' => $taskId,
-                ];
-            }, $createTaskRequest->taskIds);
-
-            $invoice->invoiceDetails()->createMany($invoiceDetails);
-
-
+            foreach ($createTaskRequest->tasks as $task) {
+                $task = Task::find($task['taskId']);
+                $task->invoice_id = $invoice->id;
+                $task->save();
+            }
             DB::commit();
 
             return response()->json([
