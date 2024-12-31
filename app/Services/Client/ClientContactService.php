@@ -33,7 +33,7 @@ class ClientContactService{
             'phone' => $phoneData['phone'],
             'prefix' => $phoneData['prefix'],
             'email' => $phoneData['email'],
-            'note' => $phoneData['note'],
+            'note' => $phoneData['note']??"",
             'parameter_value_id' => $phoneData['parameterValueId'],
             'client_id' => $phoneData['clientId'],
         ]);
@@ -59,7 +59,7 @@ class ClientContactService{
             'phone' => $phoneData['phone'],
             'prefix' => $phoneData['prefix'],
             'email' => $phoneData['email'],
-            'note' => $phoneData['note'],
+            'note' => $phoneData['note']??"",
             'parameter_value_id' => $phoneData['parameterValueId'],
         ]);
 

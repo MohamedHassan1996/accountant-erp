@@ -21,8 +21,9 @@ return new class extends Migration
             $table->timestamp('end_at')->nullable();
             $table->tinyInteger('type')->default(TaskTimeLogType::TIME_LOG->value);
             $table->text('comment')->nullable();
+            $table->string('total_time', 10)->default("0");
+            $table->tinyInteger('status')->default(TaskTimeLogStatus::START->value);
             $table->foreignId('task_id')->constrained('tasks')->onDelete('cascade');
-            $table->foreignId('time_log_id')->nullable()->constrained('task_time_logs')->onDelete('cascade');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $this->CreatedUpdatedByRelationship($table);
             $table->softDeletes();

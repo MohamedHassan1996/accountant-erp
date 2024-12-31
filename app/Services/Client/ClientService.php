@@ -13,7 +13,8 @@ class ClientService{
 
         $clients = QueryBuilder::for(Client::class)
         ->allowedFilters([
-            //AllowedFilter::custom('search', new FilterClient()), // Add a custom search filter
+            AllowedFilter::exact('clientId', 'client_id'), // Add a custom search filter
+            AllowedFilter::custom('search', new FilterClient()), // Add a custom search filter
         ])
         ->get();
         return $clients;

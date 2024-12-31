@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Task\TaskTimeLog;
 
+use App\Enums\Task\TaskTimeLogStatus;
 use App\Enums\Task\TaskTimeLogType;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -27,12 +28,12 @@ class UpdateTaskTimeLogRequest extends FormRequest
     {
         return [
             'taskTimeLogId' => 'required',
-            'startAt' => 'required',
+            'startAt' => 'nullable',
             'endAt' => 'nullable',
             'type' => ['required', new Enum(TaskTimeLogType::class)],
+            'status' => ['required', new Enum(TaskTimeLogStatus::class)],
             'comment' => ['nullable'],
             'taskId' => 'required',
-            'parentTimeLogId' => 'nullable',
             'userId' => 'required',
         ];
     }

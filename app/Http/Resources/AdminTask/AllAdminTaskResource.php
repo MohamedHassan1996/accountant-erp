@@ -19,6 +19,7 @@ class AllAdminTaskResource extends JsonResource
             'taskId' => $this->id,
             'title' => $this->title,
             'status' => $this->status,
+            'number' => $this->number,
             'accountantName' => $this->user->full_name,
             'clientName' => $this->client->ragione_sociale,
             'serviceCategoryName' => $this->serviceCategory->name,

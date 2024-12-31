@@ -25,7 +25,7 @@ class TaskTimeLogController extends Controller
         $this->middleware('permission:create_task_time_log', ['only' => ['create']]);
         $this->middleware('permission:edit_task_time_log', ['only' => ['edit']]);
         $this->middleware('permission:update_task_time_log', ['only' => ['update']]);
-        $this->middleware('permission:delete_task_time_log', ['only' => ['delete']]);
+        //$this->middleware('permission:delete_task_time_log', ['only' => ['delete']]);
         $this->taskTimeLogService = $taskTimeLogService;
     }
 
@@ -114,7 +114,7 @@ class TaskTimeLogController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function delete(Request $request)
+    /*public function delete(Request $request)
     {
 
         try {
@@ -131,6 +131,6 @@ class TaskTimeLogController extends Controller
         }
 
 
-    }
+    }*/
 
 }

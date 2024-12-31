@@ -35,7 +35,7 @@ class ClientAddressService{
             'region' => $addressData['region'],
             'latitude' => $addressData['latitude'],
             'longitude' => $addressData['longitude'],
-            'note' => $addressData['note'],
+            'note' => $addressData['note']??"",
             'parameter_value_id' => $addressData['parameterValueId'],
             'client_id' => $addressData['clientId'],
         ]);
@@ -63,7 +63,7 @@ class ClientAddressService{
             'region' => $addressData['region'],
             'latitude' => $addressData['latitude'],
             'longitude' => $addressData['longitude'],
-            'note' => $addressData['note'],
+            'note' => $addressData['note']??"",
             'parameter_value_id' => $addressData['parameterValueId'],
         ]);
 

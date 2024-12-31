@@ -16,15 +16,17 @@ class TaskTimeLog extends Model
     protected $fillable = [
         'start_at',
         'end_at',
+        'total_time',
+        'status',
         'type',
         'comment',
         'task_id',
-        'time_log_id',
-        'user_id',
+        'user_id'
     ];
 
     protected $casts = [
-        'status' => TaskTimeLogType::class,
+        'status' => TaskTimeLogStatus::class,
+        'type' => TaskTimeLogType::class,
         'start_at' => 'datetime',
         'end_at' => 'datetime',
     ];

@@ -18,6 +18,7 @@ class AllTaskResource extends JsonResource
         return [
             'taskId' => $this->id,
             'title' => $this->title,
+            'number' => $this->number,
             'status' => $this->status,
             'accountantName' => $this->user->full_name,
             'clientName' => $this->client->ragione_sociale,

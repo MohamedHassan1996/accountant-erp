@@ -24,7 +24,7 @@ class AllTaskTimeLogResource extends JsonResource
             'userId' => $this->user_id,
             'type' => $this->type,
             'comment' => $this->comment??"",
-            'parentTimeLogId' => $this->time_log_id??"",
+            'status' => $this->status
         ];
     }
 }
