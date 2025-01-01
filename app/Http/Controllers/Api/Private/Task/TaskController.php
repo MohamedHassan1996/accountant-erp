@@ -51,13 +51,13 @@ class TaskController extends Controller
         try {
             DB::beginTransaction();
 
-            $this->taskService->createTask($createTaskRequest->validated());
+            $task = $this->taskService->createTask($createTaskRequest->validated());
 
             DB::commit();
 
             return response()->json([
                 'message' => __('messages.success.created'),
-                'data' => $createTaskRequest->validated()
+                'data' => new TaskResource($task)
             ], 200);
 
         } catch (\Exception $e) {

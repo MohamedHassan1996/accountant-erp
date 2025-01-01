@@ -18,8 +18,6 @@ class AllUserDataResource extends JsonResource
     {
 
 
-        //dd($userData);
-
         return [
             'userId' => $this->id,
             'firstName' => $this->first_name??"",
