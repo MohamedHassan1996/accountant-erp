@@ -27,7 +27,7 @@ class UpdateTaskRequest extends FormRequest
     {
         return [
             'taskId' => ['required'],
-            'title' => ['required'],
+            'title' => ['nullable'],
             'description' => ['nullable'],
             'status' => ['required', new Enum(TaskStatus::class)],
             'clientId' => ['required'],

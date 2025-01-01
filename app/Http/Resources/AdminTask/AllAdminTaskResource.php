@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\AdminTask;
 
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -26,6 +27,7 @@ class AllAdminTaskResource extends JsonResource
             'totalHours' => $this->total_hours,
             'costOfService' => $this->serviceCategory->getPrice(),
             'costAfterDiscount' => $this->getTotalPriceAfterDiscountAttribute(),
+            'createdAt' => Carbon::parse($this->created_at)->format('d/m/Y'),
         ];
     }
 }

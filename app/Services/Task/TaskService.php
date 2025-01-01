@@ -4,6 +4,7 @@ namespace App\Services\Task;
 
 use App\Enums\Task\TaskStatus;
 use App\Filters\Task\FilterTask;
+use App\Filters\Task\FilterTaskDateBetween;
 use App\Models\Task\Task;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -17,7 +18,9 @@ class TaskService{
             AllowedFilter::custom('search', new FilterTask()), // Add a custom search filter
             AllowedFilter::exact('userId', 'user_id'),
             AllowedFilter::exact('status', 'status'),
+            AllowedFilter::exact('serviceCategoryId', 'service_category_id'),
             AllowedFilter::exact('clientId', 'client_id'),
+            AllowedFilter::custom('dateBetween', new FilterTaskDateBetween()),
         ])
         ->get();
         return $tasks;
@@ -27,7 +30,7 @@ class TaskService{
     public function createTask(array $taskData){
 
         $task = Task::create([
-            'title' => $taskData['title'],
+            'title' => $taskData['title']??"",
             'description' => $taskData['description']??"",
             'client_id' => $taskData['clientId'],
             'user_id' => $taskData['userId'],
@@ -53,7 +56,7 @@ class TaskService{
         $task = Task::find($taskData['taskId']);
 
         $task->fill([
-            'title' => $taskData['title'],
+            'title' => $taskData['title']??"",
             'description' => $taskData['description']??"",
             'client_id' => $taskData['clientId'],
             'user_id' => $taskData['userId'],

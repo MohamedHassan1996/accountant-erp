@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Task;
 
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -23,7 +24,8 @@ class AllTaskResource extends JsonResource
             'accountantName' => $this->user->full_name,
             'clientName' => $this->client->ragione_sociale,
             'serviceCategoryName' => $this->serviceCategory->name,
-            'totalHours' => $this->total_hours
+            'totalHours' => $this->total_hours,
+            'createdAt' => Carbon::parse($this->created_at)->format('d/m/Y'),
         ];
     }
 }

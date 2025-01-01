@@ -26,7 +26,7 @@ class CreateTaskRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title' => ['required'],
+            'title' => ['nullable'],
             'description' => ['nullable'],
             'status' => ['required', new Enum(TaskStatus::class)],
             'clientId' => ['required'],
