@@ -20,8 +20,9 @@ class Invoice extends Model
     public static function boot()
     {
         parent::boot();
-        static::creating(function ($model) {
-            $model->number = 'IN_' . generateUniqNumber();
+        static::created(function ($model) {
+            $model->number = 'IN_' . str_pad($model->id, 5, '0', STR_PAD_LEFT);
+            $model->save();
         });
     }
 
@@ -30,8 +31,4 @@ class Invoice extends Model
         return $this->belongsTo(Client::class);
     }
 
-    public function invoiceDetails(): HasMany
-    {
-        return $this->hasMany(InvoiceDetail::class, 'invoice_id');
-    }
 }

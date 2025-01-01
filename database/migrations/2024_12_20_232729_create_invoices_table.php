@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('invoices', function (Blueprint $table) {
             $table->id();
-            $table->string('number')->unique();
+            $table->string('number')->nullable();
             $table->foreignId('client_id')->constrained('clients')->onDelete('cascade');
             $this->CreatedUpdatedByRelationship($table);
             $table->softDeletes();
