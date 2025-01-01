@@ -32,7 +32,7 @@ class CreateTaskRequest extends FormRequest
             'clientId' => ['required'],
             'userId' => ['required'],
             'serviceCategoryId' => ['required'],
-            'connectionTypeId' => ['required'],
+            'connectionTypeId' => ['nullable'],
         ];
     }
 
