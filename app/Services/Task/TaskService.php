@@ -34,7 +34,7 @@ class TaskService{
             'service_category_id' => $taskData['serviceCategoryId'],
             'invoice_id' => $taskData['invoiceId']??null,
             'status' => TaskStatus::from($taskData['status'])->value,
-
+            'connection_type_id' => $taskData['connectionTypeId']??null
         ]);
 
         return $task;
@@ -60,6 +60,7 @@ class TaskService{
             'service_category_id' => $taskData['serviceCategoryId'],
             'invoice_id' => $taskData['invoiceId']??null,
             'status' => TaskStatus::from($taskData['status'])->value,
+            'connection_type_id' => $taskData['connectionTypeId']??null
         ]);
 
         $task->save();
