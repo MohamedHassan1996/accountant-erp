@@ -56,7 +56,8 @@ class TaskController extends Controller
             DB::commit();
 
             return response()->json([
-                'message' => __('messages.success.created')
+                'message' => __('messages.success.created'),
+                'data' => $createTaskRequest->validated()
             ], 200);
 
         } catch (\Exception $e) {
