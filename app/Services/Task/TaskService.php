@@ -5,6 +5,7 @@ namespace App\Services\Task;
 use App\Enums\Task\TaskStatus;
 use App\Filters\Task\FilterTask;
 use App\Filters\Task\FilterTaskDateBetween;
+use App\Filters\Task\FilterTaskStartEndDate;
 use App\Models\Task\Task;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -21,6 +22,7 @@ class TaskService{
             AllowedFilter::exact('serviceCategoryId', 'service_category_id'),
             AllowedFilter::exact('clientId', 'client_id'),
             AllowedFilter::custom('dateBetween', new FilterTaskDateBetween()),
+            AllowedFilter::custom('startEndDate', new FilterTaskStartEndDate()),
         ])
         ->get();
         return $tasks;
