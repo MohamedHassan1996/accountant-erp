@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Task;
 
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -28,7 +29,10 @@ class TaskResource extends JsonResource
             'latestTimeLogId' => $this->latest_time_log_id,
             'connectionTypeId' => $this->connection_type_id,
             'startDate' => $this->start_date??"",
-            'endDate' => $this->end_date??""
+            'endDate' => $this->end_date??"",
+            'startTime' => $this->timeLogs()?Carbon::parse($this->timeLogs()->latest()->first()->start_at)->format('d/m/Y H:i:s'):Carbon::now(),
+            'endTime' => $this->timeLogs()?Carbon::parse($this->timeLogs()->latest()->first()->end_at)->format('d/m/Y H:i:s'):Carbon::now(),
+
         ];
 
     }

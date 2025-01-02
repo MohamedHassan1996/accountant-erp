@@ -26,6 +26,8 @@ class AllTaskResource extends JsonResource
             'serviceCategoryName' => $this->serviceCategory->name,
             'totalHours' => $this->total_hours,
             'createdAt' => Carbon::parse($this->created_at)->format('d/m/Y'),
+            'startDate' => $this->start_date?Carbon::parse($this->start_at)->format('d/m/Y'):"",
+            'endDate' => $this->end_date?Carbon::parse($this->end_date)->format('d/m/Y'):"",
         ];
     }
 }
