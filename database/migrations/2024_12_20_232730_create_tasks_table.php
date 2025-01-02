@@ -25,6 +25,8 @@ return new class extends Migration
             $table->foreignId('service_category_id')->constrained('service_categories')->onDelete('cascade');
             $table->foreignId('invoice_id')->nullable()->constrained('invoices')->onDelete('cascade');
             $table->foreignId('connection_type_id')->nullable()->constrained('parameter_values')->onDelete('cascade');
+            $table->date('start_date')->nullable();
+            $table->date('end_date')->nullable();
             $this->CreatedUpdatedByRelationship($table);
             $table->softDeletes();
             $table->timestamps();

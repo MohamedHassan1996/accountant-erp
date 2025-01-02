@@ -26,7 +26,9 @@ class Task extends Model
         'user_id',
         'service_category_id',
         'invoice_id',
-        'connection_type_id'
+        'connection_type_id',
+        'start_date',
+        'end_date'
     ];
 
     protected $casts = [
