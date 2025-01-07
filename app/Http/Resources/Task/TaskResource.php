@@ -30,7 +30,7 @@ class TaskResource extends JsonResource
             'connectionTypeId' => $this->connection_type_id,
             'startDate' => $this->start_date??"",
             'endDate' => $this->end_date??"",
-            'startTime' => count($this->timeLogs)?Carbon::parse($this->timeLogs()->latest()->first()->start_at)->format(format: 'd/m/Y H:i:s'):Carbon::now()->format('d/m/Y H:i:s'),
+            'startTime' => count($this->timeLogs)?Carbon::parse($this->timeLogs()->first()->start_at)->format(format: 'd/m/Y H:i:s'):Carbon::now()->format('d/m/Y H:i:s'),
             'endTime' => count($this->timeLogs)?Carbon::parse($this->timeLogs()->latest()->first()->end_at)->format('d/m/Y H:i:s'):Carbon::now()->format('d/m/Y H:i:s'),
 
         ];
