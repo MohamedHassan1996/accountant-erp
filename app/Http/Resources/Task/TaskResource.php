@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Resources\Task;
+namespace App\Http\Resources\Task\TaskResource;
 
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -15,6 +15,7 @@ class TaskResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $latestLog = $this->timeLogs()->latest()->first();
         return [
             'taskId' => $this->id,
             'title' => $this->title,
@@ -31,7 +32,8 @@ class TaskResource extends JsonResource
             'startDate' => $this->start_date??"",
             'endDate' => $this->end_date??"",
             'startTime' => count($this->timeLogs)?Carbon::parse($this->timeLogs()->first()->start_at)->format(format: 'd/m/Y H:i:s'):Carbon::now()->format('d/m/Y H:i:s'),
-            'endTime' => count($this->timeLogs)?Carbon::parse($this->timeLogs()->latest()->first()->end_at)->format('d/m/Y H:i:s'):Carbon::now()->format('d/m/Y H:i:s'),
+            // 'endTime' => count($this->timeLogs)?Carbon::parse($this->timeLogs()->latest()->first()->end_at)->format(format:'d/m/Y H:i:s'):Carbon::now()->format('d/m/Y H:i:s'),
+            'endTime' => $latestLog && $latestLog->end_at ? Carbon::parse($latestLog->end_at)->format('d/m/Y H:i:s') : "",
 
         ];
 

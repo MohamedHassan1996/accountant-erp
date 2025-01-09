@@ -1,23 +1,24 @@
 <?php
 
-use App\Http\Controllers\Api\Private\Client\ClientAddressController;
-use App\Http\Controllers\Api\Private\Client\ClientContactController;
-use App\Http\Controllers\Api\Private\Client\ClientController;
-use App\Http\Controllers\Api\Private\Client\ClientServiceCategoryDiscountController;
-use App\Http\Controllers\Api\Private\Invoice\InvoiceController;
-use App\Http\Controllers\Api\Private\Parameter\ParameterController;
-use App\Http\Controllers\Api\Private\Parameter\ParameterValueController;
-use App\Http\Controllers\Api\Private\Select\SelectController;
-use App\Http\Controllers\Api\Private\ServiceCategory\ServiceCategoryController;
-use App\Http\Controllers\Api\Private\Task\ActiveTaskController;
-use App\Http\Controllers\Api\Private\Task\AdminTaskController;
-use App\Http\Controllers\Api\Private\Task\TaskController;
-use App\Http\Controllers\Api\Private\Task\TaskTimeLogController;
-use App\Http\Controllers\Api\Private\User\UserController;
-use App\Http\Controllers\Api\Public\Auth\AuthController;
-use App\Models\Parameter\ParameterValue;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Models\Parameter\ParameterValue;
+use App\Http\Controllers\Api\Public\Auth\AuthController;
+use App\Http\Controllers\Api\Private\Task\TaskController;
+use App\Http\Controllers\Api\Private\User\UserController;
+use App\Http\Controllers\Api\Private\Client\ClientController;
+use App\Http\Controllers\Api\Private\Select\SelectController;
+use App\Http\Controllers\Api\Private\Reports\ReportController;
+use App\Http\Controllers\Api\Private\Task\AdminTaskController;
+use App\Http\Controllers\Api\Private\Invoice\InvoiceController;
+use App\Http\Controllers\Api\Private\Task\ActiveTaskController;
+use App\Http\Controllers\Api\Private\Task\TaskTimeLogController;
+use App\Http\Controllers\Api\Private\Parameter\ParameterController;
+use App\Http\Controllers\Api\Private\Client\ClientAddressController;
+use App\Http\Controllers\Api\Private\Client\ClientContactController;
+use App\Http\Controllers\Api\Private\Parameter\ParameterValueController;
+use App\Http\Controllers\Api\Private\ServiceCategory\ServiceCategoryController;
+use App\Http\Controllers\Api\Private\Client\ClientServiceCategoryDiscountController;
 
 /*
 |--------------------------------------------------------------------------
@@ -122,7 +123,9 @@ Route::prefix('v1/parameters')->group(function(){
     Route::put('update', [ParameterValueController::class, 'update']);
     Route::delete('delete', [ParameterValueController::class, 'delete']);
 });
-
+Route::prefix('v1/reports')->group(function(){
+Route::get('', ReportController::class);
+});
 Route::prefix('v1/selects')->group(function(){
     Route::get('', [SelectController::class, 'getSelects']);
 });
