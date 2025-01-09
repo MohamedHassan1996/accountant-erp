@@ -13,20 +13,20 @@ class ReportService
      public function reports()
     {
         $clients=DB::table('clients')->count();
-        $Invoiced =Task::whereNotNull('invoice_id')->count();
-        $NotInvoiced =Task::where('invoice_id',null)->count();
-        $Towork =Task::where('status',TaskStatus::TO_WORK)->count();
-        $Inprogress =Task::where('status',TaskStatus::IN_PROGRESS)->count();
-        $done =Task::where('status',TaskStatus::DONE)->count();
+        $invoiced =Task::whereNotNull('invoice_id')->count();
+        $notInvoiced =Task::where('invoice_id',null)->count();
+        $toWork =Task::where('status',TaskStatus::TO_WORK->value)->count();
+        $inProgress =Task::where('status',TaskStatus::IN_PROGRESS->value)->count();
+        $done =Task::where('status',TaskStatus::DONE->value)->count();
         return response()->json([
             "clients"=>$clients,
             "invoices"=>[
-                "invoiced"=>$Invoiced,
-                "notInvoiced"=>$NotInvoiced
+                "invoiced"=>$invoiced,
+                "notInvoiced"=>$notInvoiced
             ],
             "tasks"=>[
-                "toWork"=>$Towork,
-                "inProgress"=>$Inprogress,
+                "toWork"=>$toWork,
+                "inProgress"=>$inProgress,
                 "done"=>$done,
             ]
           ],200);
