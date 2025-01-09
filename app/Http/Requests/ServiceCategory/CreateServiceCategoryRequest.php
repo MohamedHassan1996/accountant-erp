@@ -28,7 +28,7 @@ class CreateServiceCategoryRequest extends FormRequest
     {
         return [
             'name' => ['required', 'unique:service_categories,name'],
-            'description' => 'required',
+            'description' => 'nullable|string',
             'addToInvoice' => ['required', new Enum(ServiceCategoryAddToInvoiceStatus::class)],
             'price' => 'required',
         ];
