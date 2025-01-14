@@ -32,12 +32,12 @@ class ClientService{
             'email' => $clientData['email']??"",
             'hours_per_month' => $clientData['hoursPerMonth']??0,
             'price' => $clientData['price'],
-            'payment_type_id'=>$clientData['payment_type_id']??"" ,
-            'pay_steps_id'=>$clientData['pay_steps_id']??"",
-            'payment_type_two_id'=>$clientData['payment_type_two_id']??"",
-            'iban'=>$clientData['iban']??"",
-            'abi'=>$clientData['abi']??"",
-            'cab'=>$clientData['cab']??""
+            'payment_type_id'=>$clientData['payment_type_id'] ,
+            'pay_steps_id'=>$clientData['pay_steps_id'],
+            'payment_type_two_id'=>$clientData['payment_type_two_id'],
+            'iban'=>$clientData['iban'],
+            'abi'=>$clientData['abi'],
+            'cab'=>$clientData['cab']
         ]);
 
         return $client;
