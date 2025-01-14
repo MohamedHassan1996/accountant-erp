@@ -18,6 +18,8 @@ class ParameterSeeder extends Seeder
         'addressType',
         'contactType',
         'ticketConnectionType',
+        'paymentType',
+        'paySteps'
     ];
 
     /**

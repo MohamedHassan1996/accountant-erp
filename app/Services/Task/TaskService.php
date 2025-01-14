@@ -2,13 +2,15 @@
 
 namespace App\Services\Task;
 
+use App\Models\Task\Task;
 use App\Enums\Task\TaskStatus;
 use App\Filters\Task\FilterTask;
+use Spatie\QueryBuilder\QueryBuilder;
+use Spatie\QueryBuilder\AllowedFilter;
 use App\Filters\Task\FilterTaskDateBetween;
 use App\Filters\Task\FilterTaskStartEndDate;
-use App\Models\Task\Task;
-use Spatie\QueryBuilder\AllowedFilter;
-use Spatie\QueryBuilder\QueryBuilder;
+use App\Models\Client\ClientServiceDiscount;
+use App\Models\ServiceCategory\ServiceCategory;
 
 class TaskService{
 
@@ -30,7 +32,6 @@ class TaskService{
     }
 
     public function createTask(array $taskData){
-
         $task = Task::create([
             'title' => $taskData['title']??"",
             'description' => $taskData['description']??"",
@@ -41,7 +42,7 @@ class TaskService{
             'status' => TaskStatus::from($taskData['status'])->value,
             'connection_type_id' => $taskData['connectionTypeId']??null,
             'start_date' => $taskData['startDate']??null,
-            'end_date' => $taskData['endDate']??null
+            'end_date' => $taskData['endDate']??null,
         ]);
 
         return $task;

@@ -26,8 +26,15 @@ class ClientResource extends JsonResource
             'email' => $this->email??"",
             'price' => $this->price??0,
             'hoursPerMonth' => $this->hours_per_month??0,
+            'payment_type_id' => $this->payment_type_id??"" ,
+            'pay_steps_id'=> $this->pay_steps_id??"",
+            'payment_type_two_id'=> $this->payment_type_two_id??"",
+            'iban' => $this->iban??"",
+            'abi'=> $this->abi??"",
+            'cab' => $this->cab??"",
             'addresses' => AllClientAddressResource::collection($this->whenLoaded('addresses')),
             'contacts' => AllClientContactResource::collection($this->whenLoaded('contacts')),
+
         ];
     }
 }

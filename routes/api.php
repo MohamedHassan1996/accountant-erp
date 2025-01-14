@@ -78,6 +78,7 @@ Route::prefix('v1/service-categories')->group(function(){
 });
 
 Route::prefix('v1/client-service-discounts')->group(function(){
+    Route::post('changeShow', [ClientServiceCategoryDiscountController::class, 'changeShow']);
     Route::get('', [ClientServiceCategoryDiscountController::class, 'index']);
     Route::post('create', [ClientServiceCategoryDiscountController::class, 'create']);
     Route::get('edit', [ClientServiceCategoryDiscountController::class, 'edit']);

@@ -4,6 +4,7 @@ namespace App\Services\Client;
 
 use App\Enums\Client\ClientServiceDiscountStatus;
 use App\Enums\Client\ClientServiceDiscountType;
+use App\Enums\Client\ClientShowStatus;
 use App\Filters\ClientServiceDiscount\FilterClientServiceDiscount;
 use App\Models\Client\ClientServiceDiscount;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -34,6 +35,7 @@ class ClientServiceDiscountService{
             'discount' => $clientServiceDiscountData['discount'],
             'type' => ClientServiceDiscountType::from($clientServiceDiscountData['type'])->value,
             'is_active' => ClientServiceDiscountStatus::from($clientServiceDiscountData['isActive'])->value,
+            'is_show'=>ClientShowStatus::from($clientServiceDiscountData['isShow'])->value,
             'client_id' => $clientServiceDiscountData['clientId'],
         ]);
 
@@ -51,12 +53,17 @@ class ClientServiceDiscountService{
     public function updateClientServiceDiscount(array $clientServiceDiscountData){
 
         $clientServiceDiscount = ClientServiceDiscount::find($clientServiceDiscountData['clientServiceDiscountId']);
-
+        // $clientServiceDiscount->service_category_id = $clientServiceDiscountData['serviceCategoryId'];
+        // $clientServiceDiscount->discount =  $clientServiceDiscountData['discount'];
+        // $clientServiceDiscount->type = ClientServiceDiscountType::from($clientServiceDiscountData['type'])->value;
+        // $clientServiceDiscount->is_active =  ClientServiceDiscountStatus::from($clientServiceDiscountData['isActive'])->value;
+        // $clientServiceDiscount->is_show = ClientShowStatus::from($clientServiceDiscountData['isShow'])->value;
         $clientServiceDiscount->fill([
             'service_category_id' => $clientServiceDiscountData['serviceCategoryId'],
             'discount' => $clientServiceDiscountData['discount'],
             'type' => ClientServiceDiscountType::from($clientServiceDiscountData['type'])->value,
             'is_active' => ClientServiceDiscountStatus::from($clientServiceDiscountData['isActive'])->value,
+            'is_show'=>ClientShowStatus::from($clientServiceDiscountData['isShow'])->value
         ]);
 
         $clientServiceDiscount->save();
@@ -68,6 +75,10 @@ class ClientServiceDiscountService{
     public function deleteClientServiceDiscount(string $clientServiceDiscountId){
         $clientServiceDiscount = ClientServiceDiscount::find($clientServiceDiscountId);
         $clientServiceDiscount->delete();
+    }
+    public function changeShow(int $ClientDiscountId, int $isShow)
+    {
+        return ClientServiceDiscount::where('id', $ClientDiscountId)->update(['status' => ClientServiceDiscount::from($isShow)->value]);
     }
 
 }

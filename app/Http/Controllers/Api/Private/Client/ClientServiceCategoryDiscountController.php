@@ -121,5 +121,22 @@ class ClientServiceCategoryDiscountController extends Controller
 
 
     }
+    public function changeShow(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+            //($request->ClientDiscountId, $request->isShow)
+            $this->clientServiceDiscountService->changeShow($request->ClientDiscountId, $request->isShow);
+            DB::commit();
+            return response()->json([
+                'message' => 'تم تغيير حالة المستخدم!'
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+
+    }
 
 }

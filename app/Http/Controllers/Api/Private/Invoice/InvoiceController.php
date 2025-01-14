@@ -58,6 +58,8 @@ class InvoiceController extends Controller
                 'tasks.id as taskId',
                 'tasks.status as taskStatus',
                 'tasks.title as taskTitle',
+                'tasks.price as taskPrice',
+                'tasks.price_after_discount as taskPriceAfterDiscount',
                 'tasks.number as taskNumber',
                 'tasks.invoice_id as invoiceId',
                 'service_categories.id as serviceCategoryId',
@@ -112,8 +114,8 @@ class InvoiceController extends Controller
                 'taskNumber' => $invoice->taskNumber,
                 'serviceCategoryName' => $invoice->serviceCategoryName,
                 'taskStatus' => $invoice->taskStatus,
-                'price' => $servicePrice,
-                'priceAfterDiscount' => $servicePriceAfterDiscount
+                'price' =>$invoice->taskPrice ?? $servicePrice,
+                'priceAfterDiscount' =>$invoice->taskPriceAfterDiscount??$servicePriceAfterDiscount
             ];
         }
 
@@ -131,16 +133,30 @@ class InvoiceController extends Controller
 
     public function create(Request $createTaskRequest)
     {
-
+        // 'price'=>$service->price,
+        // 'price_after_discount' => $service->price * (1 - $serviceDiscount->discount / 100)
+        // $service =ServiceCategory::find($taskData['serviceCategoryId']);
+        // $serviceDiscount=ClientServiceDiscount::where('service_category_id',$taskData['serviceCategoryId'])->first();
         try {
             DB::beginTransaction();
 
             $invoice = Invoice::create([
                 'client_id' => $createTaskRequest->clientId,
             ]);
-
-            Task::whereIn('id', $createTaskRequest->taskIds)
-            ->update(['invoice_id' => $invoice->id]);
+            $clientDiscount=  ClientServiceDiscount::where('client_id',$createTaskRequest->clientId)->first();
+            foreach ($createTaskRequest->taskIds as  $taskId) {
+                $task = Task::findOrFail($taskId);
+                $servicePrice = $task->serviceCategory->price;
+                $serviceDiscount =  $clientDiscount ? $clientDiscount->discount : 0;
+                $price_after_discount = ($serviceDiscount > 0) ? $servicePrice * (1 - $serviceDiscount / 100) : $servicePrice;
+                $task->update([
+                    "price"=>$servicePrice,
+                    "price_after_discount"=>$price_after_discount,
+                    'invoice_id' => $invoice->id
+                ]);
+            }
+            // Task::whereIn('id', $createTaskRequest->taskIds)
+            // ->update(['invoice_id' => $invoice->id]);
 
             DB::commit();
 
