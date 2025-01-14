@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\Private\Client\ClientContactController;
 use App\Http\Controllers\Api\Private\Parameter\ParameterValueController;
 use App\Http\Controllers\Api\Private\ServiceCategory\ServiceCategoryController;
 use App\Http\Controllers\Api\Private\Client\ClientServiceCategoryDiscountController;
+use App\Http\Controllers\ImportClientController;
 
 /*
 |--------------------------------------------------------------------------
@@ -129,4 +130,8 @@ Route::get('', ReportController::class);
 });
 Route::prefix('v1/selects')->group(function(){
     Route::get('', [SelectController::class, 'getSelects']);
+});
+
+Route::prefix('v1/import-clients')->group(function(){
+    Route::post('', [ImportClientController::class, 'index']);
 });
