@@ -53,11 +53,9 @@ class ClientServiceDiscountService{
     public function updateClientServiceDiscount(array $clientServiceDiscountData){
 
         $clientServiceDiscount = ClientServiceDiscount::find($clientServiceDiscountData['clientServiceDiscountId']);
-        // $clientServiceDiscount->service_category_id = $clientServiceDiscountData['serviceCategoryId'];
-        // $clientServiceDiscount->discount =  $clientServiceDiscountData['discount'];
-        // $clientServiceDiscount->type = ClientServiceDiscountType::from($clientServiceDiscountData['type'])->value;
-        // $clientServiceDiscount->is_active =  ClientServiceDiscountStatus::from($clientServiceDiscountData['isActive'])->value;
-        // $clientServiceDiscount->is_show = ClientShowStatus::from($clientServiceDiscountData['isShow'])->value;
+        if ($clientServiceDiscount === null) {
+            throw new \Exception("ClientServiceDiscount not found for ID: " . $clientServiceDiscountData['clientServiceDiscountId']);
+        } 
         $clientServiceDiscount->fill([
             'service_category_id' => $clientServiceDiscountData['serviceCategoryId'],
             'discount' => $clientServiceDiscountData['discount'],
