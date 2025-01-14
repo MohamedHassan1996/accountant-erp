@@ -21,6 +21,7 @@ class AllClientServiceDiscountResource extends JsonResource
             'discount' => $this->discount,
             'type' => $this->type,
             'isActive' => $this->is_active,
+            'isShow' => $this->is_show,
         ];
     }
 }

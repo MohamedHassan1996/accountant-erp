@@ -35,6 +35,12 @@ class CreateClientRequest extends FormRequest
             'price' => ['nullable'],
             'addresses' => ['nullable'],
             'contacts' => ['nullable'],
+            'payment_type_id' => ['nullable'] ,
+            'pay_steps_id' => ['nullable'],
+            'payment_type_two_id' => ['nullable'],
+            'iban' => ['nullable'],
+            'abi' => ['nullable'],
+            'cab' => ['nullable']
         ];
     }
 

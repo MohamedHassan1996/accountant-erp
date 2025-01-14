@@ -14,8 +14,15 @@ return new class extends Migration
      */
     public function up(): void
     {
+        //payment_type_id , pay_steps_id, payment_type_two_id, iban, abi, cab
         Schema::create('clients', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('payment_type_id')->nullable()->constrained('parameter_values')->onDelete('cascade');
+            $table->foreignId('pay_steps_id')->nullable()->constrained('parameter_values')->onDelete('cascade');
+            $table->foreignId('payment_type_two_id')->nullable()->constrained('parameter_values')->onDelete('cascade');
+            $table->string('iban')->nullable();
+            $table->string('abi')->nullable();
+            $table->string('cab')->nullable();
             $table->string('iva', 60)->nullable();
             $table->string('ragione_sociale')->nullable();
             $table->string('cf', 60)->nullable();

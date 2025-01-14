@@ -27,6 +27,8 @@ return new class extends Migration
             $table->foreignId('connection_type_id')->nullable()->constrained('parameter_values')->onDelete('cascade');
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
+            $table->decimal('price',8, 2)->nullable();
+            $table->decimal('price_after_discount',8, 2)->nullable();
             $this->CreatedUpdatedByRelationship($table);
             $table->softDeletes();
             $table->timestamps();

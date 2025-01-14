@@ -31,6 +31,8 @@ class TaskResource extends JsonResource
             'connectionTypeId' => $this->connection_type_id,
             'startDate' => $this->start_date??"",
             'endDate' => $this->end_date??"",
+            // "Price"  => $this->price ??"",
+            // "priceAfterDiscount" => $this->price_after_discount ??"",
             'startTime' => count($this->timeLogs)?Carbon::parse($this->timeLogs()->first()->start_at)->format(format: 'd/m/Y H:i:s'):Carbon::now()->format('d/m/Y H:i:s'),
             // 'endTime' => count($this->timeLogs)?Carbon::parse($this->timeLogs()->latest()->first()->end_at)->format(format:'d/m/Y H:i:s'):Carbon::now()->format('d/m/Y H:i:s'),
             'endTime' => $latestLog && $latestLog->end_at ? Carbon::parse($latestLog->end_at)->format('d/m/Y H:i:s') : "",

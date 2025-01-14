@@ -2,12 +2,13 @@
 
 namespace App\Http\Requests\Client\ClinetServiceDiscount;
 
-use App\Enums\Client\ClientServiceDiscountStatus;
-use App\Enums\Client\ClientServiceDiscountType;
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\Exceptions\HttpResponseException;
-use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Validation\Rules\Enum;
+use App\Enums\Client\ClientShowStatus;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Contracts\Validation\Validator;
+use App\Enums\Client\ClientServiceDiscountType;
+use App\Enums\Client\ClientServiceDiscountStatus;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class UpdateClientServiceDiscountRequest extends FormRequest
 {
@@ -32,6 +33,7 @@ class UpdateClientServiceDiscountRequest extends FormRequest
             'discount' => ['required'],
             'type' => ['required', new Enum(ClientServiceDiscountType::class)],
             'isActive' => ['required', new Enum(ClientServiceDiscountStatus::class)],
+            'isShow' => ['nullable', new Enum(ClientShowStatus::class)]
         ];
     }
 

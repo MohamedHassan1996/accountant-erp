@@ -25,6 +25,12 @@ class Client extends Model
         'note',
         'price',
         'hours_per_month',
+        'payment_type_id' ,
+        'pay_steps_id',
+        'payment_type_two_id',
+        'iban',
+        'abi',
+        'cab'
     ];
 
     public function addresses()
