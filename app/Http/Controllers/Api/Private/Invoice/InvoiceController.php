@@ -67,6 +67,7 @@ class InvoiceController extends Controller
                 'service_categories.price as serviceCategoryPrice',
                 'service_categories.add_to_invoice as serviceCategoryAddToInvoice'
             ])
+            ->whereNull('tasks.deleted_at')
             ->get();
 
         // Format the data
