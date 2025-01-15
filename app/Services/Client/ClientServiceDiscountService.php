@@ -23,6 +23,9 @@ class ClientServiceDiscountService{
             $filters['clientId'] ?? null,
             fn ($query) => $query->where('client_id', $filters['clientId'])
         )
+        ->with([
+            'serviceCategory'
+        ])
         ->get();
         return $clientServiceDiscountes;
 
@@ -55,7 +58,7 @@ class ClientServiceDiscountService{
         $clientServiceDiscount = ClientServiceDiscount::find($clientServiceDiscountData['clientServiceDiscountId']);
         if ($clientServiceDiscount === null) {
             throw new \Exception("ClientServiceDiscount not found for ID: " . $clientServiceDiscountData['clientServiceDiscountId']);
-        } 
+        }
         $clientServiceDiscount->fill([
             'service_category_id' => $clientServiceDiscountData['serviceCategoryId'],
             'discount' => $clientServiceDiscountData['discount'],

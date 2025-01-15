@@ -9,6 +9,7 @@ use App\Models\ServiceCategory\ServiceCategory;
 use App\Traits\CreatedUpdatedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -30,8 +31,8 @@ class ClientServiceDiscount extends Model
         'is_show'=>ClientShowStatus::class
     ];
 
-    public function serviceCategory() : BelongsToMany
+    public function serviceCategory() : BelongsTo
     {
-        return $this->belongsToMany(ServiceCategory::class, 'client_service_discounts', 'client_id', 'service_category_id');
+        return $this->belongsTo(ServiceCategory::class);
     }
 }
