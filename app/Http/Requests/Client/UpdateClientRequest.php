@@ -33,9 +33,9 @@ class UpdateClientRequest extends FormRequest
             'email' => ['nullable'],
             'hoursPerMonth' => ['nullable'],
             'price' => ['nullable'],
-            'payment_type_id' => ['nullable'] ,
-            'pay_steps_id' => ['nullable'],
-            'payment_type_two_id' => ['nullable'],
+            'paymentTypeId' => ['nullable'] ,
+            'payStepsId' => ['nullable'],
+            'paymentTypeTwoId' => ['nullable'],
             'iban' => ['nullable'],
             'abi' => ['nullable'],
             'cab' => ['nullable']
