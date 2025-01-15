@@ -22,7 +22,7 @@ class ClientContact extends Model
         'prefix',
         'note',
         'client_id',
-        'parameter_id'
+        'parameter_value_id'
     ];
 
     public function parameter(): BelongsTo
