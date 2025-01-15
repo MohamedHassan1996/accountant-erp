@@ -32,6 +32,6 @@ class ClientServiceDiscount extends Model
 
     public function serviceCategory() : BelongsToMany
     {
-        return $this->belongsToMany(ServiceCategory::class, 'service_category_id');
+        return $this->belongsToMany(ServiceCategory::class, 'client_service_discounts', 'client_id', 'service_category_id');
     }
 }
