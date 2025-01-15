@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Resources\Task\TaskResource;
+namespace App\Http\Resources\Task;
 
 use Carbon\Carbon;
 use Illuminate\Http\Request;
