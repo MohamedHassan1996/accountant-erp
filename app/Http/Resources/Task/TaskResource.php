@@ -23,6 +23,7 @@ class TaskResource extends JsonResource
             'status' => $this->status,
             'userId' => $this->user_id,
             'clientId' => $this->client_id,
+            'description' => $this->description??"",
             'serviceCategoryId' => $this->service_category_id,
             'invoiceId' => $this->invoice_id??"",
             'timeLogStatus' => $this->timeLogStatus,

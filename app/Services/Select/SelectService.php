@@ -3,9 +3,6 @@
 
 namespace App\Services\Select;
 
-use App\Services\Select\Company\BranchSelectService;
-use App\Services\Select\Company\CompanySelectService;
-use App\Services\Select\Company\CustomerSelectService;
 use App\Services\Select\Parameter\ParameterSelectService;
 
 class SelectService
