@@ -26,6 +26,7 @@ class TaskService{
             AllowedFilter::custom('dateBetween', new FilterTaskDateBetween()),
             AllowedFilter::custom('startEndDate', new FilterTaskStartEndDate()),
         ])
+        ->orderBy('id', 'desc')
         ->get();
         return $tasks;
 
@@ -50,8 +51,9 @@ class TaskService{
     }
 
     public function editTask(string $taskId){
-        $task = Task::find($taskId);
-
+        $task = Task::with('timeLogs')->find($taskId);
+        // $startTask= $task->timeLogs->start_at ;
+        // $endTask=$task->timeLogs->end_at;
         return $task;
 
     }
@@ -83,7 +85,6 @@ class TaskService{
         $task = Task::find($taskId);
         $task->delete();
     }
-
     public function changeStatus(string $taskId, int $status){
         $task = Task::find($taskId);
         $task->update([

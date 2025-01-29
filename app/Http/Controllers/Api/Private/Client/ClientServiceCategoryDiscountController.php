@@ -50,8 +50,6 @@ class ClientServiceCategoryDiscountController extends Controller
 
             $data = $createClientServiceDiscountRequest->validated();
             $clientContact = $this->clientServiceDiscountService->createClientServiceDiscount($data);
-
-
             DB::commit();
 
             return response()->json([

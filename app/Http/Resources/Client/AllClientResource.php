@@ -26,6 +26,8 @@ class AllClientResource extends JsonResource
             'payment_type_id' => $this->payment_type_id??"" ,
             'pay_steps_id'=> $this->pay_steps_id??"",
             'payment_type_two_id'=> $this->payment_type_two_id??"",
+            'addable_to_bulck_invoice'=>$this->addable_to_bulck_invoice,
+            'allowed_days_to_pay'=>$this->allowed_days_to_pay??"",
             'iban' => $this->iban??"",
             'abi'=> $this->abi??"",
             'cab' => $this->cab??""

@@ -19,7 +19,8 @@ class ClientServiceDiscount extends Model
         'discount',
         'is_active',
         'type',
-        'is_show'
+        'is_show',
+        'category'
     ];
 
     protected $casts = [

@@ -31,6 +31,7 @@ class CreateServiceCategoryRequest extends FormRequest
             'description' => 'nullable|string',
             'addToInvoice' => ['required', new Enum(ServiceCategoryAddToInvoiceStatus::class)],
             'price' => 'required',
+            'ServiceTypeId'=>'nullable'
         ];
     }
 

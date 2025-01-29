@@ -2,7 +2,9 @@
 
 namespace App\Http\Resources\Task;
 
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
 class AllTaskCollection extends ResourceCollection
@@ -33,10 +35,13 @@ class AllTaskCollection extends ResourceCollection
 
     public function toArray(Request $request): array
     {
-
+        $hours=floor(DB::table('task_time_logs')->sum('total_time')/60);
+        $minutes=DB::table('task_time_logs')->sum('total_time')%60;
+        $taskTimeLogs=sprintf('%d:%02d', $hours, $minutes);
         return [
             "result" => [
                 'tasks' => AllTaskResource::collection(($this->collection)->values()->all()),
+                "totalHours"=>$taskTimeLogs
             ],
             'pagination' => $this->pagination
         ];

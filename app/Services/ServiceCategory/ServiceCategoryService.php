@@ -26,6 +26,7 @@ class ServiceCategoryService{
         $serviceCategory = ServiceCategory::create([
             'name' => $serviceCategoryData['name'],
             'description' => $serviceCategoryData['description'],
+            'service_type_id'=>$serviceCategoryData['ServiceTypeId']??null,
             'add_to_invoice' => ServiceCategoryAddToInvoiceStatus::from($serviceCategoryData['addToInvoice']),
             'price' => $serviceCategoryData['price'],
         ]);
@@ -48,6 +49,7 @@ class ServiceCategoryService{
         $serviceCategory->fill([
             'name' => $serviceCategoryData['name'],
             'description' => $serviceCategoryData['description'],
+            'service_type_id'=>$serviceCategoryData['ServiceTypeId']??null,
             'add_to_invoice' => ServiceCategoryAddToInvoiceStatus::from($serviceCategoryData['addToInvoice']),
             'price' => $serviceCategoryData['price'],
         ]);

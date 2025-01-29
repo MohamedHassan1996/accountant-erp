@@ -2,6 +2,7 @@
 
 namespace App\Services\Client;
 
+use App\Enums\Client\ClientCategory;
 use App\Enums\Client\ClientServiceDiscountStatus;
 use App\Enums\Client\ClientServiceDiscountType;
 use App\Enums\Client\ClientShowStatus;
@@ -33,6 +34,7 @@ class ClientServiceDiscountService{
         $clientServiceDiscount = ClientServiceDiscount::create([
             'service_category_id' => $clientServiceDiscountData['serviceCategoryId'],
             'discount' => $clientServiceDiscountData['discount'],
+            'category' => ClientCategory::from($clientServiceDiscountData['category']),
             'type' => ClientServiceDiscountType::from($clientServiceDiscountData['type'])->value,
             'is_active' => ClientServiceDiscountStatus::from($clientServiceDiscountData['isActive'])->value,
             'is_show'=>ClientShowStatus::from($clientServiceDiscountData['isShow'])->value,
@@ -55,10 +57,11 @@ class ClientServiceDiscountService{
         $clientServiceDiscount = ClientServiceDiscount::find($clientServiceDiscountData['clientServiceDiscountId']);
         if ($clientServiceDiscount === null) {
             throw new \Exception("ClientServiceDiscount not found for ID: " . $clientServiceDiscountData['clientServiceDiscountId']);
-        } 
+        }
         $clientServiceDiscount->fill([
             'service_category_id' => $clientServiceDiscountData['serviceCategoryId'],
             'discount' => $clientServiceDiscountData['discount'],
+            'category' => ClientCategory::from($clientServiceDiscountData['category']),
             'type' => ClientServiceDiscountType::from($clientServiceDiscountData['type'])->value,
             'is_active' => ClientServiceDiscountStatus::from($clientServiceDiscountData['isActive'])->value,
             'is_show'=>ClientShowStatus::from($clientServiceDiscountData['isShow'])->value

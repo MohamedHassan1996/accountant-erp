@@ -15,7 +15,8 @@ class ServiceCategory extends Model
         'name',
         'description',
         'price',
-        'add_to_invoice'
+        'add_to_invoice',
+        'service_type_id'
     ];
 
     protected $casts = [
@@ -28,5 +29,9 @@ class ServiceCategory extends Model
             return 0;
         }
         return $this->price;
+    }
+    public function serviceType()
+    {
+      return $this->belongsTo(ParameterValue::class,'service_type_id');
     }
 }

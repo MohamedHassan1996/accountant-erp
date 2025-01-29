@@ -2,6 +2,7 @@
 
 namespace App\Services\Client;
 
+use App\Enums\Client\AddableToBulck;
 use App\Filters\Client\FilterClient;
 use App\Models\Client\Client;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -37,7 +38,9 @@ class ClientService{
             'payment_type_two_id'=>$clientData['payment_type_two_id'],
             'iban'=>$clientData['iban'],
             'abi'=>$clientData['abi'],
-            'cab'=>$clientData['cab']
+            'cab'=>$clientData['cab'],
+            'addable_to_bulck_invoice'=>AddableToBulck::from($clientData['AddableToBulckInvoice'])->value,
+            'allowed_days_to_pay'=>$clientData['AllowedDaysToPay']??"",
         ]);
 
         return $client;
@@ -69,7 +72,9 @@ class ClientService{
             'payment_type_two_id'=>$clientData['payment_type_two_id']??"",
             'iban'=>$clientData['iban']??"",
             'abi'=>$clientData['abi']??"",
-            'cab'=>$clientData['cab']??""
+            'cab'=>$clientData['cab']??"",
+            'addable_to_bulck_invoice'=>AddableToBulck::from($clientData['AddableToBulckInvoice'])->value,
+            'allowed_days_to_pay'=>$clientData['AllowedDaysToPay']??"",
         ]);
 
         $client->save();
