@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\Client;
 
-use App\Enums\Client\AddableToBulck;
+use App\Enums\Client\AddableToBulk;
 use Illuminate\Validation\Rules\Enum;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
@@ -37,11 +37,11 @@ class CreateClientRequest extends FormRequest
             'price' => ['nullable'],
             'addresses' => ['nullable'],
             'contacts' => ['nullable'],
-            'payment_type_id' => ['nullable'] ,
-            'pay_steps_id' => ['nullable'],
-            'payment_type_two_id' => ['nullable'],
-            'AddableToBulckInvoice'=>['nullable',new Enum(AddableToBulck::class) ],
-            'AllowedDaysToPay'=>['nullable'],
+            'paymentTypeId' => ['nullable'] ,
+            'payStepsId' => ['nullable'],
+            'paymentTypeTwoId' => ['nullable'],
+            'addableToBulkInvoice'=>['nullable',new Enum(AddableToBulk::class) ],
+            'allowedDaysToPay'=>['nullable'],
             'iban' => ['nullable'],
             'abi' => ['nullable'],
             'cab' => ['nullable']

@@ -2,7 +2,7 @@
 
 namespace App\Models\Client;
 
-use App\Enums\Client\AddableToBulck;
+use App\Enums\Client\AddableToBulk;
 use App\Enums\Client\ClientServiceDiscountStatus;
 use App\Enums\Client\ClientServiceDiscountType;
 use App\Enums\ServiceCategory\ServiceCategoryAddToInvoiceStatus;
@@ -32,11 +32,11 @@ class Client extends Model
         'iban',
         'abi',
         'cab',
-        'addable_to_bulck_invoice',
+        'addable_to_bulk_invoice',
         'allowed_days_to_pay'
     ];
     protected $casts = [
-        'addable_to_bulck_invoice' => AddableToBulck::class
+        'addable_to_bulk_invoice' => AddableToBulk::class
     ];
     public function addresses()
     {

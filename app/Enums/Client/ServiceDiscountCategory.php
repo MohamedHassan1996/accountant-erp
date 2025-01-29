@@ -1,6 +1,6 @@
 <?php
 namespace App\Enums\Client;
-enum ClientCategory:int{
+enum ServiceDiscountCategory:int{
     case DISCOUNT=0;
     case TAX=1;
 
