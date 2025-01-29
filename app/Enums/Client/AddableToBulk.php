@@ -1,6 +1,6 @@
 <?php
 namespace App\Enums\Client;
- enum AddableToBulck: int{
+ enum AddableToBulk: int{
 
     case ADDABLE = 1;
     case NOTADDABLE = 0;
