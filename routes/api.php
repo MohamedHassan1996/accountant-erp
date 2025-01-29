@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\Private\Parameter\ParameterValueController;
 use App\Http\Controllers\Api\Private\ServiceCategory\ServiceCategoryController;
 use App\Http\Controllers\Api\Private\Client\ClientServiceCategoryDiscountController;
 use App\Http\Controllers\ImportClientController;
+use App\Http\Controllers\ImportServiceCategoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -135,3 +136,8 @@ Route::prefix('v1/selects')->group(function(){
 Route::prefix('v1/import-clients')->group(function(){
     Route::post('', [ImportClientController::class, 'index']);
 });
+
+Route::prefix('v1/import-service-categories')->group(function(){
+    Route::post('', [ImportServiceCategoryController::class, 'index']);
+});
+
