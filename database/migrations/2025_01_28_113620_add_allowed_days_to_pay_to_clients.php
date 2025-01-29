@@ -13,7 +13,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('clients', function (Blueprint $table) {
-            $table->boolean('addable_to_bulck_invoice')->default(AddableToBulk::NOTADDABLE->value);
+            $table->boolean('addable_to_bulk_invoice')->default(AddableToBulk::NOTADDABLE->value);
             $table->smallInteger('allowed_days_to_pay')->nullable();
         });
     }
@@ -24,7 +24,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('clients', function (Blueprint $table) {
-            $table->dropColumn('addable_to_bulck_invoice');
+            $table->dropColumn('addable_to_bulk_invoice');
             $table->dropColumn('allowed_days_to_pay');
         });
     }
