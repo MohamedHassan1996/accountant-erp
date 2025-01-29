@@ -30,7 +30,7 @@ class ClientResource extends JsonResource
             'pay_steps_id'=> $this->pay_steps_id??"",
             'payment_type_two_id'=> $this->payment_type_two_id??"",
             'addableToBulkInvoice'=>$this->addable_to_bulk_invoice,
-            'allowedDaysToPay'=>$this->allowed_days_to_pay??"",
+            'allowedDaysToPay'=>$this->allowed_days_to_pay??0,
             'iban' => $this->iban??"",
             'abi'=> $this->abi??"",
             'cab' => $this->cab??"",
