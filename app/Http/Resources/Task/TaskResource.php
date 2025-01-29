@@ -23,8 +23,8 @@ class TaskResource extends JsonResource
             'status' => $this->status,
             'userId' => $this->user_id,
             'clientId' => $this->client_id,
-            'description' => $this->description??"",
             'serviceCategoryId' => $this->service_category_id,
+            'description' => $this->description??"",
             'invoiceId' => $this->invoice_id??"",
             'timeLogStatus' => $this->timeLogStatus,
             'currentTime' => $this->current_time,
@@ -32,6 +32,7 @@ class TaskResource extends JsonResource
             'connectionTypeId' => $this->connection_type_id,
             'startDate' => $this->start_date??"",
             'endDate' => $this->end_date??"",
+
             // "Price"  => $this->price ??"",
             // "priceAfterDiscount" => $this->price_after_discount ??"",
             'startTime' => count($this->timeLogs)?Carbon::parse($this->timeLogs()->first()->start_at)->format(format: 'd/m/Y H:i:s'):Carbon::now()->format('d/m/Y H:i:s'),

@@ -31,7 +31,8 @@ class UpdateServiceCategoryRequest extends FormRequest
             'name' => ['required', "unique:service_categories,name,{$this->serviceCategoryId}"],
             'description' => 'nullable|string',
             'addToInvoice' => ['required', new Enum(ServiceCategoryAddToInvoiceStatus::class)],
-            'price' => 'required'
+            'price' => 'required',
+            'ServiceTypeId'=>'nullable'
         ];
     }
 

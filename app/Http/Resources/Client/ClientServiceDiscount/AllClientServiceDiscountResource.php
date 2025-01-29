@@ -14,13 +14,16 @@ class AllClientServiceDiscountResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+
         return [
             'clientServiceDiscountId' => $this->id,
-            'serviceCategoryName' => $this->serviceCategory->name,
+            'serviceCategoryId' => $this->service_category_id,
             'discount' => $this->discount,
+            'category'=>$this->category,
             'type' => $this->type,
             'isActive' => $this->is_active,
             'isShow' => $this->is_show,
+
         ];
     }
 }

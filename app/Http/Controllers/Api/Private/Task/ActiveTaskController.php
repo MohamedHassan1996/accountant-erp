@@ -47,7 +47,6 @@ class ActiveTaskController extends Controller
             'clients.id as clientId',
             'clients.ragione_sociale as clientName',
         ])
-        ->whereNull('tasks.deleted_at')
         ->get();
 
         foreach ($tasks as $index => $task) {

@@ -2,6 +2,7 @@
 
 namespace App\Services\Client;
 
+use App\Enums\Client\ClientCategory;
 use App\Enums\Client\ClientServiceDiscountStatus;
 use App\Enums\Client\ClientServiceDiscountType;
 use App\Enums\Client\ClientShowStatus;
@@ -23,9 +24,6 @@ class ClientServiceDiscountService{
             $filters['clientId'] ?? null,
             fn ($query) => $query->where('client_id', $filters['clientId'])
         )
-        ->with([
-            'serviceCategory'
-        ])
         ->get();
         return $clientServiceDiscountes;
 
@@ -36,6 +34,7 @@ class ClientServiceDiscountService{
         $clientServiceDiscount = ClientServiceDiscount::create([
             'service_category_id' => $clientServiceDiscountData['serviceCategoryId'],
             'discount' => $clientServiceDiscountData['discount'],
+            'category' => ClientCategory::from($clientServiceDiscountData['category']),
             'type' => ClientServiceDiscountType::from($clientServiceDiscountData['type'])->value,
             'is_active' => ClientServiceDiscountStatus::from($clientServiceDiscountData['isActive'])->value,
             'is_show'=>ClientShowStatus::from($clientServiceDiscountData['isShow'])->value,
@@ -62,6 +61,7 @@ class ClientServiceDiscountService{
         $clientServiceDiscount->fill([
             'service_category_id' => $clientServiceDiscountData['serviceCategoryId'],
             'discount' => $clientServiceDiscountData['discount'],
+            'category' => ClientCategory::from($clientServiceDiscountData['category']),
             'type' => ClientServiceDiscountType::from($clientServiceDiscountData['type'])->value,
             'is_active' => ClientServiceDiscountStatus::from($clientServiceDiscountData['isActive'])->value,
             'is_show'=>ClientShowStatus::from($clientServiceDiscountData['isShow'])->value

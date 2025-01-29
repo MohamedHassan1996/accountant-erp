@@ -31,6 +31,7 @@ class CreateClientServiceDiscountRequest extends FormRequest
             'clientId' => ['required'],
             'serviceCategoryId' => ['required'],
             'discount' => ['required'],
+            'category' =>['nullable'],
             'type' => ['required', new Enum(ClientServiceDiscountType::class)],
             'isActive' => ['required', new Enum(ClientServiceDiscountStatus::class)],
             'isShow' => ['required', new Enum(ClientShowStatus::class)]

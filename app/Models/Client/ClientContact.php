@@ -22,10 +22,10 @@ class ClientContact extends Model
         'prefix',
         'note',
         'client_id',
-        'parameter_value_id'
+        'parameter_id'
     ];
 
-public function parameter(): BelongsTo
+    public function parameter(): BelongsTo
     {
         return $this->belongsTo(ParameterValue::class, 'parameter_value_id');
     }
