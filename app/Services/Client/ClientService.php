@@ -34,7 +34,7 @@ class ClientService{
             'email' => $clientData['email']??"",
             'hours_per_month' => $clientData['hoursPerMonth']??0,
             'price' => $clientData['price'],
-            'payment_type_id'=>$clientData['paymentTypeId'], ,
+            'payment_type_id'=>$clientData['paymentTypeId'],
             'pay_steps_id'=>$clientData['payStepsId'],
             'payment_type_two_id'=>$clientData['paymentTypeTwoId'],
             'iban'=>$clientData['iban'],
