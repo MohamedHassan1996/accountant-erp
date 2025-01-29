@@ -40,8 +40,8 @@ class ClientService{
             'iban'=>$clientData['iban'],
             'abi'=>$clientData['abi'],
             'cab'=>$clientData['cab'],
-            'addable_to_bulk_invoice'=>AddableToBulk::from($clientData['AddableToBulkInvoice'])->value,
-            'allowed_days_to_pay'=>$clientData['AllowedDaysToPay']??"",
+            'addable_to_bulk_invoice'=>AddableToBulk::from($clientData['addableToBulkInvoice'])->value,
+            'allowed_days_to_pay'=>$clientData['allowedDaysToPay']??"",
         ]);
 
         return $client;
@@ -74,8 +74,8 @@ class ClientService{
             'iban'=>$clientData['iban']??"",
             'abi'=>$clientData['abi']??"",
             'cab'=>$clientData['cab']??"",
-            'addable_to_bulk_invoice'=>AddableToBulk::from($clientData['AddableToBulkInvoice'])->value,
-            'allowed_days_to_pay'=>$clientData['AllowedDaysToPay']??"",
+            'addable_to_bulk_invoice'=>AddableToBulk::from($clientData['addableToBulkInvoice'])->value,
+            'allowed_days_to_pay'=>$clientData['allowedDaysToPay']??"",
         ]);
 
         $client->save();

@@ -26,9 +26,9 @@ class ClientResource extends JsonResource
             'email' => $this->email??"",
             'price' => $this->price??0,
             'hoursPerMonth' => $this->hours_per_month??0,
-            'payment_type_id' => $this->payment_type_id??"" ,
-            'pay_steps_id'=> $this->pay_steps_id??"",
-            'payment_type_two_id'=> $this->payment_type_two_id??"",
+            'paymentTypeId' => $this->payment_type_id??"" ,
+            'payStepsId'=> $this->pay_steps_id??"",
+            'paymentTypeTwoId'=> $this->payment_type_two_id??"",
             'addableToBulkInvoice'=>$this->addable_to_bulk_invoice,
             'allowedDaysToPay'=>$this->allowed_days_to_pay??0,
             'iban' => $this->iban??"",
@@ -36,7 +36,6 @@ class ClientResource extends JsonResource
             'cab' => $this->cab??"",
             'addresses' => AllClientAddressResource::collection($this->whenLoaded('addresses')),
             'contacts' => AllClientContactResource::collection($this->whenLoaded('contacts')),
-
         ];
     }
 }

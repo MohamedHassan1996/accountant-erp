@@ -15,6 +15,7 @@ use App\Http\Resources\Task\TaskResource;
 use App\Models\Client\ClientServiceDiscount;
 use App\Http\Requests\Task\UpdateTaskRequest;
 use App\Enums\Client\ClientServiceDiscountStatus;
+use App\Enums\Client\ServiceDiscountCategory;
 use App\Http\Resources\Invoice\AllInvoiceCollection;
 use App\Enums\ServiceCategory\ServiceCategoryAddToInvoiceStatus;
 
@@ -134,35 +135,33 @@ class InvoiceController extends Controller
 
     public function create(Request $createTaskRequest)
     {
-        // 'price'=>$service->price,
-        // 'price_after_discount' => $service->price * (1 - $serviceDiscount->discount / 100)
-        // $service =ServiceCategory::find($taskData['serviceCategoryId']);
-        // $serviceDiscount=ClientServiceDiscount::where('service_category_id',$taskData['serviceCategoryId'])->first();
         try {
             DB::beginTransaction();
 
-            $invoice = Invoice::create([
-                'client_id' => $createTaskRequest->clientId,
-            ]);
-            $clientDiscount=  ClientServiceDiscount::where('client_id',$createTaskRequest->clientId)->first();
-                foreach ($createTaskRequest->taskIds as  $taskId) {
-                    $task = Task::findOrFail($taskId);
-                    $servicePrice = $task->serviceCategory->price;
-                    $serviceDiscount =  $clientDiscount ? $clientDiscount->discount : 0;
-                    if($clientDiscount->category == ClientCategory::TAX->value)
-                    {
-                        $price_after_discount = ($serviceDiscount > 0) ? $servicePrice * (1 + $serviceDiscount / 100) : $servicePrice;
-                    }else{
-                    $price_after_discount = ($serviceDiscount > 0) ? $servicePrice * (1 - $serviceDiscount / 100) : $servicePrice;
+            foreach ($createTaskRequest->invoices as  $invoiceData) {
+                $invoice = Invoice::create([
+                    'client_id' => $invoiceData['clientId'],
+                    'end_at' => $invoiceData['endAt'],
+                    'payment_type_id' => $invoiceData['paymentTypeId']
+                ]);
+                $clientDiscount=  ClientServiceDiscount::where('client_id', $invoiceData['clientId'])->first();
+                    foreach ($invoiceData['taskIds'] as  $taskId) {
+                        $task = Task::findOrFail($taskId);
+                        $servicePrice = $task->serviceCategory->price;
+                        $serviceDiscount =  $clientDiscount ? $clientDiscount->discount : 0;
+                        if($clientDiscount->category == ServiceDiscountCategory::TAX->value){
+                            $price_after_discount = ($serviceDiscount > 0) ? $servicePrice * (1 + $serviceDiscount / 100) : $servicePrice;
+                        }else{
+                            $price_after_discount = ($serviceDiscount > 0) ? $servicePrice * (1 - $serviceDiscount / 100) : $servicePrice;
+                        }
+                        $task->update([
+                            "price"=>$servicePrice,
+                            "price_after_discount"=>$price_after_discount,
+                            'invoice_id' => $invoice->id
+                        ]);
                     }
-                    $task->update([
-                        "price"=>$servicePrice,
-                        "price_after_discount"=>$price_after_discount,
-                        'invoice_id' => $invoice->id
-                    ]);
-                }
-            // Task::whereIn('id', $createTaskRequest->taskIds)
-            // ->update(['invoice_id' => $invoice->id]);
+            }
+
 
             DB::commit();
 

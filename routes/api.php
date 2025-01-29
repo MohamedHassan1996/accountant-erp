@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Private\Client\ClientPaymentTypeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Models\Parameter\ParameterValue;
@@ -140,4 +141,9 @@ Route::prefix('v1/import-clients')->group(function(){
 Route::prefix('v1/import-service-categories')->group(function(){
     Route::post('', [ImportServiceCategoryController::class, 'index']);
 });
+
+Route::prefix('v1/client-payment-type')->group(function(){
+    Route::post('', [ClientPaymentTypeController::class, 'index']);
+});
+
 
