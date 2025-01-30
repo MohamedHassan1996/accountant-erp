@@ -8,6 +8,7 @@ use App\Http\Requests\Client\UpdateClientRequest;
 use App\Http\Resources\Client\AllClientCollection;
 use App\Http\Resources\Client\ClientResource;
 use App\Models\Client\Client;
+use App\Models\Parameter\ParameterValue;
 use App\Utils\PaginateCollection;
 use App\Services\Client\ClientService;
 use App\Services\Client\ClientAddressService;
@@ -33,11 +34,21 @@ class ClientPaymentTypeController extends Controller
      */
     public function index(Request $request)
     {
-        $clientsPaymentType = Client::whereIn('id', $request->clientIds)->pluck('payment_type_two_id')->toArray();
-
+        $clientsPaymentTypeData = Client::whereIn('id', $request->clientIds)->select('id', 'payment_type_two_id', 'ragione_sociale')->get();
+        $clientsPaymentType = [];
+        foreach ($clientsPaymentTypeData as $clientPaymentTypeData) {
+            $paymentDescription = ParameterValue::find($clientPaymentTypeData->payment_type_two_id);
+            $clientsPaymentType[] = [
+                'clientId' => $clientPaymentTypeData->id,
+                'paymentTypeTwoId' => $clientPaymentTypeData->payment_type_two_id,
+                'ragioneSociale' => $clientPaymentTypeData->ragione_sociale,
+                'paymentDescription' => $paymentDescription->description??""
+            ];
+        }
         return response()->json([
             'data' => [
-                'clientsPaymentType' => $clientsPaymentType]
+                'clientsPaymentType' => $clientsPaymentType
+                ]
             ]);
     }
 
