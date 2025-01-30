@@ -30,6 +30,8 @@ class AllAdminTaskResource extends JsonResource
             'createdAt' => Carbon::parse($this->created_at)->format('d/m/Y'),
             'startDate' => $this->start_date?Carbon::parse($this->start_at)->format('d/m/Y'):"",
             'endDate' => $this->end_date?Carbon::parse($this->end_date)->format('d/m/Y'):"",
+            "startTime"=>$this->timeLogs()->first()?Carbon::parse($this->timeLogs()->first()->start_at)->format('d/m/Y H:i:s') : "",
+            "endTime"=>$this->timeLogs()->latest()->first()?Carbon::parse($this->timeLogs()->latest()->first()->end_at)->format('d/m/Y H:i:s'):"",
         ];
     }
 }
