@@ -68,30 +68,29 @@ class Task extends Model
     public function getTotalHoursAttribute()
     {
         $backTimeLogs = $this->timeLogs()
-        ->where('type', TaskTimeLogType::BACK_TIME_LOG->value)
-        ->whereNotNull('end_at')
-        ->get();
+            ->where('type', TaskTimeLogType::BACK_TIME_LOG->value)
+            ->whereNotNull('end_at')
+            ->get();
 
-    if ($backTimeLogs->isNotEmpty()) {
-        $totalMinutes = $backTimeLogs->sum(function ($log) {
-            return $log->total_time;
-        });
+        if ($backTimeLogs->isNotEmpty()) {
+            $totalMinutes = $backTimeLogs->sum('total_time');
+        } else {
+            // If no BACK_TIME_LOG, calculate TIME_LOG
+            $timeLogs = $this->timeLogs()
+                ->where('type', TaskTimeLogType::TIME_LOG->value)
+                ->get();
 
-        return number_format($totalMinutes / 60, 2);
-    }
+            $totalMinutes = $timeLogs->sum(function ($log) {
+                return $log->end_at
+                    ? $log->total_time
+                    : Carbon::now()->diffInMinutes($log->start_at);
+            });
+        }
 
-    // If no BACK_TIME_LOG, calculate TIME_LOG
-    $timeLogs = $this->timeLogs()
-        ->where('type', TaskTimeLogType::TIME_LOG->value)
-        ->get();
+        $hours = floor($totalMinutes / 60);
+        $minutes = $totalMinutes % 60;
 
-    $totalMinutes = $timeLogs->sum(function ($log) {
-        return $log->end_at
-            ? $log->total_time
-            : Carbon::now()->diffInMinutes($log->start_at);
-    });
-
-    return $totalMinutes == 0 ? 0 : number_format($totalMinutes / 60, 2);
+        return sprintf('%02d:%02d', $hours, $minutes);
     }
 
     public function getCurrentTimeAttribute()
