@@ -144,11 +144,11 @@ Route::prefix('v1/import-service-categories')->group(function(){
 });
 
 Route::prefix('v1/client-payment-type')->group(function(){
-    Route::post('', [ClientPaymentTypeController::class, 'index']);
+    Route::get('', [ClientPaymentTypeController::class, 'index']);
 });
 
 Route::prefix('v1/client-payment-period')->group(function(){
-    Route::post('', [ClientPaymentPeriodController::class, 'index']);
+    Route::get('', [ClientPaymentPeriodController::class, 'index']);
 });
 
 
