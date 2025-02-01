@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\Private\Task\TaskTimeLogController;
 use App\Http\Controllers\Api\Private\Parameter\ParameterController;
 use App\Http\Controllers\Api\Private\Client\ClientAddressController;
 use App\Http\Controllers\Api\Private\Client\ClientContactController;
+use App\Http\Controllers\Api\Private\Client\ClientPaymentPeriodController;
 use App\Http\Controllers\Api\Private\Parameter\ParameterValueController;
 use App\Http\Controllers\Api\Private\ServiceCategory\ServiceCategoryController;
 use App\Http\Controllers\Api\Private\Client\ClientServiceCategoryDiscountController;
@@ -145,5 +146,10 @@ Route::prefix('v1/import-service-categories')->group(function(){
 Route::prefix('v1/client-payment-type')->group(function(){
     Route::post('', [ClientPaymentTypeController::class, 'index']);
 });
+
+Route::prefix('v1/client-payment-period')->group(function(){
+    Route::post('', [ClientPaymentPeriodController::class, 'index']);
+});
+
 
 

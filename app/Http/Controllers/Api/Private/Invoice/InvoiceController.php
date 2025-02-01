@@ -138,6 +138,18 @@ class InvoiceController extends Controller
         try {
             DB::beginTransaction();
 
+            /*
+
+            invoices = [
+                {
+                    "clientId": 1,
+                    "endAt": "2023-01-01",
+                    "paymentTypeId": 1,
+                    "taskIds": [1, 2, 3]
+                }
+            ]
+            */
+
             foreach ($createTaskRequest->invoices as  $invoiceData) {
                 $invoice = Invoice::create([
                     'client_id' => $invoiceData['clientId'],
