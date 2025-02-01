@@ -163,9 +163,10 @@ class InvoiceController extends Controller
                         $task = Task::find($taskId);
                         $servicePrice = $task->serviceCategory->price;
                         $serviceDiscount =  $clientDiscount ? $clientDiscount->discount : 0;
-                        if($clientDiscount->category == ServiceDiscountCategory::TAX->value){
+                        $price_after_discount = $servicePrice;
+                        if(isset( $clientDiscount) && $clientDiscount->category == ServiceDiscountCategory::TAX->value){
                             $price_after_discount = ($serviceDiscount > 0) ? $servicePrice * (1 + $serviceDiscount / 100) : $servicePrice;
-                        }else{
+                        }elseif(isset( $clientDiscount) && $clientDiscount->category == ServiceDiscountCategory::DISCOUNT->value){
                             $price_after_discount = ($serviceDiscount > 0) ? $servicePrice * (1 - $serviceDiscount / 100) : $servicePrice;
                         }
                         $task->update([
