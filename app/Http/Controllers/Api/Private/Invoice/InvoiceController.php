@@ -156,9 +156,10 @@ class InvoiceController extends Controller
                     'end_at' => $invoiceData['endAt'],
                     'payment_type_id' => $invoiceData['paymentTypeId']
                 ]);
+                $invoiceTasks = $invoiceData['taskIds'];
                 $clientDiscount=  ClientServiceDiscount::where('client_id', $invoiceData['clientId'])->first();
-                    foreach ($invoiceData['taskIds'] as  $taskId) {
-                        $task = Task::findOrFail($taskId);
+                    foreach ($invoiceTasks as  $taskId) {
+                        $task = Task::find($taskId);
                         $servicePrice = $task->serviceCategory->price;
                         $serviceDiscount =  $clientDiscount ? $clientDiscount->discount : 0;
                         if($clientDiscount->category == ServiceDiscountCategory::TAX->value){
