@@ -37,7 +37,7 @@ class ClientPaymentPeriodController extends Controller
 
         return response()->json([
             'data' => [
-                'paymentDate' => $paymentDate
+                'paymentDate' => $paymentDate->format('Y-m-d')
             ]
         ]);
     }
