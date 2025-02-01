@@ -52,6 +52,7 @@ class InvoiceController extends Controller
                 return $query->where('tasks.invoice_id', $filters['unassigned'] == 1 ? null : '!=', null);
             })
             ->where('tasks.status', TaskStatus::DONE->value)
+            ->whereNull('invoices.deleted_at')
             ->select([
                 'invoices.id as invoiceId',
                 'clients.id as clientId',
