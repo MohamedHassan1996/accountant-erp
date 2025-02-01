@@ -160,19 +160,24 @@ class InvoiceController extends Controller
                 $invoiceTasks = $invoiceData['taskIds'];
                 $clientDiscount=  ClientServiceDiscount::where('client_id', $invoiceData['clientId'])->first();
                     foreach ($invoiceTasks as  $taskId) {
-                        $task = Task::find($taskId);
-                        $servicePrice = $task->serviceCategory->price;
-                        $serviceDiscount =  $clientDiscount ? $clientDiscount->discount : 0;
-                        $price_after_discount = $servicePrice;
-                        if(isset( $clientDiscount) && $clientDiscount->category == ServiceDiscountCategory::TAX->value){
-                            $price_after_discount = ($serviceDiscount > 0) ? $servicePrice * (1 + $serviceDiscount / 100) : $servicePrice;
-                        }elseif(isset( $clientDiscount) && $clientDiscount->category == ServiceDiscountCategory::DISCOUNT->value){
-                            $price_after_discount = ($serviceDiscount > 0) ? $servicePrice * (1 - $serviceDiscount / 100) : $servicePrice;
+                        if (!$task = Task::find($taskId)) {
+                            continue;
                         }
+
+                        $servicePrice = $task->serviceCategory->price ?? 0;
+                        $serviceDiscount = $clientDiscount->discount ?? 0;
+                        $priceAfterDiscount = $servicePrice;
+
+                        if (!empty($clientDiscount?->category)) {
+                            $priceAfterDiscount = $clientDiscount->category == ServiceDiscountCategory::TAX->value
+                                ? $servicePrice * (1 + $serviceDiscount / 100)
+                                : $servicePrice * (1 - $serviceDiscount / 100);
+                        }
+
                         $task->update([
-                            "price"=>$servicePrice,
-                            "price_after_discount"=>$price_after_discount,
-                            'invoice_id' => $invoice->id
+                            "price" => $servicePrice,
+                            "price_after_discount" => $priceAfterDiscount,
+                            "invoice_id" => $invoice->id,
                         ]);
                     }
             }
