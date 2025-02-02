@@ -12,12 +12,13 @@ class ReportService
 {
      public function reports()
     {
+        $authUser=auth()->user();
         $clients=DB::table('clients')->count();
         $invoiced =Task::whereNotNull('invoice_id')->count();
         $notInvoiced =Task::where('invoice_id',null)->count();
-        $toWork =Task::where('status',TaskStatus::TO_WORK->value)->count();
-        $inProgress =Task::where('status',TaskStatus::IN_PROGRESS->value)->count();
-        $done =Task::where('status',TaskStatus::DONE->value)->count();
+        $toWork =Task::where('status',TaskStatus::TO_WORK->value)->where('user_id',$authUser->id)->count();
+        $inProgress =Task::where('status',TaskStatus::IN_PROGRESS->value)->where('user_id',$authUser->id)->count();
+        $done =Task::where('status',TaskStatus::DONE->value)->where('user_id',$authUser->id)->count();
         return response()->json([
             "clients"=>$clients,
             "invoices"=>[

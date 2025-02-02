@@ -12,8 +12,8 @@ class ReportController extends Controller
     protected $reportService;
     public function  __construct(ReportService $reportService)
     {
-        // $this->middleware('auth:api');
-       $this->reportService =$reportService;
+        $this->middleware('auth:api');
+        $this->reportService =$reportService;
     }
     public function __invoke()
     {
