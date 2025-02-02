@@ -16,6 +16,7 @@ class TaskResource extends JsonResource
     public function toArray(Request $request): array
     {
         $latestLog = $this->timeLogs()->latest()->first();
+        dd($latestLog);
         return [
             'taskId' => $this->id,
             'title' => $this->title,
