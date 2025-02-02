@@ -48,7 +48,7 @@ class InvoiceController extends Controller
             ->when($filters['clientId'] ?? null, function ($query) use ($filters) {
                 return $query->where('tasks.client_id', $filters['clientId']);
             })
-            ->when($filters['unassigned']?? null, function ($query) use ($filters) {
+            ->when($filters['unassigned'] ?? null, function ($query) use ($filters) {
                 return $query->where('tasks.invoice_id', $filters['unassigned'] == 1 ? null : '!=', null);
             })
             ->where('tasks.status', TaskStatus::DONE->value)
@@ -57,6 +57,7 @@ class InvoiceController extends Controller
                 'invoices.id as invoiceId',
                 'clients.id as clientId',
                 'clients.ragione_sociale as clientName',
+                'clients.addable_to_bulk_invoice as clientAddableToBulkInvoice',
                 'invoices.number as invoiceNumber',
                 'tasks.id as taskId',
                 'tasks.status as taskStatus',
@@ -86,6 +87,7 @@ class InvoiceController extends Controller
                     'invoiceNumber' => $invoice->invoiceNumber ?? "",
                     'clientId' => $invoice->clientId ?? "",
                     'clientName' => $invoice->clientName ?? "",
+                    'clientAddableToBulkInvoice' => $invoice->clientAddableToBulkInvoice ?? "",
                     'tasks' => [],
                     'totalPrice' => 0,
                     'totalPriceAfterDiscount' => 0

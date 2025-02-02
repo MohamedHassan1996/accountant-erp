@@ -3,13 +3,16 @@
 namespace App\Http\Controllers\Api\Private\Task;
 
 use App\Enums\Task\TaskStatus;
+use App\Enums\Task\TaskTimeLogStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Task\TaskTimeLog\UpdateTaskTimeLogRequest;
 use App\Http\Requests\Task\TaskTimeLog\CreateTaskTimeLogRequest;
 use App\Http\Resources\Task\TaskTimeLog\AllTaskTimeLogResource;
 use App\Http\Resources\Task\TaskTimeLog\TaskTimeLogResource;
 use App\Models\Task\Task;
+use App\Models\Task\TaskTimeLog;
 use App\Services\Task\TaskTimeLogService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -52,6 +55,13 @@ class TaskTimeLogController extends Controller
             $taskTimeLog = $this->taskTimeLogService->createTaskTimeLog($createTaskTimeLogRequest->validated());
 
             $task = Task::find($createTaskTimeLogRequest->taskId);
+
+            $createdBy = auth()->user();
+
+            TaskTimeLog::where('end_at', null)->where('user_id', $createdBy->id)->where('status', TaskTimeLogStatus::START->value)->update([
+                'end_at' => Carbon::now(),
+                'status' => TaskTimeLogStatus::PAUSE->value
+            ]);
 
             if($task->timeLogs()->count() == 1) {
                 $task->update([

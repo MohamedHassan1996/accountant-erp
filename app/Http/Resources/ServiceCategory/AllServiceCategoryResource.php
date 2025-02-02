@@ -19,7 +19,7 @@ class AllServiceCategoryResource extends JsonResource
             'serviceCategoryId' => $this->id,
             'name' => $this->name,
             'addToInvoice' => $this->add_to_invoice,
-            ' ServiceTypeId'=>$this->service_type_id??"",
+            'serviceTypeId'=>$this->service_type_id??"",
             'price' => $this->price
         ];
     }

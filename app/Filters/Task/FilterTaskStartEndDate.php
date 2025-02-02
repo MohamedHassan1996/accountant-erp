@@ -14,11 +14,16 @@ class FilterTaskStartEndDate implements Filter
         $startDate = $dates[0] ?? null;
         $endDate = $dates[1] ?? null;
 
-        return $query->when($startDate, function ($query) use ($startDate) {
-                $query->whereDate('start_date', '>=', $startDate);
+        return $query
+            ->when(!empty($startDate) && !empty($endDate), function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('start_date', [$startDate, $endDate])
+                    ->whereBetween('end_date', [$startDate, $endDate]);
             })
-            ->when($endDate, function ($query) use ($endDate) {
-                $query->whereDate('end_date', '<=', $endDate);
+            ->when(!empty($startDate) && empty($endDate), function ($query) use ($startDate) {
+                $query->where('start_date', '>=', $startDate);
+            })
+            ->when(!empty($endDate) && empty($startDate), function ($query) use ($endDate) {
+                $query->where('end_date', '<=', $endDate);
             });
     }
 }
