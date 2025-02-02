@@ -3,6 +3,7 @@
 namespace App\Models\ServiceCategory;
 
 use App\Enums\ServiceCategory\ServiceCategoryAddToInvoiceStatus;
+use App\Models\Parameter\ParameterValue;
 use App\Traits\CreatedUpdatedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

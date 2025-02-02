@@ -15,15 +15,13 @@ class ServiceCategoryImport implements ToModel, WithHeadingRow
     */
     public function model(array $row)
     {
-        //$clientAcronym = explode('-', $row['codice'])[0];
-        //$serviceInternalCode = explode('-', $row['codice'])[1];
-        //dd($clientAcronym);
-
 
         return new ServiceCategory([
-            'ragione_sociale' => $row['ragione_sociale'],
-            'iva' => $row['pivacodfi_st'],
-            'cf' => $row['pivacodfi_st'],
+            'name' => $row['name'],
+            'description' => null,
+            'price' => $row['price'],
+            'add_to_invoice' => 0,
+            'service_type_id' => null
         ]);
     }
 
