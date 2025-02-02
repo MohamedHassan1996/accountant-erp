@@ -4,6 +4,7 @@ namespace App\Http\Resources\AdminTask;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
+use Illuminate\Support\Facades\DB;
 
 class AllAdminTaskCollection extends ResourceCollection
 {
@@ -33,10 +34,14 @@ class AllAdminTaskCollection extends ResourceCollection
 
     public function toArray(Request $request): array
     {
+        $hours=floor(DB::table('task_time_logs')->sum('total_time')/60);
+        $minutes=DB::table('task_time_logs')->sum('total_time')%60;
+        $taskTimeLogs=sprintf('%d:%02d', $hours, $minutes);
 
         return [
             "result" => [
                 'tasks' => AllAdminTaskResource::collection(($this->collection)->values()->all()),
+                "totalHours"=>$taskTimeLogs
             ],
             'pagination' => $this->pagination
         ];
