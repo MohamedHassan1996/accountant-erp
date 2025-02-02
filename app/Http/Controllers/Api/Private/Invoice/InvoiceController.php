@@ -45,11 +45,11 @@ class InvoiceController extends Controller
             ->leftJoin('invoices', 'invoices.id', '=', 'tasks.invoice_id')
             ->leftJoin('clients', 'tasks.client_id', '=', 'clients.id')
             ->leftJoin('service_categories', 'tasks.service_category_id', '=', 'service_categories.id')
-            ->when($filters['clientId'] ?? null, function ($query) use ($filters) {
+            ->when(isset($filters['clientId']), function ($query) use ($filters) {
                 return $query->where('tasks.client_id', $filters['clientId']);
             })
-            ->when($filters['unassigned'] ?? null, function ($query) use ($filters) {
-                return $query->where('tasks.invoice_id', $filters['unassigned'] == 1 ? null : '!=', null);
+            ->when(isset($filters['unassigned']), function ($query) use ($filters) {
+                return $query->where('tasks.invoice_id', $filters['unassigned'] == 1 ? '=' : '!=', null);
             })
             ->where('tasks.status', TaskStatus::DONE->value)
             ->whereNull('invoices.deleted_at')
