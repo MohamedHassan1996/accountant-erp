@@ -28,7 +28,7 @@ class TaskResource extends JsonResource
             'invoiceId' => $this->invoice_id??"",
             'timeLogStatus' => $this->timeLogStatus,
             'currentTime' => $this->current_time,
-            'latestTimeLogId' => $this->latest_time_log_id,
+            'latestTimeLogId' => $this->latestLog->id,
             'connectionTypeId' => $this->connection_type_id,
             'startDate' => $this->start_date??"",
             'endDate' => $this->end_date??"",

@@ -40,7 +40,7 @@ class ClientPaymentTypeController extends Controller
             $paymentDescription = ParameterValue::find($clientPaymentTypeData->payment_type_two_id);
             $clientsPaymentType[] = [
                 'clientId' => $clientPaymentTypeData->id,
-                'paymentTypeTwoId' => $clientPaymentTypeData->payment_type_two_id,
+                'paymentTypeTwoId' => $clientPaymentTypeData->payment_type_two_id??"",
                 'ragioneSociale' => $clientPaymentTypeData->ragione_sociale,
                 'paymentDescription' => $paymentDescription->description??""
             ];
