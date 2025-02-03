@@ -58,7 +58,9 @@ class TaskTimeLogController extends Controller
 
             $createdBy = auth()->user();
 
-            TaskTimeLog::where('end_at', null)->where('user_id', $createdBy->id)->where('status', TaskTimeLogStatus::START->value)->update([
+            TaskTimeLog::where('end_at', null)->where('user_id', $createdBy->id)->where('status', TaskTimeLogStatus::START->value)
+            ->whereNot('id', $taskTimeLog->id)
+            ->update([
                 'end_at' => Carbon::now(),
                 'status' => TaskTimeLogStatus::PAUSE->value
             ]);
