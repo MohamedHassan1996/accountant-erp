@@ -23,7 +23,8 @@ class TaskService{
             AllowedFilter::exact('status', 'status'),
             AllowedFilter::exact('serviceCategoryId', 'service_category_id'),
             AllowedFilter::exact('clientId', 'client_id'),
-            AllowedFilter::custom('startEndDate', new FilterTaskStartEndDate()),
+            AllowedFilter::custom('startDate', new FilterTaskStartEndDate()),
+            AllowedFilter::custom('endDate', new FilterTaskStartEndDate()),
         ])
         ->orderBy('id', 'desc')
         ->get();
