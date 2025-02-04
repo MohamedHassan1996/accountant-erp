@@ -30,6 +30,7 @@ class TaskService{
                 AllowedFilter::exact('status', 'status'),
                 AllowedFilter::exact('serviceCategoryId', 'service_category_id'),
                 AllowedFilter::exact('clientId', 'client_id'),
+                AllowedFilter::exact('userId', 'user_id'),
             ])
             ->when(
                 !empty($startDate) && !empty($endDate),
