@@ -36,7 +36,10 @@ class AdminTaskController extends Controller
         $allTasks = $this->taskService->allTasks();
 
         return response()->json(
-            new AllAdminTaskCollection(PaginateCollection::paginate($allTasks, $request->pageSize?$request->pageSize:10))
+            new AllAdminTaskCollection(
+                PaginateCollection::paginate(collect($allTasks['tasks']), $request->pageSize ?? 10),
+                ['totalHours' => $allTasks['totalTime']] // Pass total time separately
+            )
         );
     }
 

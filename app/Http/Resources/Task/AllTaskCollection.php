@@ -15,36 +15,33 @@ class AllTaskCollection extends ResourceCollection
      * @return array<string, mixed>
      */
 
-     private $pagination;
+    private $pagination;
+    private $totalTime; // Store total time
 
-     public function __construct($resource)
-     {
-         $this->pagination = [
-             'total' => $resource->total(),
-             'count' => $resource->count(),
-             'per_page' => $resource->perPage(),
-             'current_page' => $resource->currentPage(),
-             'total_pages' => $resource->lastPage()
-         ];
+    public function __construct($resource, $totalTime)
+    {
+        $this->pagination = [
+            'total' => $resource->total(),
+            'count' => $resource->count(),
+            'per_page' => $resource->perPage(),
+            'current_page' => $resource->currentPage(),
+            'total_pages' => $resource->lastPage()
+        ];
 
-         $resource = $resource->getCollection();
+        $this->totalTime = $totalTime; // Store total time for response
+        $resource = $resource->getCollection();
 
-         parent::__construct($resource);
-     }
-
+        parent::__construct($resource);
+    }
 
     public function toArray(Request $request): array
     {
-        $hours=floor(DB::table('task_time_logs')->sum('total_time')/60);
-        $minutes=DB::table('task_time_logs')->sum('total_time')%60;
-        $taskTimeLogs=sprintf('%d:%02d', $hours, $minutes);
         return [
             "result" => [
                 'tasks' => AllTaskResource::collection(($this->collection)->values()->all()),
-                "totalHours"=>$taskTimeLogs
+                "totalHours" => $this->totalTime // Include total time in response
             ],
             'pagination' => $this->pagination
         ];
-
     }
 }

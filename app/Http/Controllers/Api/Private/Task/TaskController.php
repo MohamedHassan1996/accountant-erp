@@ -37,7 +37,10 @@ class TaskController extends Controller
         $allTasks = $this->taskService->allTasks();
 
         return response()->json(
-            new AllTaskCollection(PaginateCollection::paginate($allTasks, $request->pageSize?$request->pageSize:10))
+            new AllTaskCollection(
+                PaginateCollection::paginate(collect($allTasks['tasks']), $request->pageSize ?? 10),
+                $allTasks['totalTime'] // Pass total time separately
+            )
         );
     }
 

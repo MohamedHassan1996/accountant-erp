@@ -11,6 +11,7 @@ use App\Filters\Task\FilterTaskDateBetween;
 use App\Filters\Task\FilterTaskStartEndDate;
 use App\Models\Client\ClientServiceDiscount;
 use App\Models\ServiceCategory\ServiceCategory;
+use Illuminate\Support\Facades\DB;
 
 class TaskService{
 
@@ -53,7 +54,21 @@ class TaskService{
             ->orderByDesc('id')
             ->get();
 
-        return $tasks;
+         // Get IDs of filtered tasks
+    $taskIds = $tasks->pluck('id');
+
+    // Calculate total time for filtered tasks
+    $totalTime = DB::table('task_time_logs')
+        ->whereIn('task_id', $taskIds) // Apply the filter based on tasks
+        ->sum('total_time');
+
+    $hours = floor($totalTime / 60);
+    $minutes = $totalTime % 60;
+    $taskTimeLogs = sprintf('%d:%02d', $hours, $minutes);
+        return [
+            'tasks' => $tasks,
+            'totalTime' => $taskTimeLogs,
+        ];
     }
 
     public function createTask(array $taskData){
