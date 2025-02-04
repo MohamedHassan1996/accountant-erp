@@ -32,10 +32,11 @@ class TaskTimeLogService{
         if($task->timeLogs()->count() > 0) {
             $latestTaskTimeLog = $task->timeLogs()->latest()->first();
             if($latestTaskTimeLog->type == TaskTimeLogType::TIME_LOG->value && $latestTaskTimeLog->status == TaskTimeLogStatus::START->value) {
-                $totalTime = $taskTimeLogData['startAt']->diffInSeconds($latestTaskTimeLog->start_at);
+                $totalTime = $taskTimeLogData['startAt']->diffInMinutes($latestTaskTimeLog->start_at);
                 $latestTaskTimeLog->update([
                     'status' => TaskTimeLogStatus::PAUSE->value,
                     'end_at' => $taskTimeLogData['startAt'],
+                    'total_time' => $totalTime
                 ]);
             }
         }
