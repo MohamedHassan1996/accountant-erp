@@ -33,22 +33,21 @@ class TaskService{
             ->when(
                 !empty($startDate) && !empty($endDate),
                 function ($query) use ($startDate, $endDate) {
-                    $query->whereBetween('start_date', [$startDate, $endDate])
-                          ->whereBetween('end_date', [$startDate, $endDate]);
+                    $query->whereDate('created_at', '>=', $startDate)->whereDate('created_at', '<=', $endDate);
                 }
             )
             ->when(
                 !empty($endDate) && empty($startDate),
                 function ($query) use ($endDate) {
 
-                    $query->where('end_date', '<=', $endDate);
+                    $query->whereDate('created_at', '<=', $endDate);
                 }
             )
             ->when(
                 empty($endDate) && !empty($startDate),
                 function ($query) use ($startDate) {
 
-                    $query->where('start_date', '>=', $startDate);
+                    $query->whereDate('created_at', '>=', $startDate);
                 }
             )
             ->orderByDesc('id')
