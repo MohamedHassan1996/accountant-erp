@@ -20,6 +20,8 @@ class TaskService{
         $startDate = $filters['startDate'] ?? null;
         $endDate = $filters['endDate'] ?? null;
 
+        //dd($startDate, $endDate);
+
         $tasks = QueryBuilder::for(Task::class)
             ->allowedFilters([
                 AllowedFilter::custom('search', new FilterTask()), // Custom search filter
@@ -29,22 +31,24 @@ class TaskService{
                 AllowedFilter::exact('clientId', 'client_id'),
             ])
             ->when(
-                $startDate && $endDate,
+                !empty($startDate) && !empty($endDate),
                 function ($query) use ($startDate, $endDate) {
                     $query->whereBetween('start_date', [$startDate, $endDate])
                           ->whereBetween('end_date', [$startDate, $endDate]);
                 }
             )
             ->when(
-                $startDate && !$endDate,
-                function ($query) use ($startDate) {
-                    $query->where('start_date', '>=', $startDate);
+                !empty($endDate) && empty($startDate),
+                function ($query) use ($endDate) {
+
+                    $query->where('end_date', '<=', $endDate);
                 }
             )
             ->when(
-                !$startDate && $endDate,
-                function ($query) use ($endDate) {
-                    $query->where('end_date', '<=', $endDate);
+                empty($endDate) && !empty($startDate),
+                function ($query) use ($startDate) {
+
+                    $query->where('start_date', '>=', $startDate);
                 }
             )
             ->orderByDesc('id')
