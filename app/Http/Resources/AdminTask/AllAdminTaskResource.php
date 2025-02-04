@@ -16,6 +16,33 @@ class AllAdminTaskResource extends JsonResource
     public function toArray(Request $request): array
     {
 
+                 // Get the first and latest time logs for start_at and end_at
+                 $firstLog = $this->timeLogs()->first();
+                 $lastLog = $this->timeLogs()->latest()->first();
+
+                 // Handle cases where logs might not exist
+                 $startTime = $firstLog ? Carbon::parse($firstLog->start_at)->format('d/m/Y H:i:s') : '';
+                 $endTime = $lastLog ? Carbon::parse($lastLog->end_at)->format('d/m/Y H:i:s') : '';
+
+                 // Calculate the total hours in 'HH:MM' format
+                 $totalHours = '';
+                 if ($firstLog && $lastLog) {
+                     // If both start_at and end_at exist, calculate the total time
+                     $start = Carbon::parse($firstLog->start_at);
+                     $end = Carbon::parse($lastLog->end_at ?? now()); // Use 'now()' if end_at is null
+
+                     // Calculate the difference in minutes
+                     $totalMinutes = $start->diffInMinutes($end);
+
+                     // Convert minutes to hours and minutes
+                     $hours = floor($totalMinutes / 60);
+                     $minutes = $totalMinutes % 60;
+
+                     // Format as 'HH:MM'
+                     $totalHours = sprintf('%d:%02d', $hours, $minutes);
+                 }
+
+
         return [
             'taskId' => $this->id,
             'title' => $this->title,
@@ -24,7 +51,7 @@ class AllAdminTaskResource extends JsonResource
             'accountantName' => $this->user->full_name,
             'clientName' => $this->client->ragione_sociale,
             'serviceCategoryName' => $this->serviceCategory->name,
-            'totalHours' => $this->total_hours,
+            'totalHours' => $totalHours,
             'costOfService' => $this->serviceCategory->getPrice(),
             'costAfterDiscount' => $this->getTotalPriceAfterDiscountAttribute(),
             'createdAt' => Carbon::parse($this->created_at)->format('d/m/Y'),
