@@ -14,38 +14,43 @@ use App\Models\ServiceCategory\ServiceCategory;
 
 class TaskService{
 
-    public function allTasks(){
-        $startDate = request('filter[startDate]');
-        $endDate = request('filter[endDate]');
-        $tasks = QueryBuilder::for(Task::class)
-        ->allowedFilters([
-            AllowedFilter::custom('search', new FilterTask()), // Add a custom search filter
-            AllowedFilter::exact('userId', 'user_id'),
-            AllowedFilter::exact('status', 'status'),
-            AllowedFilter::exact('serviceCategoryId', 'service_category_id'),
-            AllowedFilter::exact('clientId', 'client_id'),
-        ])
-        ->when(
-            $startDate && $endDate,
-            function ($query) use ($startDate, $endDate) {
-                $query->whereBetween('start_date', [$startDate, $endDate])
-                ->whereBetween('end_date', [$startDate, $endDate]);
-            }
-        )->when(
-            $startDate && !$endDate,
-            function ($query) use ($startDate) {
-                $query->where('start_date', '>=', $startDate);
-            }
-        )->when(
-            !$startDate && $endDate,
-            function ($query) use ($endDate) {
-                $query->where('end_date', '<=', $endDate);
-            }
-        )
-        ->orderBy('id', 'desc')
-        ->get();
-        return $tasks;
+    public function allTasks()
+    {
+        $filters = request()->input('filter', []);
+        $startDate = $filters['startDate'] ?? null;
+        $endDate = $filters['endDate'] ?? null;
 
+        $tasks = QueryBuilder::for(Task::class)
+            ->allowedFilters([
+                AllowedFilter::custom('search', new FilterTask()), // Custom search filter
+                AllowedFilter::exact('userId', 'user_id'),
+                AllowedFilter::exact('status', 'status'),
+                AllowedFilter::exact('serviceCategoryId', 'service_category_id'),
+                AllowedFilter::exact('clientId', 'client_id'),
+            ])
+            ->when(
+                $startDate && $endDate,
+                function ($query) use ($startDate, $endDate) {
+                    $query->whereBetween('start_date', [$startDate, $endDate])
+                          ->whereBetween('end_date', [$startDate, $endDate]);
+                }
+            )
+            ->when(
+                $startDate && !$endDate,
+                function ($query) use ($startDate) {
+                    $query->where('start_date', '>=', $startDate);
+                }
+            )
+            ->when(
+                !$startDate && $endDate,
+                function ($query) use ($endDate) {
+                    $query->where('end_date', '<=', $endDate);
+                }
+            )
+            ->orderByDesc('id')
+            ->get();
+
+        return $tasks;
     }
 
     public function createTask(array $taskData){
