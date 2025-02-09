@@ -14,7 +14,7 @@ class ServiceCategoryService{
 
         $serviceCategories = QueryBuilder::for(ServiceCategory::class)
         ->allowedFilters([
-            //AllowedFilter::custom('search', new FilterServiceCategory()), // Add a custom search filter
+            AllowedFilter::custom('search', new FilterServiceCategory()), // Add a custom search filter
         ])
         ->get();
         return $serviceCategories;

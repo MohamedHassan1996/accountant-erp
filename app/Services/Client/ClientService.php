@@ -26,9 +26,9 @@ class ClientService{
     public function createClient(array $clientData){
 
         $client = Client::create([
-            'iva' => $clientData['iva'],
-            'ragione_sociale' => $clientData['ragioneSociale'],
-            'cf' => $clientData['cf'],
+            'iva' => $clientData['iva']??null,
+            'ragione_sociale' => $clientData['ragioneSociale']??null,
+            'cf' => $clientData['cf']??null,
             'note' => $clientData['note'],
             'phone' => $clientData['phone']??"",
             'email' => $clientData['email']??"",

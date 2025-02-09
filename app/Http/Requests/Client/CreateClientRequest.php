@@ -27,9 +27,9 @@ class CreateClientRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'iva' => ['nullable'],
+            'iva' => ['required'],
             'ragioneSociale' => ['required'],
-            'cf' => ['nullable'],
+            'cf' => ['required'],
             'note' => ['nullable'],
             'phone' => ['nullable'],
             'email' => ['nullable'],
