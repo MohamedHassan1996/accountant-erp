@@ -13,6 +13,7 @@ class ReportController extends Controller
     public function  __construct(ReportService $reportService)
     {
         $this->middleware('auth:api');
+        $this->middleware('permission:all_reports', ['only' => ['__invoke']]);
         $this->reportService =$reportService;
     }
     public function __invoke()

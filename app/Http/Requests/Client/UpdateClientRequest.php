@@ -27,9 +27,9 @@ class UpdateClientRequest extends FormRequest
     {
         return [
             'clientId' => ['required'],
-            'iva' => ['nullable'],
+            'iva' => ['required'],
             'ragioneSociale' => ['required'],
-            'cf' => ['nullable'],
+            'cf' => ['required'],
             'note' => ['nullable'],
             'phone' => ['nullable'],
             'email' => ['nullable'],

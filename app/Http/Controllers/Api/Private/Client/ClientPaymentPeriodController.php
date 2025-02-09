@@ -15,7 +15,7 @@ class ClientPaymentPeriodController extends Controller
     public function __construct()
     {
         $this->middleware('auth:api');
-        // $this->middleware('permission:all_clients', ['only' => ['index']]);
+        $this->middleware('permission:client_payment_period', ['only' => ['index']]);
         // $this->middleware('permission:create_client', ['only' => ['create']]);
         // $this->middleware('permission:edit_client', ['only' => ['edit']]);
         // $this->middleware('permission:update_client', ['only' => ['update']]);
