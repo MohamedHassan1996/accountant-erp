@@ -49,7 +49,7 @@ class TaskService{
                 empty($endDate) && !empty($startDate),
                 function ($query) use ($startDate) {
 
-                    $query->whereDate('created_at', '>=', $startDate);
+                    $query->whereDate('created_at', '=', $startDate);
                 }
             )
             ->orderByDesc('id')
