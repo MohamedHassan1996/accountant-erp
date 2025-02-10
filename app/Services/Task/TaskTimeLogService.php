@@ -79,12 +79,11 @@ class TaskTimeLogService{
 
         $startDate = $taskTimeLog->start_at;
 
+        $status = TaskTimeLogStatus::from($taskTimeLogData['status'])->value;
 
         if($taskTimeLog->status == TaskTimeLogStatus::PAUSE && $taskTimeLogData['status'] == TaskTimeLogStatus::STOP){
             $status = $taskTimeLog->status;
             $taskTimeLogData['endAt'] = $taskTimeLog->end_at;
-        } else {
-            $status = TaskTimeLogStatus::from($taskTimeLogData['status'])->value;
         }
 
         $taskTimeLog->fill([
