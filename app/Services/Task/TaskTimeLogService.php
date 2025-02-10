@@ -51,6 +51,10 @@ class TaskTimeLogService{
             'status' => TaskTimeLogStatus::from($taskTimeLogData['status'])->value,
         ]);
 
+        if($taskTimeLogData['status'] == TaskTimeLogStatus::STOP->value) {
+            $task->closed_at = $taskTimeLogData['endAt'];
+            $task->save();
+        }
 
         return $taskTimeLog;
 
@@ -75,6 +79,8 @@ class TaskTimeLogService{
 
         $startDate = $taskTimeLog->start_at;
 
+        $status = $taskTimeLog->status == TaskTimeLogStatus::PAUSE && $taskTimeLogData['status'] == TaskTimeLogStatus::STOP ? $taskTimeLog->status : TaskTimeLogStatus::from($taskTimeLogData['status'])->value;
+
         $taskTimeLog->fill([
             'start_at' => $startDate,
             'end_at' => $taskTimeLogData['endAt']??null,
@@ -82,15 +88,16 @@ class TaskTimeLogService{
             'comment' => $taskTimeLogData['comment']??null,
             'task_id' => $taskTimeLogData['taskId'],
             'user_id' => $taskTimeLogData['userId'],
-            'status' => TaskTimeLogStatus::from($taskTimeLogData['status'])->value,
+            'status' => $status,
             'total_time' => $totalTime
         ]);
 
         $taskTimeLog->save();
 
-        if($taskTimeLog->status == TaskTimeLogStatus::STOP) {
+        if($taskTimeLogData['status'] == TaskTimeLogStatus::STOP->value) {
             $task = Task::find($taskTimeLog->task_id);
             $task->status = TaskStatus::DONE->value;
+            $task->closed_at = $taskTimeLogData['endAt']??null;
             $task->save();
         }
 
