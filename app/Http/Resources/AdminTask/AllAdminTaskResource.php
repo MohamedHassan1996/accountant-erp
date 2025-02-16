@@ -47,7 +47,7 @@ class AllAdminTaskResource extends JsonResource
         $formattedEndTime = "";
 
         if($endTime[0]->task_id == 1203){
-            dd($endTime[0]->status != 0);
+            dd(count($endTime) == 1);
         }
 
 
