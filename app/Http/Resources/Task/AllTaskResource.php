@@ -42,6 +42,20 @@ class AllTaskResource extends JsonResource
         //     $totalHours = sprintf('%d:%02d', $hours, $minutes);
         // }
 
+        $endTime = $this->timeLogs()->latest()->take(2)->get();
+
+        $formattedEndTime = "";
+
+        if(count($endTime) == 1){
+            if($endTime[0]->status != 0){
+                $formattedEndTime = Carbon::parse($endTime[0]->created_at)->format('d/m/Y H:i:s');
+            }
+        }else if(count($endTime) == 2){
+            $formattedEndTime = Carbon::parse($endTime[0]->created_at)->format('d/m/Y H:i:s');
+            if($endTime[0]->status == 1 && $endTime[1]->status == 2){
+                $formattedEndTime = Carbon::parse($endTime[1]->created_at)->format('d/m/Y H:i:s');
+            }
+        }
 
         return [
             'taskId' => $this->id,
@@ -56,7 +70,7 @@ class AllTaskResource extends JsonResource
             'startDate' => $this->start_date?Carbon::parse($this->start_at)->format('d/m/Y'):"",
             'endDate' => $this->end_date?Carbon::parse($this->end_date)->format('d/m/Y'):"",
             "startTime"=>$this->timeLogs()->first()?Carbon::parse($this->timeLogs()->first()->created_at)->format('d/m/Y H:i:s') : "",
-            "endTime"=>$this->timeLogs()->latest()->first()?Carbon::parse($this->timeLogs()->latest()->first()->created_at)->format('d/m/Y H:i:s'):"",
+            "endTime"=> $formattedEndTime
         ];
     }
 }

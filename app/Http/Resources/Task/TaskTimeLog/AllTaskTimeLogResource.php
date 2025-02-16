@@ -23,6 +23,7 @@ class AllTaskTimeLogResource extends JsonResource
             'taskId' => $this->task_id,
             'userId' => $this->user_id,
             'type' => $this->type,
+            'currentTime' => $this->total_time,
             'comment' => $this->comment??"",
             'status' => $this->status
         ];
