@@ -53,6 +53,7 @@ class TaskService{
                     $query->whereDate('created_at', '=', $startDate);
                 }
             )
+            ->where('is_new', 1)
             ->orderByDesc('id')
             ->get();
 
