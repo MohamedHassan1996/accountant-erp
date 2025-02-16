@@ -21,6 +21,12 @@ use App\Http\Controllers\Api\Private\Client\ClientPaymentPeriodController;
 use App\Http\Controllers\Api\Private\Parameter\ParameterValueController;
 use App\Http\Controllers\Api\Private\ServiceCategory\ServiceCategoryController;
 use App\Http\Controllers\Api\Private\Client\ClientServiceCategoryDiscountController;
+use App\Http\Controllers\Api\Private\Invoice\ClientEmailController;
+use App\Http\Controllers\Api\Private\Invoice\SendEmailController;
+use App\Http\Controllers\Api\Private\Invoice\SendInvoiceController;
+use App\Http\Controllers\Api\Private\Reports\InvoiceCsvReportController;
+use App\Http\Controllers\Api\Private\Reports\InvoicePdfReportController;
+use App\Http\Controllers\Api\Private\Reports\InvoiceReportExportController;
 use App\Http\Controllers\ImportClientController;
 use App\Http\Controllers\ImportServiceCategoryController;
 
@@ -150,6 +156,23 @@ Route::prefix('v1/client-payment-type')->group(function(){
 Route::prefix('v1/client-payment-period')->group(function(){
     Route::get('', [ClientPaymentPeriodController::class, 'index']);
 });
+
+Route::prefix('v1/export-invoice-report')->group(function(){
+    Route::get('', [InvoiceReportExportController::class, 'index']);
+});
+
+Route::prefix('v1/send-invoice-email')->group(function(){
+    Route::post('', [SendEmailController::class, 'index']);
+});
+Route::prefix('v1/client-email')->group(function(){
+    Route::get('edit', [ClientEmailController::class, 'edit']);
+});
+
+Route::prefix('v1/send-uploaded-invoice')->group(function(){
+    Route::post('', [SendInvoiceController::class, 'index']);
+});
+
+
 
 
 

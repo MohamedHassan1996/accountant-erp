@@ -17,7 +17,7 @@ class AllAdminTaskResource extends JsonResource
     {
 
                  // Get the first and latest time logs for start_at and end_at
-                 $firstLog = $this->timeLogs()->first();
+                 /*$firstLog = $this->timeLogs()->first();
                  $lastLog = $this->timeLogs()->latest()->first();
 
                  // Handle cases where logs might not exist
@@ -40,7 +40,7 @@ class AllAdminTaskResource extends JsonResource
 
                      // Format as 'HH:MM'
                      $totalHours = sprintf('%d:%02d', $hours, $minutes);
-                 }
+                 }*/
 
 
         return [
@@ -51,15 +51,15 @@ class AllAdminTaskResource extends JsonResource
             'accountantName' => $this->user->full_name,
             'clientName' => $this->client->ragione_sociale,
             'serviceCategoryName' => $this->serviceCategory->name,
-            'totalHours' => $totalHours,
+            'totalHours' => $this->total_hours,
             'costOfService' => $this->serviceCategory->getPrice(),
             'costAfterDiscount' => $this->getTotalPriceAfterDiscountAttribute(),
             'createdAt' => Carbon::parse($this->created_at)->format('d/m/Y'),
             'startDate' => $this->start_date?Carbon::parse($this->start_at)->format('d/m/Y'):"",
             'endDate' => $this->end_date?Carbon::parse($this->end_date)->format('d/m/Y'):"",
-            "startTime"=>$this->timeLogs()->first()?Carbon::parse($this->timeLogs()->first()->start_at)->format('d/m/Y H:i:s') : "",
-            //"endTime"=>$this->timeLogs()->latest()->first()?Carbon::parse($this->timeLogs()->latest()->first()->end_at)->format('d/m/Y H:i:s'):"",
-            "endTime"=>$this->closed_at?Carbon::parse($this->closed_at)->format('d/m/Y H:i'):"",
+            "startTime"=>$this->timeLogs()->first()?Carbon::parse($this->timeLogs()->first()->created_at)->format('d/m/Y H:i:s') : "",
+            "endTime"=>$this->timeLogs()->latest()->first()?Carbon::parse($this->timeLogs()->latest()->first()->created_at)->format('d/m/Y H:i:s'):"",
+            //"endTime"=>$this->closed_at?Carbon::parse(time: $this->closed_at)->format('d/m/Y H:i'):"",
         ];
     }
 }

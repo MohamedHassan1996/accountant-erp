@@ -40,6 +40,9 @@ class Task extends Model
     public static function boot()
     {
         parent::boot();
+        static::creating(function($model){
+            $model->is_new = 1;
+        });
         static::created(function ($model) {
             $model->number = 'T_' . str_pad($model->id, 5, '0', STR_PAD_LEFT);
             $model->save();
@@ -65,52 +68,49 @@ class Task extends Model
     {
         return $this->hasMany(TaskTimeLog::class);
     }
+
+    public function latestTimeLog()
+    {
+        return $this->hasOne(TaskTimeLog::class)->latestOfMany();
+    }
     public function getTotalHoursAttribute()
     {
-        $backTimeLogs = $this->timeLogs()
-            ->where('type', TaskTimeLogType::BACK_TIME_LOG->value)
-            ->whereNotNull('end_at')
-            ->get();
+        $latestTimeLog = $this->timeLogs()
+            ->where('type', TaskTimeLogType::TIME_LOG->value)
+            ->latest()
+            ->first();
+            if($latestTimeLog == null){
+                return "00:00:00";
+            }
+        $totalTime = $latestTimeLog->total_time; // Ensure it's an integer
 
-        if ($backTimeLogs->isNotEmpty()) {
-            $totalMinutes = $backTimeLogs->sum('total_time');
-        } else {
-            // If no BACK_TIME_LOG, calculate TIME_LOG
-            $timeLogs = $this->timeLogs()
-                ->where('type', TaskTimeLogType::TIME_LOG->value)
-                ->get();
-
-            $totalMinutes = $timeLogs->sum(function ($log) {
-                return $log->end_at
-                    ? $log->total_time
-                    : Carbon::now()->diffInMinutes($log->start_at);
-            });
+        if ($latestTimeLog->status == TaskTimeLogStatus::START) {
+            $totalTime = Carbon::parse($totalTime)->addSeconds(Carbon::now()->diffInSeconds($latestTimeLog->created_at));
         }
 
-        $hours = floor($totalMinutes / 60);
-        $minutes = $totalMinutes % 60;
-
-        return sprintf('%02d:%02d', $hours, $minutes);
+        return Carbon::parse($totalTime)->format('H:i:s');
     }
-
     public function getCurrentTimeAttribute()
     {
-        $timeLogs = $this->timeLogs()
-            ->where('type', TaskTimeLogType::TIME_LOG->value)
-            ->get();
+        $latestTimeLog = $this->timeLogs()
+        ->where('type', TaskTimeLogType::TIME_LOG->value)
+        ->latest()
+        ->first();
 
-        $totalSeconds = $timeLogs->sum(function ($log) {
-            return $log->end_at
-                ? $log->total_time * 60// Convert total_mins to total_seconds
-                : Carbon::now()->diffInSeconds($log->start_at); // Use diffInSeconds for accuracy
-        });
 
-        // Handle large hours manually if exceeding Carbon's default formatting
-        $hours = floor($totalSeconds / 3600);
-        $minutes = floor(($totalSeconds % 3600) / 60);
-        $seconds = $totalSeconds % 60;
+        if(empty($latestTimeLog)){
+            return "00:00:00";
+        }
 
-        return sprintf('%02d:%02d:%02d', $hours, $minutes, $seconds);
+        $currentTime = $latestTimeLog->total_time;
+
+
+        if ($latestTimeLog->status == TaskTimeLogStatus::START) {
+            $currentTime = Carbon::parse($currentTime)->addSeconds(Carbon::now()->diffInSeconds($latestTimeLog->created_at));
+        }
+
+        return Carbon::parse($currentTime)->format('H:i:s');
+
     }
 
 

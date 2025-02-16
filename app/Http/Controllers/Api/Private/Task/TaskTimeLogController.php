@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Private\Task;
 
 use App\Enums\Task\TaskStatus;
 use App\Enums\Task\TaskTimeLogStatus;
+use App\Enums\Task\TaskTimeLogType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Task\TaskTimeLog\UpdateTaskTimeLogRequest;
 use App\Http\Requests\Task\TaskTimeLog\CreateTaskTimeLogRequest;
@@ -52,22 +53,42 @@ class TaskTimeLogController extends Controller
         try {
             DB::beginTransaction();
 
-            $taskTimeLog = $this->taskTimeLogService->createTaskTimeLog($createTaskTimeLogRequest->validated());
+            $validatedData = $createTaskTimeLogRequest->validated();
 
-            $task = Task::find($createTaskTimeLogRequest->taskId);
+            $taskTimeLog = $this->taskTimeLogService->createTaskTimeLog($validatedData);
 
-            $createdBy = auth()->user();
+            $task = Task::find($validatedData['taskId']);
 
-            TaskTimeLog::where('end_at', null)->where('user_id', $createdBy->id)->where('status', TaskTimeLogStatus::START->value)
-            ->where('id', '!=',$taskTimeLog->id)
-            ->update([
-                'end_at' => $createTaskTimeLogRequest->startAt,
-                'status' => TaskTimeLogStatus::PAUSE->value
-            ]);
+            $latestPlayedTasks = Task::where('user_id', $validatedData['userId'])
+                ->where('status', TaskStatus::IN_PROGRESS->value)
+                ->whereNot('id', $task->id)
+                ->with('latestTimeLog')
+                ->get();
 
-            if($task->timeLogs()->count() == 1) {
-                $task->update([
-                    'status' => TaskStatus::IN_PROGRESS->value
+            foreach ($latestPlayedTasks as $latestTask) {
+                // Get the latest time log's created_at timestamp
+                $latestTimeLog = $latestTask->latestTimeLog;
+
+                if($latestTimeLog->status != TaskTimeLogStatus::START){
+                   continue;
+                }
+
+
+                // Calculate the difference in HH:MM:SS format
+                $totalTime = $latestTimeLog
+                    ? gmdate('H:i:s', Carbon::now()->diffInSeconds($latestTimeLog->created_at))
+                    : '00:00:00';
+
+                // Create the new TaskTimeLog record
+                TaskTimeLog::create([
+                    'start_at'   => null,
+                    'end_at'     => null,
+                    'type'       => TaskTimeLogType::TIME_LOG->value,
+                    'comment'    => null,
+                    'task_id'    => $latestTask->id,  // Assign the task ID
+                    'user_id'    => $validatedData['userId'],
+                    'status'     => TaskTimeLogStatus::PAUSE->value,
+                    'total_time' => $totalTime,
                 ]);
             }
 
@@ -105,7 +126,7 @@ class TaskTimeLogController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateTaskTimeLogRequest $updateTaskTimeLogRequest)
+    /*public function update(UpdateTaskTimeLogRequest $updateTaskTimeLogRequest)
     {
 
         try {
@@ -121,7 +142,7 @@ class TaskTimeLogController extends Controller
         }
 
 
-    }
+    }*/
 
     /**
      * Remove the specified resource from storage.

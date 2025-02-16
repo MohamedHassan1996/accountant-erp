@@ -17,30 +17,30 @@ class AllTaskResource extends JsonResource
     {
 
          // Get the first and latest time logs for start_at and end_at
-        $firstLog = $this->timeLogs()->first();
-        $lastLog = $this->timeLogs()->latest()->first();
+        // $firstLog = $this->timeLogs()->first();
+        // $lastLog = $this->timeLogs()->latest()->first();
 
-        // Handle cases where logs might not exist
-        $startTime = $firstLog ? Carbon::parse($firstLog->start_at)->format('d/m/Y H:i:s') : '';
-        $endTime = $lastLog ? Carbon::parse($lastLog->end_at)->format('d/m/Y H:i:s') : '';
+        // // Handle cases where logs might not exist
+        // $startTime = $firstLog ? Carbon::parse($firstLog->start_at)->format('d/m/Y H:i:s') : '';
+        // $endTime = $lastLog ? Carbon::parse($lastLog->end_at)->format('d/m/Y H:i:s') : '';
 
-        // Calculate the total hours in 'HH:MM' format
-        $totalHours = '';
-        if ($firstLog && $lastLog) {
-            // If both start_at and end_at exist, calculate the total time
-            $start = Carbon::parse($firstLog->start_at);
-            $end = Carbon::parse($lastLog->end_at ?? now()); // Use 'now()' if end_at is null
+        // // Calculate the total hours in 'HH:MM' format
+        // $totalHours = '';
+        // if ($firstLog && $lastLog) {
+        //     // If both start_at and end_at exist, calculate the total time
+        //     $start = Carbon::parse($firstLog->start_at);
+        //     $end = Carbon::parse($lastLog->end_at ?? now()); // Use 'now()' if end_at is null
 
-            // Calculate the difference in minutes
-            $totalMinutes = $start->diffInMinutes($end);
+        //     // Calculate the difference in minutes
+        //     $totalMinutes = $start->diffInMinutes($end);
 
-            // Convert minutes to hours and minutes
-            $hours = floor($totalMinutes / 60);
-            $minutes = $totalMinutes % 60;
+        //     // Convert minutes to hours and minutes
+        //     $hours = floor($totalMinutes / 60);
+        //     $minutes = $totalMinutes % 60;
 
-            // Format as 'HH:MM'
-            $totalHours = sprintf('%d:%02d', $hours, $minutes);
-        }
+        //     // Format as 'HH:MM'
+        //     $totalHours = sprintf('%d:%02d', $hours, $minutes);
+        // }
 
 
         return [
@@ -51,12 +51,12 @@ class AllTaskResource extends JsonResource
             'accountantName' => $this->user->full_name,
             'clientName' => $this->client->ragione_sociale,
             'serviceCategoryName' => $this->serviceCategory->name,
-            'totalHours' => $totalHours,
-            "startTime"=>$this->timeLogs()->first()?Carbon::parse($this->timeLogs()->first()->start_at)->format('d/m/Y H:i') : "",
-            "endTime"=>$this->closed_at?Carbon::parse($this->closed_at)->format('d/m/Y H:i'):"",
+            'totalHours' => $this->total_hours,
             'createdAt' => Carbon::parse($this->created_at)->format('d/m/Y'),
             'startDate' => $this->start_date?Carbon::parse($this->start_at)->format('d/m/Y'):"",
             'endDate' => $this->end_date?Carbon::parse($this->end_date)->format('d/m/Y'):"",
+            "startTime"=>$this->timeLogs()->first()?Carbon::parse($this->timeLogs()->first()->created_at)->format('d/m/Y H:i:s') : "",
+            "endTime"=>$this->timeLogs()->latest()->first()?Carbon::parse($this->timeLogs()->latest()->first()->created_at)->format('d/m/Y H:i:s'):"",
         ];
     }
 }

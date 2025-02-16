@@ -28,13 +28,14 @@ class CreateTaskTimeLogRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'startAt' => 'required',
-            'endAt' => 'nullable',
+            // 'startAt' => 'required',
+            // 'endAt' => 'nullable',
             'type' => ['required', new Enum(TaskTimeLogType::class)],
             'comment' => ['nullable'],
             'status' => ['required', new Enum(TaskTimeLogStatus::class)],
             'taskId' => 'required',
             'userId' => 'required',
+            'currentTime' => 'required'
         ];
 
     }

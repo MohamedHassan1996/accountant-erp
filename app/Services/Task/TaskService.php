@@ -11,6 +11,7 @@ use App\Filters\Task\FilterTaskDateBetween;
 use App\Filters\Task\FilterTaskStartEndDate;
 use App\Models\Client\ClientServiceDiscount;
 use App\Models\ServiceCategory\ServiceCategory;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class TaskService{
@@ -55,20 +56,47 @@ class TaskService{
             ->orderByDesc('id')
             ->get();
 
-         // Get IDs of filtered tasks
-    $taskIds = $tasks->pluck('id');
+                    // Get IDs of filtered tasks
+        $taskIds = $tasks->pluck('id');
 
-    // Calculate total time for filtered tasks
-    $totalTime = DB::table('task_time_logs')
-        ->whereIn('task_id', $taskIds) // Apply the filter based on tasks
-        ->sum('total_time');
+        // Calculate total time for filtered tasks
+        $totalTime = DB::table('task_time_logs')
+            ->whereIn('task_id', $taskIds)
+            ->sum('total_time');
 
-    $hours = floor($totalTime / 60);
-    $minutes = $totalTime % 60;
-    $taskTimeLogs = sprintf('%d:%02d', $hours, $minutes);
+        // Get latest time logs for each task
+        $latestLogs = DB::table('task_time_logs')
+            ->whereIn('task_id', $taskIds)
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->groupBy('task_id');
+
+        $sumTotalTime = 0;
+
+        foreach ($latestLogs as $taskId => $logs) {
+            $latestLog = $logs->first(); // Get the latest log for the task
+
+            if ($latestLog->status == 0) { // Task is in play status
+                $createdAt = Carbon::parse($latestLog->created_at);
+                $now = Carbon::now();
+                $elapsedTime = $now->diffInSeconds($createdAt);
+
+                if ($latestLog->total_time == '00:00:00') {
+                    $sumTotalTime += $elapsedTime;
+                } else {
+                    $sumTotalTime += $elapsedTime + Carbon::parse($latestLog->total_time)->diffInSeconds(Carbon::parse('00:00:00'));
+                }
+            } else {
+                $sumTotalTime += Carbon::parse($latestLog->total_time)->diffInSeconds(Carbon::parse('00:00:00'));
+            }
+        }
+
+        // Convert sumTotalTime from seconds to H:i:s format
+        $formattedTotalTime = gmdate('H:i:s', $sumTotalTime);
+
         return [
             'tasks' => $tasks,
-            'totalTime' => $taskTimeLogs,
+            'totalTime' => $formattedTotalTime
         ];
     }
 
