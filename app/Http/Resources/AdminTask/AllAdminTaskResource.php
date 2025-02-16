@@ -47,6 +47,7 @@ class AllAdminTaskResource extends JsonResource
         $formattedEndTime = "";
 
         if(count($endTime) == 1){
+            dd($endTime[0]);
             if($endTime[0]->status != 0){
                 $formattedEndTime = Carbon::parse($endTime[0]->created_at)->format('d/m/Y H:i:s');
             }
