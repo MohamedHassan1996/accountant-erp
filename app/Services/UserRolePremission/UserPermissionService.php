@@ -4,7 +4,7 @@ namespace App\Services\UserRolePremission;
 
 use Illuminate\Contracts\Auth\Authenticatable;
 use Spatie\Permission\Models\Permission;
-
+use Spatie\Permission\Models\Role;
 
 /*class UserPermissionService
 {
@@ -66,7 +66,15 @@ class UserPermissionService
         $permissions = Permission::all()->pluck('name')->toArray();
 
         return array_map(function ($permission) use ($user) {
-            dd($user);
+            $userRoles = $user->getRoleNames();
+            $role = Role::findByName($userRoles[0]);
+            if($role->name =='superAdmin' && $permission == 'all_tasks'){
+                return [
+                    'permissionName' => $permission,
+                    'access' => true
+                ];
+            }
+
             return [
                 'permissionName' => $permission,
                 'access' => $user->can($permission)
