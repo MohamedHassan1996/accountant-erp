@@ -62,8 +62,8 @@ class ParameterService{
 
     }
 
-    public function deleteParameter(string $paramteterValueGuid){
-        $parameter = ParameterValue::find($paramteterValueGuid);
+    public function deleteParameter(string $paramteterValueId){
+        $parameter = ParameterValue::find($paramteterValueId);
         $parameter->delete();
         /*return response()->json([
             'message' => 'parameter has been deleted!'
