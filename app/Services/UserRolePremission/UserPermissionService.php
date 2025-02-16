@@ -66,14 +66,6 @@ class UserPermissionService
         $permissions = Permission::all()->pluck('name')->toArray();
 
         return array_map(function ($permission) use ($user) {
-            $userRoles = $user->getRoleNames();
-            $role = Role::findByName($userRoles[0]);
-            if($role->name =='superAdmin' && $permission == 'all_tasks'){
-                return [
-                    'permissionName' => $permission,
-                    'access' => true
-                ];
-            }
 
             return [
                 'permissionName' => $permission,
