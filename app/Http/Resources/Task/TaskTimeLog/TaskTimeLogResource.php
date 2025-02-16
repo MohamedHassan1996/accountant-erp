@@ -17,7 +17,7 @@ class TaskTimeLogResource extends JsonResource
     {
         return [
             'taskTimeLogId' => $this->id,
-            'startAt' => Carbon::parse($this->start_at)->format('d/m/Y H:i'),
+            'startAt' => Carbon::parse($this->created_at)->format('d/m/Y H:i'),
             'endAt' => empty($this->end_at) ? "" : Carbon::parse($this->end_at)->format('d/m/Y H:i'),
             'taskId' => $this->task_id,
             'userId' => $this->user_id,
