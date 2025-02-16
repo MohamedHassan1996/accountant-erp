@@ -66,10 +66,10 @@ class UserPermissionService
         $permissions = Permission::all()->pluck('name')->toArray();
 
         return array_map(function ($permission) use ($user) {
-
+            dd($user);
             return [
                 'permissionName' => $permission,
-                'access' => $user->can($permission) == false?true:true
+                'access' => $user->can($permission)
             ];
         }, $permissions);
     }
