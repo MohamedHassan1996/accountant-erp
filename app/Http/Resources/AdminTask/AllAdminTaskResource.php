@@ -43,11 +43,10 @@ class AllAdminTaskResource extends JsonResource
                  }*/
 
         $endTime = $this->timeLogs()->latest()->take(2)->get();
+        dd($endTime);
 
         $formattedEndTime = "";
-        if($this->task_id == 1203){
-            dd($endTime[0]);
-        }
+
 
         if(count($endTime) == 1){
             if($endTime[0]->status != 0){
