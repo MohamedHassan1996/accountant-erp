@@ -71,7 +71,7 @@ class AuthService
             $role = Role::findByName($userRoles[0]);
             $roleWithPermissions = $role->permissions;
 
-
+            dd($this->userPermissionService->getUserPermissions($user));
             return response()->json([
                 'token' => $userToken,
                 'profile' => new UserResource($user),
