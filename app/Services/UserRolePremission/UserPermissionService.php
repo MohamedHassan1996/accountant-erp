@@ -69,7 +69,7 @@ class UserPermissionService
 
             return [
                 'permissionName' => $permission,
-                'access' => $user->can($permission) == false?true:true;
+                'access' => $user->can($permission) == false?true:true
             ];
         }, $permissions);
     }
