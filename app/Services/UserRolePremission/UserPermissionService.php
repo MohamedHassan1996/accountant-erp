@@ -67,7 +67,7 @@ class UserPermissionService
 
         return array_map(function ($permission) use ($user) {
             if($permission == 'all_tasks'){
-                dd("te");
+                dd($user);
             }
             return [
                 'permissionName' => $permission,
