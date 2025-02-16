@@ -66,6 +66,9 @@ class UserPermissionService
         $permissions = Permission::all()->pluck('name')->toArray();
 
         return array_map(function ($permission) use ($user) {
+            if($permission == 'all_tasks'){
+                dd("te");
+            }
             return [
                 'permissionName' => $permission,
                 'access' => $user->can($permission)
