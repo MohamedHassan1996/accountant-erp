@@ -55,6 +55,7 @@ class AllTaskResource extends JsonResource
             if(($endTime[0]->status->value == 2 && $endTime[1]->status->value == 1) &&  $endTime[0]->total_time == $endTime[1]->total_time){
                 $formattedEndTime = Carbon::parse($endTime[1]->created_at)->format('d/m/Y H:i:s');
             }
+        }
 
         return [
             'taskId' => $this->id,
