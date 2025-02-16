@@ -92,7 +92,7 @@ class ParameterValueController extends Controller
      */
     public function delete(Request $request)
     {
-        $this->parameterService->deleteParameter($request->parameterValueGuid);
+        $this->parameterService->deleteParameter($request->parameterValueId);
 
         return response()->json([
             'message' => __('messages.success.deleted')
