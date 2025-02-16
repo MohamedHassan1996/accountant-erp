@@ -46,18 +46,13 @@ class AllAdminTaskResource extends JsonResource
 
         $formattedEndTime = "";
 
-        if($endTime[0]->task_id == 1203){
-            dd($endTime[0]->status->value);
-        }
-
-
         if(count($endTime) == 1){
-            if($endTime[0]->status != 0){
+            if($endTime[0]->status->value != 0){
                 $formattedEndTime = Carbon::parse($endTime[0]->created_at)->format('d/m/Y H:i:s');
             }
         }else if(count($endTime) == 2){
             $formattedEndTime = Carbon::parse($endTime[0]->created_at)->format('d/m/Y H:i:s');
-            if($endTime[0]->status == 1 && $endTime[1]->status == 2){
+            if($endTime[0]->status->value == 1 && $endTime[1]->status->value == 2){
                 $formattedEndTime = Carbon::parse($endTime[1]->created_at)->format('d/m/Y H:i:s');
             }
         }
