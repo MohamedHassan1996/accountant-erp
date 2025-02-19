@@ -33,7 +33,7 @@ class ClientService{
             'phone' => $clientData['phone']??"",
             'email' => $clientData['email']??"",
             'hours_per_month' => $clientData['hoursPerMonth']??0,
-            'price' => $clientData['price'],
+            'price' => $clientData['price']??0,
             'payment_type_id'=>$clientData['paymentTypeId']??null,
             'pay_steps_id'=>$clientData['payStepsId']??null,
             'payment_type_two_id'=>$clientData['paymentTypeTwoId']??null,
@@ -41,7 +41,7 @@ class ClientService{
             'abi'=>$clientData['abi'],
             'cab'=>$clientData['cab'],
             'addable_to_bulk_invoice'=>AddableToBulk::from($clientData['addableToBulkInvoice'])->value,
-            'allowed_days_to_pay'=>$clientData['allowedDaysToPay']??"",
+            'allowed_days_to_pay'=>$clientData['allowedDaysToPay']??0,
         ]);
 
         return $client;
@@ -67,7 +67,7 @@ class ClientService{
             'phone' => $clientData['phone']??"",
             'email' => $clientData['email']??"",
             'hours_per_month' => $clientData['hoursPerMonth']??0,
-            'price' => $clientData['price'],
+            'price' => $clientData['price']??0,
             'payment_type_id'=>$clientData['paymentTypeId']??null,
             'pay_steps_id'=>$clientData['payStepsId']??null,
             'payment_type_two_id'=>$clientData['paymentTypeTwoId']??null,
@@ -75,7 +75,7 @@ class ClientService{
             'abi'=>$clientData['abi']??"",
             'cab'=>$clientData['cab']??"",
             'addable_to_bulk_invoice'=>AddableToBulk::from($clientData['addableToBulkInvoice'])->value,
-            'allowed_days_to_pay'=>$clientData['allowedDaysToPay']??"",
+            'allowed_days_to_pay'=>$clientData['allowedDaysToPay']??0,
         ]);
 
         $client->save();
