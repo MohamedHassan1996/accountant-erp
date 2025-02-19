@@ -153,18 +153,35 @@ class TaskService{
             'end_date' => $taskData['endDate']??null
         ]);
 
-        if($taskData['status'] == TaskStatus::DONE->value) {
-            $taskTimeLog = TaskTimeLog::create([
-                'start_at' => null,
-                'end_at' => null,
-                'type' => TaskTimeLogType::TIME_LOG->value,
-                'comment' => null,
-                'task_id' => $task->id,
-                'user_id' => $taskData['userId'],
-                'status' => TaskTimeLogStatus::STOP->value,
-                'total_time' => $taskTimeLogData['currentTime']??"00:00:00"
-            ]);
-        }
+        // if($taskData['status'] == TaskStatus::DONE->value) {
+
+        //     //$latestTimeLog = TaskTimeLog::find($taskData['taskTimeLogId']);
+
+        //     $taskTimeLogs = $task->timeLogs()->latest()->first();
+
+        //     $totalTime = $taskData['currentTime'];
+
+        //     /*if(!empty($latestTimeLog)){
+        //         $totalTime = gmdate('H:i:s', Carbon::now()->diffInSeconds($latestTimeLog->created_at));
+        //     }*/
+
+        //     if(count($taskTimeLogs) == 1 && $taskTimeLogs[0]->status->value == TaskTimeLogStatus::START->value){
+        //         $taskTimeLog = TaskTimeLog::create([
+        //             'start_at' => null,
+        //             'end_at' => null,
+        //             'type' => TaskTimeLogType::TIME_LOG->value,
+        //             'comment' => null,
+        //             'task_id' => $task->id,
+        //             'user_id' => $taskData['userId'],
+        //             'status' => TaskTimeLogStatus::STOP->value,
+        //             'total_time' => $totalTime,
+        //         ]);
+        //     }
+
+
+
+
+        // }
 
 
 
