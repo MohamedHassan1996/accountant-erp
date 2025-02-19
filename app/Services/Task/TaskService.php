@@ -4,6 +4,8 @@ namespace App\Services\Task;
 
 use App\Models\Task\Task;
 use App\Enums\Task\TaskStatus;
+use App\Enums\Task\TaskTimeLogStatus;
+use App\Enums\Task\TaskTimeLogType;
 use App\Filters\Task\FilterTask;
 use Spatie\QueryBuilder\QueryBuilder;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -11,6 +13,7 @@ use App\Filters\Task\FilterTaskDateBetween;
 use App\Filters\Task\FilterTaskStartEndDate;
 use App\Models\Client\ClientServiceDiscount;
 use App\Models\ServiceCategory\ServiceCategory;
+use App\Models\Task\TaskTimeLog;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -131,6 +134,12 @@ class TaskService{
 
         $task = Task::find($taskData['taskId']);
 
+        if($task->status == TaskStatus::DONE) {
+            return response()->json([
+                'message' => 'Task is already done',
+            ], 401);
+        }
+
         $task->fill([
             'title' => $taskData['title']??"",
             'description' => $taskData['description']??"",
@@ -143,6 +152,21 @@ class TaskService{
             'start_date' => $taskData['startDate']??null,
             'end_date' => $taskData['endDate']??null
         ]);
+
+        if($taskData['status'] == TaskStatus::DONE->value) {
+            $taskTimeLog = TaskTimeLog::create([
+                'start_at' => null,
+                'end_at' => null,
+                'type' => TaskTimeLogType::TIME_LOG->value,
+                'comment' => null,
+                'task_id' => $task->id,
+                'user_id' => $taskData['userId'],
+                'status' => TaskTimeLogStatus::STOP->value,
+                'total_time' => $taskTimeLogData['currentTime']??"00:00:00"
+            ]);
+        }
+
+
 
         $task->save();
 
