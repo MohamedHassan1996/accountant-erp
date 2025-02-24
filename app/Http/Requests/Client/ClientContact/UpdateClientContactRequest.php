@@ -26,8 +26,8 @@ class UpdateClientContactRequest extends FormRequest
     {
         return [
             'clientContactId' => ['required'],
-            'firstName' => 'required|string',
-            'lastName' => 'required|string',
+            'firstName' => 'nullable|required_without:lastName',
+            'lastName'  => 'nullable|required_without:firstName',
             'phone' => ['nullable'],
             'prefix' => ['nullable'],
             'email' => ['nullable'],

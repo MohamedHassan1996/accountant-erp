@@ -25,8 +25,8 @@ class CreateClientContactRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'firstName' => 'required|string',
-            'lastName' => 'required|string',
+            'firstName' => 'nullable|required_without:lastName',
+            'lastName'  => 'nullable|required_without:firstName',
             'phone' => ['nullable'],
             'prefix' => ['nullable'],
             'email' => ['nullable'],
