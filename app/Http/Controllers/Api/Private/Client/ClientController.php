@@ -7,6 +7,7 @@ use App\Http\Requests\Client\CreateClientRequest;
 use App\Http\Requests\Client\UpdateClientRequest;
 use App\Http\Resources\Client\AllClientCollection;
 use App\Http\Resources\Client\ClientResource;
+use App\Services\Client\ClientServiceDiscountService;
 use App\Utils\PaginateCollection;
 use App\Services\Client\ClientService;
 use App\Services\Client\ClientAddressService;
@@ -15,13 +16,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 
+
+
 class ClientController extends Controller
 {
     protected $clientService;
     protected $clientAddressService;
     protected $clientContactService;
-
-    public function __construct(ClientService $clientService, ClientAddressService $clientAddressService, ClientContactService $clientContactService)
+    protected $clientServiceDiscountService;
+    public function __construct(ClientService $clientService, ClientAddressService $clientAddressService, ClientContactService $clientContactService, ClientServiceDiscountService $clientServiceDiscountService)
     {
         $this->middleware('auth:api');
         $this->middleware('permission:all_clients', ['only' => ['index']]);
@@ -32,6 +35,7 @@ class ClientController extends Controller
         $this->clientService = $clientService;
         $this->clientAddressService = $clientAddressService;
         $this->clientContactService = $clientContactService;
+        $this->clientServiceDiscountService = $clientServiceDiscountService;
     }
 
     /**
@@ -62,6 +66,7 @@ class ClientController extends Controller
 
             $addresses = $data['addresses'];
             $contacts = $data['contacts'];
+            $discounts = $data['discounts'];
 
             foreach($addresses as $address){
                 $this->clientAddressService->createAddress([
@@ -74,6 +79,13 @@ class ClientController extends Controller
                 $this->clientContactService->createContact([
                     'clientId' => $client->id,
                     ...$contact
+                ]);
+            }
+
+            foreach($discounts as $discount){
+                $this->clientServiceDiscountService->createClientServiceDiscount([
+                    'clientId' => $client->id,
+                    ...$discount
                 ]);
             }
 

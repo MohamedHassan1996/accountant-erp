@@ -44,7 +44,8 @@ class CreateClientRequest extends FormRequest
             'allowedDaysToPay'=>['nullable'],
             'iban' => ['nullable'],
             'abi' => ['nullable'],
-            'cab' => ['nullable']
+            'cab' => ['nullable'],
+            'discounts' => ['nullable']
         ];
     }
 
