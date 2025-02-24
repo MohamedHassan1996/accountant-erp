@@ -17,7 +17,7 @@ class AllClientContactResource extends JsonResource
 
         return [
             'clientContactId' => $this->id,
-            'firstName' => $this->first_name??"",
+            'firstName' => $this->fullName ,
             'lastName' => $this->last_name??"",
             'phone' => $this->phone??"",
             'prefix' => $this->prefix??"",

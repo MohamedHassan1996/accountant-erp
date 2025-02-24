@@ -30,5 +30,9 @@ class ClientContact extends Model
         return $this->belongsTo(ParameterValue::class, 'parameter_value_id');
     }
 
+    public function getFullNameAttribute()
+    {
+        return $this->first_name != '' && $this->last_name != '' ? $this->first_name . ' ' . $this->last_name : ($this->first_name? $this->first_name : $this->last_name);
+    }
 
 }
