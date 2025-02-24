@@ -28,11 +28,11 @@ class ClientContactService{
     public function createContact(array $phoneData){
 
         $phone = ClientContact::create([
-            'first_name' => $phoneData['firstName'],
-            'last_name' => $phoneData['lastName'],
-            'phone' => $phoneData['phone'],
-            'prefix' => $phoneData['prefix'],
-            'email' => $phoneData['email'],
+            'first_name' => $phoneData['firstName']??"",
+            'last_name' => $phoneData['lastName']??"",
+            'phone' => $phoneData['phone']??"",
+            'prefix' => $phoneData['prefix']??"",
+            'email' => $phoneData['email']??"",
             'note' => $phoneData['note']??"",
             'parameter_value_id' => $phoneData['parameterValueId'],
             'client_id' => $phoneData['clientId'],
@@ -54,11 +54,11 @@ class ClientContactService{
         $phone = ClientContact::find($phoneData['clientContactId']);
 
         $phone->fill([
-            'first_name' => $phoneData['firstName'],
-            'last_name' => $phoneData['lastName'],
-            'phone' => $phoneData['phone'],
-            'prefix' => $phoneData['prefix'],
-            'email' => $phoneData['email'],
+            'first_name' => $phoneData['firstName']??"",
+            'last_name' => $phoneData['lastName']??"",
+            'phone' => $phoneData['phone']??"",
+            'prefix' => $phoneData['prefix']??"",
+            'email' => $phoneData['email']??"",
             'note' => $phoneData['note']??"",
             'parameter_value_id' => $phoneData['parameterValueId'],
         ]);

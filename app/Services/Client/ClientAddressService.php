@@ -29,12 +29,12 @@ class ClientAddressService{
 
         $address = ClientAddress::create([
             'address' => $addressData['address'],
-            'province' => $addressData['province'],
-            'cap' => $addressData['cap'],
-            'city' => $addressData['city'],
-            'region' => $addressData['region'],
-            'latitude' => $addressData['latitude'],
-            'longitude' => $addressData['longitude'],
+            'province' => $addressData['province']??"",
+            'cap' => $addressData['cap']??"",
+            'city' => $addressData['city']??"",
+            'region' => $addressData['region']??"",
+            'latitude' => $addressData['latitude']??"",
+            'longitude' => $addressData['longitude']??"",
             'note' => $addressData['note']??"",
             'parameter_value_id' => $addressData['parameterValueId'],
             'client_id' => $addressData['clientId'],
@@ -57,12 +57,12 @@ class ClientAddressService{
 
         $address->fill([
             'address' => $addressData['address'],
-            'province' => $addressData['province'],
-            'cap' => $addressData['cap'],
-            'city' => $addressData['city'],
-            'region' => $addressData['region'],
-            'latitude' => $addressData['latitude'],
-            'longitude' => $addressData['longitude'],
+            'province' => $addressData['province']??"",
+            'cap' => $addressData['cap']??"",
+            'city' => $addressData['city']??"",
+            'region' => $addressData['region']??"",
+            'latitude' => $addressData['latitude']??"",
+            'longitude' => $addressData['longitude']??"",
             'note' => $addressData['note']??"",
             'parameter_value_id' => $addressData['parameterValueId'],
         ]);
