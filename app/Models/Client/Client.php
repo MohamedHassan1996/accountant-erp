@@ -25,6 +25,7 @@ class Client extends Model
         'phone',
         'note',
         'price',
+        'monthly_price',
         'hours_per_month',
         'payment_type_id' ,
         'pay_steps_id',

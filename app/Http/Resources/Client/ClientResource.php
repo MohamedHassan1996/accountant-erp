@@ -25,6 +25,7 @@ class ClientResource extends JsonResource
             'phone' => $this->phone??"",
             'email' => $this->email??"",
             'price' => $this->price??0,
+            'monthlyPrice' => $this->monthly_price??0,
             'hoursPerMonth' => $this->hours_per_month??0,
             'paymentTypeId' => $this->payment_type_id??"" ,
             'payStepsId'=> $this->pay_steps_id??"",

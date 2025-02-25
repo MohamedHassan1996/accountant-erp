@@ -35,6 +35,7 @@ class CreateClientRequest extends FormRequest
             'email' => ['nullable'],
             'hoursPerMonth' => ['nullable'],
             'price' => ['nullable'],
+            'monthlyPrice' => ['nullable'],
             'addresses' => ['nullable'],
             'contacts' => ['nullable'],
             'paymentTypeId' => ['nullable'] ,

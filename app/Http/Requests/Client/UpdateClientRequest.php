@@ -35,6 +35,7 @@ class UpdateClientRequest extends FormRequest
             'email' => ['nullable'],
             'hoursPerMonth' => ['nullable'],
             'price' => ['nullable'],
+            'monthlyPrice' => ['nullable'],
             'addableToBulkInvoice'=>['nullable',new Enum(AddableToBulk::class) ],
             'allowedDaysToPay'=>['nullable'],
             'paymentTypeId' => ['nullable'] ,
