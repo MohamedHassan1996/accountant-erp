@@ -15,7 +15,7 @@ class TaskResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        //$latestLog = $this->timeLogs()->latest()->first();
+        $latestLog = $this->timeLogs()->latest()->first();
         return [
             'taskId' => $this->id,
             'title' => $this->title,
@@ -28,7 +28,7 @@ class TaskResource extends JsonResource
             'invoiceId' => $this->invoice_id??"",
             'timeLogStatus' => $this->timeLogStatus,
             'currentTime' => $this->current_time,
-            //'latestTimeLogId' => $latestLog?->id??"",
+            'latestTimeLogId' => $latestLog?->id??"",
             'connectionTypeId' => $this->connection_type_id,
             //'startDate' => $this->start_date??"",
             //'endDate' => $this->end_date??"",

@@ -18,6 +18,7 @@ use App\Enums\Client\ClientServiceDiscountStatus;
 use App\Enums\Client\ServiceDiscountCategory;
 use App\Http\Resources\Invoice\AllInvoiceCollection;
 use App\Enums\ServiceCategory\ServiceCategoryAddToInvoiceStatus;
+use Carbon\Carbon;
 
 class InvoiceController extends Controller
 {
@@ -65,6 +66,7 @@ class InvoiceController extends Controller
                 'tasks.status as taskStatus',
                 'tasks.title as taskTitle',
                 'tasks.price as taskPrice',
+                'tasks.created_at as taskCreatedAt',
                 'tasks.price_after_discount as taskPriceAfterDiscount',
                 'tasks.number as taskNumber',
                 'tasks.invoice_id as invoiceId',
@@ -122,7 +124,8 @@ class InvoiceController extends Controller
                 'serviceCategoryName' => $invoice->serviceCategoryName,
                 'taskStatus' => $invoice->taskStatus,
                 'price' =>$invoice->taskPrice ?? $servicePrice,
-                'priceAfterDiscount' =>$invoice->taskPriceAfterDiscount??$servicePriceAfterDiscount
+                'priceAfterDiscount' =>$invoice->taskPriceAfterDiscount??$servicePriceAfterDiscount,
+                'taskCreatedAt' => Carbon::parse($invoice->taskCreatedAt)->format('d/m/Y')
             ];
         }
 
