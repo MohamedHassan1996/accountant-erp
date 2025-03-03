@@ -126,23 +126,35 @@ class TaskTimeLogController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    /*public function update(UpdateTaskTimeLogRequest $updateTaskTimeLogRequest)
-    {
+    // public function update(Request $request)
+    // {
 
-        try {
-            DB::beginTransaction();
-            $this->taskTimeLogService->updateTaskTimeLog($updateTaskTimeLogRequest->validated());
-            DB::commit();
-            return response()->json([
-                 'message' => __('messages.success.updated')
-            ], 200);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            throw $e;
-        }
+    //     try {
+    //         DB::beginTransaction();
+    //         $taskTimeLog = TaskTimeLog::find($request->taskTimeLogId);
+
+    //         if($taskTimeLog->status != TaskTimeLogStatus::STOP) {
+    //             return response()->json([
+    //                 'message' => "you can't change this task time log",
+    //             ]);
+    //         }
+
+    //         $taskTimeLog->update([
+    //             'total_time' => $request->totalTime,
+    //             'comment' => $request->comment
+    //         ]);
+
+    //         DB::commit();
+    //         return response()->json([
+    //              'message' => __('messages.success.updated')
+    //         ], 200);
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         throw $e;
+    //     }
 
 
-    }*/
+    // }
 
     /**
      * Remove the specified resource from storage.

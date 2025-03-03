@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Private\Client\ClientPaymentTypeController;
+use App\Http\Controllers\Api\Private\Task\ChangeTaskTimeLogController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Models\Parameter\ParameterValue;
@@ -116,6 +117,11 @@ Route::prefix('v1/task-time-logs')->group(function(){
     Route::put('update', [TaskTimeLogController::class, 'update']);
     Route::delete('delete', [TaskTimeLogController::class, 'delete']);
 });
+
+Route::prefix('v1/task-time-logs/change-time')->group(function(){
+    Route::put('', [ChangeTaskTimeLogController::class, 'update']);
+});
+
 
 Route::prefix('v1/user-active-tasks')->group(function(){
     Route::get('', [ActiveTaskController::class, 'index']);
