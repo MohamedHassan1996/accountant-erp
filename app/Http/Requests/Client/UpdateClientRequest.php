@@ -43,7 +43,11 @@ class UpdateClientRequest extends FormRequest
             'paymentTypeTwoId' => ['nullable'],
             'iban' => ['nullable'],
             'abi' => ['nullable'],
-            'cab' => ['nullable']
+            'cab' => ['nullable'],
+            'isCompany' => ['nullable'],
+            'totalTax' => ['nullable'],
+            'totalTaxDescription' => ['nullable'],
+            'payInstallments' => ['nullable'],
         ];
     }
 

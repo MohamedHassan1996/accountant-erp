@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\Private\Task\ActiveTaskController;
 use App\Http\Controllers\Api\Private\Task\TaskTimeLogController;
 use App\Http\Controllers\Api\Private\Parameter\ParameterController;
 use App\Http\Controllers\Api\Private\Client\ClientAddressController;
+use App\Http\Controllers\Api\Private\Client\ClientBankAccountController;
 use App\Http\Controllers\Api\Private\Client\ClientContactController;
 use App\Http\Controllers\Api\Private\Client\ClientPaymentPeriodController;
 use App\Http\Controllers\Api\Private\Parameter\ParameterValueController;
@@ -78,6 +79,14 @@ Route::prefix('v1/client-contacts')->group(function(){
     Route::get('edit', [ClientContactController::class, 'edit']);
     Route::put('update', [ClientContactController::class, 'update']);
     Route::delete('delete', [ClientContactController::class, 'delete']);
+});
+
+Route::prefix('v1/client-bank-accounts')->group(function(){
+    Route::get('', [ClientBankAccountController::class, 'index']);
+    Route::post('create', [ClientBankAccountController::class, 'create']);
+    Route::get('edit', [ClientBankAccountController::class, 'edit']);
+    Route::put('update', [ClientBankAccountController::class, 'update']);
+    Route::delete('delete', [ClientBankAccountController::class, 'delete']);
 });
 
 Route::prefix('v1/service-categories')->group(function(){

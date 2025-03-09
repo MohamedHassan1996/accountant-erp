@@ -43,6 +43,9 @@ class ClientService{
             'cab'=>$clientData['cab'],
             'addable_to_bulk_invoice'=>AddableToBulk::from($clientData['addableToBulkInvoice'])->value,
             'allowed_days_to_pay'=>$clientData['allowedDaysToPay']??0,
+            'is_company'=>$clientData['isCompany']??0,
+            'total_tax'=>$clientData['totalTax']??0,
+            'total_tax_description'=>$clientData['totalTaxDescription']??"",
         ]);
 
         return $client;
@@ -50,7 +53,7 @@ class ClientService{
     }
 
     public function editClient(string $clientId){
-        $client = Client::with(['addresses', 'contacts'])->find($clientId);
+        $client = Client::with(['addresses', 'contacts', 'payInstallments', 'payInstallments.payInstallmentSubData'])->find($clientId);
 
         return $client;
 
@@ -78,6 +81,9 @@ class ClientService{
             'cab'=>$clientData['cab']??"",
             'addable_to_bulk_invoice'=>AddableToBulk::from($clientData['addableToBulkInvoice'])->value,
             'allowed_days_to_pay'=>$clientData['allowedDaysToPay']??0,
+            'is_company'=>$clientData['isCompany']??0,
+            'total_tax'=>$clientData['totalTax']??0,
+            'total_tax_description'=>$clientData['totalTaxDescription']??"",
         ]);
 
         $client->save();

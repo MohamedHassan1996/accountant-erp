@@ -7,6 +7,9 @@ use App\Http\Requests\Client\CreateClientRequest;
 use App\Http\Requests\Client\UpdateClientRequest;
 use App\Http\Resources\Client\AllClientCollection;
 use App\Http\Resources\Client\ClientResource;
+use App\Models\Client\ClientPayInstallment;
+use App\Models\Client\ClientPayInstallmentSubData;
+use App\Services\Client\ClientBankAccountService;
 use App\Services\Client\ClientServiceDiscountService;
 use App\Utils\PaginateCollection;
 use App\Services\Client\ClientService;
@@ -18,13 +21,17 @@ use Illuminate\Support\Facades\DB;
 
 
 
+
+
 class ClientController extends Controller
 {
     protected $clientService;
     protected $clientAddressService;
     protected $clientContactService;
     protected $clientServiceDiscountService;
-    public function __construct(ClientService $clientService, ClientAddressService $clientAddressService, ClientContactService $clientContactService, ClientServiceDiscountService $clientServiceDiscountService)
+
+    protected $clientBankAccountService;
+    public function __construct(ClientService $clientService, ClientAddressService $clientAddressService, ClientContactService $clientContactService, ClientServiceDiscountService $clientServiceDiscountService, ClientBankAccountService $clientBankAccountService)
     {
         $this->middleware('auth:api');
         $this->middleware('permission:all_clients', ['only' => ['index']]);
@@ -36,6 +43,7 @@ class ClientController extends Controller
         $this->clientAddressService = $clientAddressService;
         $this->clientContactService = $clientContactService;
         $this->clientServiceDiscountService = $clientServiceDiscountService;
+        $this->clientBankAccountService = $clientBankAccountService;
     }
 
     /**
@@ -67,6 +75,8 @@ class ClientController extends Controller
             $addresses = $data['addresses'];
             $contacts = $data['contacts'];
             $discounts = $data['discounts'];
+            $bankAccounts = $data['bankAccounts'];
+            $payInstallments = $data['payInstallments'];
 
             foreach($addresses as $address){
                 $this->clientAddressService->createAddress([
@@ -87,6 +97,32 @@ class ClientController extends Controller
                     'clientId' => $client->id,
                     ...$discount
                 ]);
+            }
+
+            foreach($bankAccounts as $bankAccount){
+                $this->clientBankAccountService->createClientBankAccount([
+                    'clientId' => $client->id,
+                    ...$bankAccount
+                ]);
+            }
+
+            foreach($payInstallments as $payInstallment){
+
+                $payInstallmentData = $payInstallment;
+
+                $payInstallmentItem = ClientPayInstallment::create([
+                    'client_id' => $client->id,
+                    'description' => $payInstallmentData['description']??"",
+                    'amount' => $payInstallmentData['amount'],
+                    'start_at' => $payInstallmentData['startAt'],
+                    'end_at' => $payInstallmentData['endAt']
+                ]);
+
+                foreach($payInstallmentData as $payInstallmentItemSubData){
+                    ClientPayInstallmentSubData::create([
+                        'clientPayInstallmentId' => $payInstallmentItem->id,
+                    ]);
+                }
             }
 
             DB::commit();
@@ -124,7 +160,26 @@ class ClientController extends Controller
 
         try {
             DB::beginTransaction();
-            $this->clientService->updateClient($updateClientRequest->validated());
+            $client = $this->clientService->updateClient($updateClientRequest->validated());
+
+            foreach($updateClientRequest->validated()['payInstallments'] as $payInstallment){
+
+                $payInstallmentData = $payInstallment;
+
+                $payInstallmentItem = ClientPayInstallment::create([
+                    'client_id' => $client->id,
+                    'description' => $payInstallmentData['description']??"",
+                    'amount' => $payInstallmentData['amount'],
+                    'start_at' => $payInstallmentData['startAt'],
+                    'end_at' => $payInstallmentData['endAt']
+                ]);
+
+                foreach($payInstallmentData as $payInstallmentItemSubData){
+                    ClientPayInstallmentSubData::create([
+                        'clientPayInstallmentId' => $payInstallmentItem->id,
+                    ]);
+                }
+            }
             DB::commit();
             return response()->json([
                  'message' => __('messages.success.updated')

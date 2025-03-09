@@ -46,7 +46,12 @@ class CreateClientRequest extends FormRequest
             'iban' => ['nullable'],
             'abi' => ['nullable'],
             'cab' => ['nullable'],
-            'discounts' => ['nullable']
+            'discounts' => ['nullable'],
+            'isCompany' => ['nullable'],
+            'bankAccounts' => ['nullable'],
+            'totalTax' => ['nullable'],
+            'totalTaxDescription' => ['nullable'],
+            'payInstallments' => ['nullable'],
         ];
     }
 

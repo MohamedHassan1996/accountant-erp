@@ -29,6 +29,10 @@ class ServiceCategoryService{
             'service_type_id'=>$serviceCategoryData['ServiceTypeId']??null,
             'add_to_invoice' => ServiceCategoryAddToInvoiceStatus::from($serviceCategoryData['addToInvoice']),
             'price' => $serviceCategoryData['price'],
+            'extra_is_pricable' => $serviceCategoryData['extraIsPricable']??0,
+            'extra_code' => $serviceCategoryData['extraCode']??"",
+            'extra_price_description' => $serviceCategoryData['extraPriceDescription']??"",
+            'extra_price' => $serviceCategoryData['extraPrice']??0
         ]);
 
         return $serviceCategory;
@@ -52,6 +56,10 @@ class ServiceCategoryService{
             'service_type_id'=>$serviceCategoryData['ServiceTypeId']??null,
             'add_to_invoice' => ServiceCategoryAddToInvoiceStatus::from($serviceCategoryData['addToInvoice']),
             'price' => $serviceCategoryData['price'],
+            'extra_is_pricable' => $serviceCategoryData['extraIsPricable']??0,
+            'extra_code' => $serviceCategoryData['extraCode']??"",
+            'extra_price_description' => $serviceCategoryData['extraPriceDescription']??"",
+            'extra_price' => $serviceCategoryData['extraPrice']??0
         ]);
 
         $serviceCategory->save();

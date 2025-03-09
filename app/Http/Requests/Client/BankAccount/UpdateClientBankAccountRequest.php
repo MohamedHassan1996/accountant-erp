@@ -1,15 +1,13 @@
 <?php
 
-namespace App\Http\Requests\ServiceCategory;
+namespace App\Http\Requests\Client\ClientBank;
 
-use App\Enums\ServiceCategory\ServiceCategoryAddToInvoiceStatus;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Validation\Rules\Enum;
 
 
-class UpdateServiceCategoryRequest extends FormRequest
+class UpdateClientBankAccountRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -27,16 +25,12 @@ class UpdateServiceCategoryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'serviceCategoryId' => ['required'],
-            'name' => ['required', "unique:service_categories,name,{$this->serviceCategoryId}"],
-            'description' => 'nullable|string',
-            'addToInvoice' => ['required', new Enum(ServiceCategoryAddToInvoiceStatus::class)],
-            'price' => 'required',
-            'ServiceTypeId'=>'nullable',
-            'extraIsPricable'=>'nullable',
-            'extraCode'=>'nullable',
-            'extraPriceDescription'=>'nullable',
-            'extraPrice'=>'nullable'
+            'clientBankAccountId' => ['required'],
+            'iban' => ['required'],
+            'abi' => ['nullable'],
+            'cab' => ['nullable'],
+            'isMain' => ['required'],
+            'clientId' => ['nullable']
         ];
     }
 

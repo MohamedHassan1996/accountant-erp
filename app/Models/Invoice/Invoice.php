@@ -16,7 +16,9 @@ class Invoice extends Model
     protected $fillable = [
         'client_id',
         'end_at',
-        'payment_type_id'
+        'payment_type_id',
+        'discount_type',
+        'discount_amount',
     ];
 
     public static function boot()

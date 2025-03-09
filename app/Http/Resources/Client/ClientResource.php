@@ -4,6 +4,7 @@ namespace App\Http\Resources\Client;
 
 use App\Http\Resources\Client\ClientAddress\AllClientAddressResource;
 use App\Http\Resources\Client\ClientContact\AllClientContactResource;
+use App\Http\Resources\Client\PayInstallment\PayInstallmentResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -32,11 +33,15 @@ class ClientResource extends JsonResource
             'paymentTypeTwoId'=> $this->payment_type_two_id??"",
             'addableToBulkInvoice'=>$this->addable_to_bulk_invoice,
             'allowedDaysToPay'=>$this->allowed_days_to_pay??0,
+            'isCompany'=>$this->is_company??0,
             'iban' => $this->iban??"",
             'abi'=> $this->abi??"",
             'cab' => $this->cab??"",
+            'totalTax' => $this->total_tax??0,
+            'totalTaxDescription' => $this->total_tax_description??"",
             'addresses' => AllClientAddressResource::collection($this->whenLoaded('addresses')),
             'contacts' => AllClientContactResource::collection($this->whenLoaded('contacts')),
+            'payInstallments' => PayInstallmentResource::collection($this->whenLoaded('payInstallments')),
         ];
     }
 }

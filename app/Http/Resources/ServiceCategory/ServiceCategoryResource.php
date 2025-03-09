@@ -22,7 +22,11 @@ class ServiceCategoryResource extends JsonResource
             'description' => $this->description??'',
             'addToInvoice' => $this->add_to_invoice,
             'serviceTypeId'=>$this->service_type_id??"",
-            'price' => $this->price
+            'price' => $this->price,
+            'extraIsPricable'=>$this->extra_is_pricable??0,
+            'extraPrice'=>$this->extra_price??0,
+            'extraCode'=>$this->extra_code??'',
+            'extraPriceDescription'=>$this->extra_price_description??''
         ];
     }
 }

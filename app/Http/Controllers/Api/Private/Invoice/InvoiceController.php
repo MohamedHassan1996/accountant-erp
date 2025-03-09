@@ -62,6 +62,8 @@ class InvoiceController extends Controller
                 'clients.ragione_sociale as clientName',
                 'clients.addable_to_bulk_invoice as clientAddableToBulkInvoice',
                 'invoices.number as invoiceNumber',
+                'invoices.discount_type as invoiceDiscountType',
+                'invoices.discount_amount as invoiceDiscountAmount',
                 'tasks.id as taskId',
                 'tasks.status as taskStatus',
                 'tasks.title as taskTitle',
@@ -159,10 +161,18 @@ class InvoiceController extends Controller
             */
 
             foreach ($createTaskRequest->invoices as  $invoiceData) {
+                $endDate = Carbon::parse($invoiceData['endAt']);
+
+                if ($endDate->format('d-m') === '31-08' || $endDate->format('d-m') === '31-12') {
+                    $endDate->addDays(10);
+                }
+
                 $invoice = Invoice::create([
                     'client_id' => $invoiceData['clientId'],
-                    'end_at' => $invoiceData['endAt'],
-                    'payment_type_id' => $invoiceData['paymentTypeId']
+                    'end_at' => $endDate,
+                    'payment_type_id' => $invoiceData['paymentTypeId'],
+                    'discount_type' => $invoiceData['discountType'],
+                    'discount_amount' => $invoiceData['discountAmount']
                 ]);
                 $invoiceTasks = $invoiceData['taskIds'];
                 $clientDiscount=  ClientServiceDiscount::where('client_id', $invoiceData['clientId'])->first();

@@ -34,7 +34,10 @@ class Client extends Model
         'abi',
         'cab',
         'addable_to_bulk_invoice',
-        'allowed_days_to_pay'
+        'allowed_days_to_pay',
+        'is_company',
+        'total_tax',
+        'total_tax_description',
     ];
     protected $casts = [
         'addable_to_bulk_invoice' => AddableToBulk::class
@@ -68,6 +71,11 @@ class Client extends Model
         } else {
             return $service->price;
         }
+    }
+
+    public function payInstallments()
+    {
+        return $this->hasMany(ClientPayInstallment::class, 'client_id');
     }
 
 }
