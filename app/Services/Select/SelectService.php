@@ -59,6 +59,7 @@ class SelectService
             'permissions' => ['getAllPermissions', PermissionSelectService::class],
             'parameters' => ['getAllParameters', ParameterSelectService::class],
             'serviceCategories' => ['getAllServiceCategories', ServiceCategorySelectService::class],
+            'bankAccounts' => ['getAllBankAccounts', ParameterSelectService::class],
         ];
 
         $paramValue = null; // Initialize paramValue
