@@ -34,7 +34,7 @@ class ParameterService{
             'is_default' => $parameterData['isDefault']??0,
         ]);
 
-        if(isset($parameterData['isDefault']) == 1){
+        if($parameterData['isDefault'] == 1){
             ParameterValue::whereNot('id', $paramteterValue->id)->where('parameter_order', $paramteterValue->parameter_order)->where('is_default', 1)->update([
                 'is_default' => 0
             ]);
