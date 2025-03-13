@@ -3,6 +3,7 @@
 namespace App\Services\Parameter;
 
 use App\Filters\Parameter\FilterParameter;
+use App\Models\Parameter\Parameter;
 use App\Models\Parameter\ParameterValue;
 use Spatie\QueryBuilder\QueryBuilder;
 
