@@ -3,8 +3,8 @@
 namespace App\Services\Parameter;
 
 use App\Filters\Parameter\FilterParameter;
-use App\Models\Parameter\Parameter;
 use App\Models\Parameter\ParameterValue;
+use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class ParameterService{
@@ -24,7 +24,7 @@ class ParameterService{
 
     public function createParameter(array $parameterData){
 
-        $parameter = Parameter::where('parameter_order', $parameterData['parameterOrder'])->first();
+        $parameter = DB::table('parameters')->where('parameter_order', $parameterData['parameterOrder'])->first();
 
         $paramteterValue = ParameterValue::create([
             'parameter_id' => $parameter->id,
