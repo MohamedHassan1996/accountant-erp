@@ -103,6 +103,7 @@ class InvoiceController extends Controller
                     'tasks' => [],
                     'totalPrice' => 0,
                     'totalPriceAfterDiscount' => 0,
+                    'totalCosts' => 0,
                     'invoiceDiscountType' => $invoice->invoiceDiscountType,
                     'invoiceDiscountAmount' => $invoice->invoiceDiscountAmount,
                     'clientTotalTax' => $invoice->clientTotalTax
