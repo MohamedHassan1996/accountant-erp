@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::table('invoices', function (Blueprint $table) {
             $table->tinyInteger('discount_type')->default(0)->after('payment_type_id');
             $table->decimal('discount_amount', 10, 2)->nullable()->after('discount_type'); // Pricing value
+            $table->foreignId('bank_account_id')->nullable()->constrained('parameter_values')->onDelete('cascade');
+
         });
     }
 

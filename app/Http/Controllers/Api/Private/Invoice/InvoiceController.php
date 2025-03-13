@@ -209,7 +209,8 @@ class InvoiceController extends Controller
                     'end_at' => $endDate,
                     'payment_type_id' => $invoiceData['paymentTypeId'],
                     'discount_type' => $invoiceData['discountType'],
-                    'discount_amount' => $invoiceData['discountAmount']
+                    'discount_amount' => $invoiceData['discountAmount'],
+                    'bank_account_id' => $invoiceData['bankAccountId'],
                 ]);
                 $invoiceTasks = $invoiceData['taskIds'];
                 $clientDiscount=  ClientServiceDiscount::where('client_id', $invoiceData['clientId'])->first();

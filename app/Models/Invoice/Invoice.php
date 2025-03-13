@@ -19,6 +19,7 @@ class Invoice extends Model
         'payment_type_id',
         'discount_type',
         'discount_amount',
+        'bank_account_id',
     ];
 
     public static function boot()

@@ -22,7 +22,7 @@ class ClientPaymentTypeController extends Controller
     public function __construct()
     {
         $this->middleware('auth:api');
-        $this->middleware('permission:client_payment_type', ['only' => ['index']]);
+        //$this->middleware('permission:client_payment_type', ['only' => ['index']]);
     }
 
     /**
