@@ -4,12 +4,9 @@ namespace App\Http\Controllers\Api\Private\Client;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Client\BankAccount\CreateClientBankAccountRequest;
-use App\Http\Requests\Client\ClientBank\UpdateClientBankAccountRequest;
-use App\Http\Requests\Client\ClientContact\CreateClientContactRequest;
-use App\Http\Requests\Client\ClientContact\UpdateClientContactRequest;
+use App\Http\Requests\Client\BankAccount\UpdateClientBankAccountRequest;
 use App\Http\Resources\Client\ClientBankAccount\AllClientBankAccountResource;
 use App\Http\Resources\Client\ClientBankAccount\ClientBankAccountResource;
-use App\Http\Resources\Client\ClientContact\AllClientContactResource;
 use App\Http\Resources\Client\ClientContact\ClientContactResource;
 use App\Services\Client\ClientBankAccountService;
 use Illuminate\Http\Request;

@@ -31,6 +31,11 @@ class ParameterService{
             'parameter_order' => $parameterData['parameterOrder'],
             'parameter_value' => $parameterData['parameterValue'],
             'description' => $parameterData['description'],
+            'is_default' => $parameterData['isDefault']??0,
+        ]);
+
+        ParameterValue::whereNot('id', $paramteterValue->id)->where('parameter_order', $paramteterValue->parameter_order)->where('is_default', 1)->update([
+            'is_default' => 0
         ]);
 
         return $paramteterValue;
@@ -55,6 +60,17 @@ class ParameterService{
             'parameter_value' => $parameterData['parameterValue'],
             'description' => $parameterData['description'],
         ]);
+
+        $paramteterValue->parameter_value = $parameterData['parameterValue'];
+        $paramteterValue->description = $parameterData['description'];
+
+        if (isset($parameterData['isDefault'])) {
+            $paramteterValue->is_default = $parameterData['isDefault'];
+
+            ParameterValue::whereNot('id', $parameterData['parameterValueId'])->where('parameter_order', $paramteterValue->parameter_order)->where('is_default', 1)->update([
+                'is_default' => 0
+            ]);
+        }
 
         $paramteterValue->save();
 

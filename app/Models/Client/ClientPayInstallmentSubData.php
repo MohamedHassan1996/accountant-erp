@@ -13,6 +13,8 @@ class ClientPayInstallmentSubData extends Model
 
     protected $table = 'client_pay_installment_sub_data';
     protected $fillable = [
+        'price',
+        'description',
         'client_pay_installment_id',
     ];
 }

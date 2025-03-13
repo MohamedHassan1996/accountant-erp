@@ -17,7 +17,11 @@ class ServiceCategory extends Model
         'description',
         'price',
         'add_to_invoice',
-        'service_type_id'
+        'service_type_id',
+        'extra_is_pricable',
+        'extra_code',
+        'extra_price',
+        'extra_price_description'
     ];
 
     protected $casts = [

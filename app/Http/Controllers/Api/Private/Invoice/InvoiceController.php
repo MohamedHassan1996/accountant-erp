@@ -55,10 +55,11 @@ class InvoiceController extends Controller
             ->where('tasks.status', TaskStatus::DONE->value)
             ->whereNull('invoices.deleted_at')
             ->whereNull('tasks.deleted_at')
-            ->where('tasks.is_new', '!=', 0)
+            ->where('tasks.is_new', '!=', 1)
             ->select([
                 'invoices.id as invoiceId',
                 'clients.id as clientId',
+                'clients.total_tax as clientTotalTax',
                 'clients.ragione_sociale as clientName',
                 'clients.addable_to_bulk_invoice as clientAddableToBulkInvoice',
                 'invoices.number as invoiceNumber',
@@ -75,7 +76,10 @@ class InvoiceController extends Controller
                 'service_categories.id as serviceCategoryId',
                 'service_categories.name as serviceCategoryName',
                 'service_categories.price as serviceCategoryPrice',
-                'service_categories.add_to_invoice as serviceCategoryAddToInvoice'
+                'service_categories.add_to_invoice as serviceCategoryAddToInvoice',
+                'service_categories.extra_is_pricable as extraIsPricable',
+                'service_categories.extra_code as extraCode',
+                'service_categories.extra_price as extraPrice',
             ])
             ->get();
 
@@ -85,6 +89,8 @@ class InvoiceController extends Controller
             $key = $invoice->invoiceId != null
                 ? $invoice->invoiceId
                 : "unassigned##{$invoice->clientId}";
+
+
 
             if (!in_array($key, array_column($formattedData, 'key'))) {
                 $formattedData[] = [
@@ -96,7 +102,10 @@ class InvoiceController extends Controller
                     'clientAddableToBulkInvoice' => $invoice->clientAddableToBulkInvoice ?? "",
                     'tasks' => [],
                     'totalPrice' => 0,
-                    'totalPriceAfterDiscount' => 0
+                    'totalPriceAfterDiscount' => 0,
+                    'invoiceDiscountType' => $invoice->invoiceDiscountType,
+                    'invoiceDiscountAmount' => $invoice->invoiceDiscountAmount,
+                    'clientTotalTax' => $invoice->clientTotalTax
                 ];
             }
 
@@ -119,6 +128,11 @@ class InvoiceController extends Controller
                 $formattedData[$search]['totalPriceAfterDiscount'] += $servicePriceAfterDiscount;
             }
 
+            if($invoice->extraIsPricable == 1){
+                $formattedData[$search]['totalCosts'] += $servicePrice;
+            }
+
+
             $formattedData[$search]['tasks'][] = [
                 'taskId' => $invoice->taskId,
                 'taskTitle' => $invoice->taskTitle,
@@ -127,8 +141,31 @@ class InvoiceController extends Controller
                 'taskStatus' => $invoice->taskStatus,
                 'price' =>$invoice->taskPrice ?? $servicePrice,
                 'priceAfterDiscount' =>$invoice->taskPriceAfterDiscount??$servicePriceAfterDiscount,
+                'extraPrice' => 0,
                 'taskCreatedAt' => Carbon::parse($invoice->taskCreatedAt)->format('d/m/Y H:i')
             ];
+
+
+
+            if(count($formattedData) > 0) {
+                $formattedData[$search]['additionalDiscount'] = 0 ;
+                $formattedData[$search]['totalAfterAdditionalDiscount'] = $formattedData[$search]['totalPriceAfterDiscount'];
+                $formattedData[$search]['additionalTax'] = $formattedData[$search]['clientTotalTax'];
+                $formattedData[$search]['totalAfterAdditionalTax'] = $formattedData[$search]['totalPriceAfterDiscount'];
+
+
+
+                /*if($invoice->invoiceDiscountType == 0) {
+                    $formattedData[$search]['additionalTax'] = $invoice->invoiceDiscountAmount;
+                    $formattedData[$search]['totalAfterAdditionalTax'] = $formattedData[$search]['totalPriceAfterDiscount'] - $invoice->invoiceDiscountAmount;
+                }*/
+
+
+
+                if($formattedData[$search]['additionalTax'] > 0) {
+                    $formattedData[$search]['totalAfterAdditionalTax'] = $formattedData[$search]['totalAfterAdditionalTax'] + ($formattedData[$search]['totalAfterAdditionalTax'] * ($formattedData[$search]['additionalTax'] / 100));
+                }
+            }
         }
 
         // Paginate the formatted data

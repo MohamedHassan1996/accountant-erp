@@ -19,6 +19,9 @@ use App\Http\Controllers\Api\Private\Parameter\ParameterController;
 use App\Http\Controllers\Api\Private\Client\ClientAddressController;
 use App\Http\Controllers\Api\Private\Client\ClientBankAccountController;
 use App\Http\Controllers\Api\Private\Client\ClientContactController;
+use App\Http\Controllers\Api\Private\Client\ClientPayInstallmentController;
+use App\Http\Controllers\Api\Private\Client\ClientPayInstallmentDividerController;
+use App\Http\Controllers\Api\Private\Client\ClientPayInstallmentSubDataController;
 use App\Http\Controllers\Api\Private\Client\ClientPaymentPeriodController;
 use App\Http\Controllers\Api\Private\Parameter\ParameterValueController;
 use App\Http\Controllers\Api\Private\ServiceCategory\ServiceCategoryController;
@@ -87,6 +90,25 @@ Route::prefix('v1/client-bank-accounts')->group(function(){
     Route::get('edit', [ClientBankAccountController::class, 'edit']);
     Route::put('update', [ClientBankAccountController::class, 'update']);
     Route::delete('delete', [ClientBankAccountController::class, 'delete']);
+});
+
+Route::prefix('v1/client-pay-installments')->group(function(){
+    Route::get('', [ClientPayInstallmentController::class, 'index']);
+    Route::post('create', [ClientPayInstallmentController::class, 'create']);
+    Route::get('edit', [ClientPayInstallmentController::class, 'edit']);
+    Route::put('update', [ClientPayInstallmentController::class, 'update']);
+});
+
+Route::prefix('v1/client-pay-installment-sub-data')->group(function(){
+    Route::get('', [ClientPayInstallmentSubDataController::class, 'index']);
+    Route::post('create', [ClientPayInstallmentSubDataController::class, 'create']);
+    Route::get('edit', [ClientPayInstallmentSubDataController::class, 'edit']);
+    Route::put('update', [ClientPayInstallmentSubDataController::class, 'update']);
+    Route::put('delete', [ClientPayInstallmentSubDataController::class, 'delete']);
+});
+
+Route::prefix('v1/client-pay-installment-divider')->group(function(){
+    Route::get('', [ClientPayInstallmentDividerController::class, 'index']);
 });
 
 Route::prefix('v1/service-categories')->group(function(){

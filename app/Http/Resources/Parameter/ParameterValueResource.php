@@ -17,7 +17,8 @@ class ParameterValueResource extends JsonResource
         return [
             'parameterValueId' => $this->id,
             'parameterValue' => $this->parameter_value,
-            'description' => $this->description??""
+            'description' => $this->description??"",
+            'isDefault' => $this->is_default
         ];
     }
 }

@@ -6,7 +6,6 @@ use App\Traits\CreatedUpdatedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Str;
 
 
 class ParameterValue extends Model
@@ -18,14 +17,14 @@ class ParameterValue extends Model
         'parameter_id',
         'parameter_value',
         'description',
-        'parameter_order'
+        'parameter_order',
+        'is_default'
     ];
 
 
     public function scopeParameterOrder($query, $paraOrder)
     {
         return $query->where('parameter_id', $paraOrder);
-
     }
 
 }

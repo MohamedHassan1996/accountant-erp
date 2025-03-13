@@ -21,7 +21,7 @@ class PayInstallmentResource extends JsonResource
             'endAt' => $this->end_at,
             'amount' => $this->amount,
             'description' => $this->description??'',
-            'payInstallmentSubDatas' => PayInstallmentSubDataResource::collection($this->payInstallmentSubData)
+            'payInstallmentSubData' => count($this->payInstallmentSubData) ? PayInstallmentSubDataResource::collection($this->payInstallmentSubData) : []
         ];
 
     }

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Client\ClientBank;
+namespace App\Http\Requests\Client\BankAccount;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -30,7 +30,6 @@ class UpdateClientBankAccountRequest extends FormRequest
             'abi' => ['nullable'],
             'cab' => ['nullable'],
             'isMain' => ['required'],
-            'clientId' => ['nullable']
         ];
     }
 

@@ -17,6 +17,8 @@ class PayInstallmentSubDataResource extends JsonResource
 
         return [
             'payInstallmentSubDataId' => $this->id,
+            'price' => $this->price,
+            'description' => $this->description??'',
         ];
     }
 }

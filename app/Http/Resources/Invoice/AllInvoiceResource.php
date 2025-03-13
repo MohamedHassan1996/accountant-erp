@@ -23,7 +23,11 @@ class AllInvoiceResource extends JsonResource
             'tasks' => $this->resource['tasks'],
             'totalPrice' => $this->resource['totalPrice'],
             'totalPriceAfterDiscount' => $this->resource['totalPriceAfterDiscount'],
-            'addableToBulkInvoice' => $this->resource['clientAddableToBulkInvoice']
+            'addableToBulkInvoice' => $this->resource['clientAddableToBulkInvoice'],
+            'additionalDiscount' => $this->resource['additionalDiscount'],
+            'totalAfterAdditionalDiscount' => $this->resource['totalAfterAdditionalDiscount'],
+            'additionalTax' => $this->resource['additionalTax'],
+            'totalAfterAdditionalTax' => $this->resource['totalAfterAdditionalTax'],
         ];
     }
 }

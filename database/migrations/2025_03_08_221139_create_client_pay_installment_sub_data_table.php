@@ -15,8 +15,8 @@ return new class extends Migration
     {
         Schema::create('client_pay_installment_sub_data', function (Blueprint $table) {
             $table->id();
-
-
+            $table->decimal('price', 10, 2);
+            $table->string('description')->nullable();
             $table->unsignedBigInteger('client_pay_installment_id')->nullable();
             $table->foreign('client_pay_installment_id', 'fk_sub_data_installment')
             ->references('id')->on('client_pay_installments')

@@ -7,6 +7,7 @@ use App\Http\Requests\Client\CreateClientRequest;
 use App\Http\Requests\Client\UpdateClientRequest;
 use App\Http\Resources\Client\AllClientCollection;
 use App\Http\Resources\Client\ClientResource;
+use App\Models\Client\Client;
 use App\Models\Client\ClientPayInstallment;
 use App\Models\Client\ClientPayInstallmentSubData;
 use App\Services\Client\ClientBankAccountService;
@@ -118,9 +119,13 @@ class ClientController extends Controller
                     'end_at' => $payInstallmentData['endAt']
                 ]);
 
-                foreach($payInstallmentData as $payInstallmentItemSubData){
+                $payInstallmentItemSubData = $payInstallmentData['payInstallmentSubData']??[];
+
+                foreach($payInstallmentItemSubData as $payInstallmentItemSubDataItem){
                     ClientPayInstallmentSubData::create([
-                        'clientPayInstallmentId' => $payInstallmentItem->id,
+                        'client_pay_installment_id' => $payInstallmentItem->id,
+                        'price' => $payInstallmentItemSubDataItem['price'],
+                        'description' => $payInstallmentItemSubDataItem['description']??'',
                     ]);
                 }
             }
@@ -147,8 +152,7 @@ class ClientController extends Controller
     {
         $client  =  $this->clientService->editClient($request->clientId);
 
-        return new ClientResource($client);//new ClientResource($client)
-
+        return new ClientResource($client);
 
     }
 
@@ -160,24 +164,41 @@ class ClientController extends Controller
 
         try {
             DB::beginTransaction();
+            $client = Client::find($updateClientRequest->clientId);
+
+            $previousPayStepsId = $client->pay_steps_id;
+
             $client = $this->clientService->updateClient($updateClientRequest->validated());
 
-            foreach($updateClientRequest->validated()['payInstallments'] as $payInstallment){
+            if($previousPayStepsId != $updateClientRequest->validated()['payStepsId']){
 
-                $payInstallmentData = $payInstallment;
+                $clientPayInstallments = ClientPayInstallment::where('client_id', $client->id)->get();
+                if($client->pay_steps_id != null && count($clientPayInstallments) > 0){
+                    ClientPayInstallment::where('client_id', $client->id)->forceDelete();
+                }
+                    $payInstallments = $updateClientRequest->validated()['payInstallments'];
 
-                $payInstallmentItem = ClientPayInstallment::create([
-                    'client_id' => $client->id,
-                    'description' => $payInstallmentData['description']??"",
-                    'amount' => $payInstallmentData['amount'],
-                    'start_at' => $payInstallmentData['startAt'],
-                    'end_at' => $payInstallmentData['endAt']
-                ]);
+                foreach($payInstallments as $payInstallment){
 
-                foreach($payInstallmentData as $payInstallmentItemSubData){
-                    ClientPayInstallmentSubData::create([
-                        'clientPayInstallmentId' => $payInstallmentItem->id,
+                    $payInstallmentData = $payInstallment;
+
+                    $payInstallmentItem = ClientPayInstallment::create([
+                        'client_id' => $client->id,
+                        'description' => $payInstallmentData['description']??"",
+                        'amount' => $payInstallmentData['amount'],
+                        'start_at' => $payInstallmentData['startAt'],
+                        'end_at' => $payInstallmentData['endAt']
                     ]);
+
+                    $payInstallmentItemSubData = $payInstallmentData['payInstallmentSubData']??[];
+
+                    foreach($payInstallmentItemSubData as $payInstallmentItemSubDataItem){
+                        ClientPayInstallmentSubData::create([
+                            'client_pay_installment_id' => $payInstallmentItem->id,
+                            'price' => $payInstallmentItemSubDataItem['price'],
+                            'description' => $payInstallmentItemSubDataItem['description']??'',
+                        ]);
+                    }
                 }
             }
             DB::commit();

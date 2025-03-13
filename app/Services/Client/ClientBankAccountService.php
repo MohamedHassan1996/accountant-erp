@@ -56,12 +56,11 @@ class ClientBankAccountService{
             'abi' => $clientBankAccountData['abi'],
             'cab' => $clientBankAccountData['cab'],
             'is_main' => $clientBankAccountData['isMain'],
-            'client_id' => $clientBankAccountData['clientId'],
         ]);
 
         $clientBankAccount->save();
 
-        ClientBankAccount::whereNot('id', $clientBankAccount->id)->where('client_id', $clientBankAccountData['clientId'])->update(['is_main' => false]);
+        ClientBankAccount::whereNot('id', $clientBankAccount->id)->where('client_id', $clientBankAccount->client_id)->update(['is_main' => false]);
 
 
         return $clientBankAccount;

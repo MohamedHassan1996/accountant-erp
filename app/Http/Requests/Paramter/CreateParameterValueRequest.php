@@ -26,7 +26,8 @@ class CreateParameterValueRequest extends FormRequest
         return [
             'parameterOrder'=> 'required',
             'parameterValue'=> 'required',
-            'description' => '',
+            'description' => 'nullable',
+            'isDefault' => 'nullable',
         ];
 
     }
