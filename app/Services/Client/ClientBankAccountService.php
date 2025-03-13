@@ -34,7 +34,10 @@ class ClientBankAccountService{
             'client_id' => $clientBankAccountData['clientId'],
         ]);
 
-        ClientBankAccount::whereNot('id', $clientBankAccount->id)->where('client_id', $clientBankAccountData['clientId'])->update(['is_main' => false]);
+
+        if($clientBankAccount['isMain'] == 1){
+            ClientBankAccount::whereNot('id', $clientBankAccount->id)->where('client_id', $clientBankAccountData['clientId'])->update(['is_main' => false]);
+        }
 
         return $clientBankAccount;
 
@@ -60,8 +63,9 @@ class ClientBankAccountService{
 
         $clientBankAccount->save();
 
-        ClientBankAccount::whereNot('id', $clientBankAccount->id)->where('client_id', $clientBankAccount->client_id)->update(['is_main' => false]);
-
+        if($clientBankAccount['isMain'] == 1){
+            ClientBankAccount::whereNot('id', $clientBankAccount->id)->where('client_id', $clientBankAccount->client_id)->update(['is_main' => false]);
+        }
 
         return $clientBankAccount;
 
