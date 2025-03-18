@@ -164,12 +164,12 @@ class InvoiceController extends Controller
 
                 if($invoice->invoiceDiscountType == 0) {
                     $formattedData[$search]['invoiceDiscount'] = $invoice->invoiceDiscountAmount;
-                    $formattedData[$search]['totalInvoiceAfterDiscount'] = $formattedData[$search]['totalAfterAdditionalTax'] - $invoice->invoiceDiscountAmount;
+                    $formattedData[$search]['totalInvoiceAfterDiscount'] = $formattedData[$search]['totalCosts'] + ($formattedData[$search]['totalAfterAdditionalTax'] - $invoice->invoiceDiscountAmount);
                 }
 
                 if($invoice->invoiceDiscountType == 1) {
                     $formattedData[$search]['invoiceDiscount'] = $invoice->invoiceDiscountAmount;
-                    $formattedData[$search]['totalInvoiceAfterDiscount'] = $formattedData[$search]['totalAfterAdditionalTax'] - ($formattedData[$search]['totalAfterAdditionalTax'] * ($invoice->invoiceDiscountAmount / 100));
+                    $formattedData[$search]['totalInvoiceAfterDiscount'] =  $formattedData[$search]['totalCosts'] + ($formattedData[$search]['totalAfterAdditionalTax'] - ($formattedData[$search]['totalAfterAdditionalTax'] * ($invoice->invoiceDiscountAmount / 100)));
                 }
 
             }
