@@ -48,8 +48,8 @@ class ClientPayInstallmentDividerController extends Controller
 
         foreach ( range(1, $installmentNumbers) as $installmentNumber ) {
             $installmentsData[] = [
-                'startAt' => $currentDate->format('d/m/Y'),
-                'endAt' => $currentDate->copy()->addDays($allowedDaysToPay)->format('d/m/Y'),
+                'startAt' => $currentDate->format('Y-m-d'),
+                'endAt' => $currentDate->copy()->addDays($allowedDaysToPay)->format('Y-m-d'),
                 'description' => '',
                 'amount' => round($installmentAmount, 2),
                 'payInstallmentSubData' => []
