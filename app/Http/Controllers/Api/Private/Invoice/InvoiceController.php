@@ -85,7 +85,7 @@ class InvoiceController extends Controller
 
         // Format the data
         $formattedData = [];
-        foreach ($allInvoices as $invoice) {
+        foreach ($allInvoices as $index =>$invoice) {
             $key = $invoice->invoiceId != null
                 ? $invoice->invoiceId
                 : "unassigned##{$invoice->clientId}";
@@ -154,21 +154,29 @@ class InvoiceController extends Controller
                 $formattedData[$search]['additionalTax'] = $formattedData[$search]['clientTotalTax'];
                 $formattedData[$search]['totalAfterAdditionalTax'] = $formattedData[$search]['totalPriceAfterDiscount'];
 
-
-                /*if($invoice->invoiceDiscountType == 0) {
-                    $formattedData[$search]['additionalTax'] = $invoice->invoiceDiscountAmount;
-                    $formattedData[$search]['totalAfterAdditionalTax'] = $formattedData[$search]['totalPriceAfterDiscount'] - $invoice->invoiceDiscountAmount;
-                }*/
-
+                $formattedData[$search]['invoiceDiscount'] = 0 ;
+                $formattedData[$search]['totalInvoiceAfterDiscount'] = $formattedData[$search]['totalAfterAdditionalTax'];
 
 
                 if($formattedData[$search]['additionalTax'] > 0) {
                     $formattedData[$search]['totalAfterAdditionalTax'] = $formattedData[$search]['totalAfterAdditionalTax'] + ($formattedData[$search]['totalAfterAdditionalTax'] * ($formattedData[$search]['additionalTax'] / 100));
                 }
 
-                $formattedData[$search]['invoiceDiscount'] = 0 ;
-                $formattedData[$search]['totalInvoiceAfterDiscount'] = $formattedData[$search]['totalAfterAdditionalTax'];
+                if($invoice->invoiceDiscountType == 0) {
+                    $formattedData[$search]['invoiceDiscount'] = $invoice->invoiceDiscountAmount;
+                    $formattedData[$search]['totalInvoiceAfterDiscount'] = $formattedData[$search]['totalAfterAdditionalTax'] - $invoice->invoiceDiscountAmount;
+                }
+
+                if($invoice->invoiceDiscountType == 1) {
+                    $formattedData[$search]['invoiceDiscount'] = $invoice->invoiceDiscountAmount;
+                    $formattedData[$search]['totalInvoiceAfterDiscount'] = $formattedData[$search]['totalAfterAdditionalTax'] - ($formattedData[$search]['totalAfterAdditionalTax'] * ($invoice->invoiceDiscountAmount / 100));
+                }
+
             }
+
+
+
+
         }
 
         // Paginate the formatted data
