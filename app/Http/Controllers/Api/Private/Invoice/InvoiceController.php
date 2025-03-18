@@ -55,7 +55,7 @@ class InvoiceController extends Controller
             ->where('tasks.status', TaskStatus::DONE->value)
             ->whereNull('invoices.deleted_at')
             ->whereNull('tasks.deleted_at')
-            ->where('tasks.is_new', '!=', 1)
+            ->where('tasks.is_new', '=', 1)
             ->select([
                 'invoices.id as invoiceId',
                 'clients.id as clientId',
