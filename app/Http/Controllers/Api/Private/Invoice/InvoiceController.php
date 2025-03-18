@@ -143,7 +143,7 @@ class InvoiceController extends Controller
                 'price' =>$invoice->taskPrice ?? $servicePrice,
                 'priceAfterDiscount' =>$invoice->taskPriceAfterDiscount??$servicePriceAfterDiscount,
                 'extraPrice' => $invoice->extraPrice,
-                'taskCreatedAt' => Carbon::parse($invoice->taskCreatedAt)->format('d/m/Y H:i')
+                'taskCreatedAt' => Carbon::parse($invoice->taskCreatedAt)->format('d/m/Y')
             ];
 
 
