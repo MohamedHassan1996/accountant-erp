@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Private\Client;
 use App\Http\Controllers\Controller;
 use App\Models\Client\Client;
 use App\Models\Parameter\ParameterValue;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 
@@ -48,7 +49,7 @@ class ClientPayInstallmentDividerController extends Controller
 
         foreach ( range(1, $installmentNumbers) as $installmentNumber ) {
             $installmentsData[] = [
-                'startAt' => $currentDate->toDateString(),
+                'startAt' => Carbon::parse($currentDate->toDateString())->format('d/m/Y'),
                 'endAt' => $currentDate->copy()->addDays($allowedDaysToPay)->toDateString(),
                 'description' => '',
                 'amount' => round($installmentAmount, 2),
