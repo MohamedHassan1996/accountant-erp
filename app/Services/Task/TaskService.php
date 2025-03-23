@@ -205,11 +205,11 @@ class TaskService{
 
         $task = Task::find($taskData['taskId']);
 
-        if($task->status == TaskStatus::DONE) {
+        /*if($task->status == TaskStatus::DONE) {
             return response()->json([
                 'message' => 'Task is already done',
             ], 401);
-        }
+        }*/
 
         // $task->fill([
         //     'title' => $taskData['title']??"",
