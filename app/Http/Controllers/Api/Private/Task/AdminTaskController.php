@@ -31,17 +31,31 @@ class AdminTaskController extends Controller
     /**
      * Display a listing of the resource.
      */
+    // public function index(Request $request)
+    // {
+    //     $allTasks = $this->taskService->allTasks();
+
+    //     return response()->json(
+    //         new AllAdminTaskCollection(
+    //             PaginateCollection::paginate(collect($allTasks['tasks']), $request->pageSize ?? 10),
+    //             ['totalHours' => $allTasks['totalTime'], 'totalTasks' => $allTasks['total']] // Pass total time separately
+    //         )
+    //     );
+    // }
+
     public function index(Request $request)
     {
         $allTasks = $this->taskService->allTasks();
 
-        return response()->json(
-            new AllAdminTaskCollection(
-                PaginateCollection::paginate(collect($allTasks['tasks']), $request->pageSize ?? 10),
-                ['totalHours' => $allTasks['totalTime']] // Pass total time separately
-            )
-        );
+
+       return response()->json(
+        new AllAdminTaskCollection($allTasks['tasks'], [
+            'totalHours' => $allTasks['totalTime'],
+            'totalTasks' => $allTasks['total']
+        ])
+    );
     }
+
 
     /**
      * Show the form for creating a new resource.

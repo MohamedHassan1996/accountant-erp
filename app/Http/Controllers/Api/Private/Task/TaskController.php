@@ -36,14 +36,14 @@ class TaskController extends Controller
     {
         $allTasks = $this->taskService->allTasks();
 
-        return response()->json(
-            new AllTaskCollection(
-                PaginateCollection::paginate(collect($allTasks['tasks']), $request->pageSize ?? 10),
-                $allTasks['totalTime'] // Pass total time separately
-            )
-        );
-    }
 
+       return response()->json(
+        new AllTaskCollection($allTasks['tasks'], [
+            'totalHours' => $allTasks['totalTime'],
+            'totalTasks' => $allTasks['total']
+        ])
+    );
+    }
     /**
      * Show the form for creating a new resource.
      */

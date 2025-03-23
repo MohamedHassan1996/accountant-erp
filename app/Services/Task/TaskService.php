@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\DB;
 
 class TaskService{
 
-    public function allTasks()
+    /*public function allTasks()
     {
         $filters = request()->input('filter', []);
         $startDate = $filters['startDate'] ?? null;
@@ -64,11 +64,6 @@ class TaskService{
         $taskIds = $tasks->pluck('id');
 
 
-        // Calculate total time for only paginated tasks
-        /*$totalTime = DB::table('task_time_logs')
-            /*->whereIn('task_id', $taskIds)
-            ->sum('total_time');*/
-
             // Get latest time logs for each task
         $latestLogs = DB::table('task_time_logs as ttl')
             ->join(
@@ -101,11 +96,6 @@ class TaskService{
 
                 $sumTotalTime += Carbon::parse($latestLog->total_time)->diffInSeconds(Carbon::parse('00:00:00'));
 
-                // if($index == 13){
-                //     dd($sumTotalTime);
-                // }
-                //                                     //dd($sumTotalTime);
-
             }
         }
 
@@ -118,9 +108,72 @@ class TaskService{
 
         return [
             'tasks' => $tasks,
-            'totalTime' => $formattedTotalTime
+            'totalTime' => $formattedTotalTime,
+            'total' => $totalTasks
         ];
+    }*/
+
+    public function allTasks()
+{
+    $filters = request()->input('filter', []);
+    $startDate = $filters['startDate'] ?? null;
+    $endDate = $filters['endDate'] ?? null;
+    $pageSize = request()->input('pageSize', 10);
+
+    // Build Query with Filtering
+    $query = QueryBuilder::for(Task::class)
+        ->allowedFilters([
+            AllowedFilter::custom('search', new FilterTask()),
+            AllowedFilter::exact('userId', 'user_id'),
+            AllowedFilter::exact('status', 'status'),
+            AllowedFilter::exact('serviceCategoryId', 'service_category_id'),
+            AllowedFilter::exact('clientId', 'client_id'),
+        ])
+        ->when($startDate && $endDate, fn($q) => $q->whereBetween('created_at', [$startDate, $endDate]))
+        ->when($endDate && !$startDate, fn($q) => $q->whereDate('created_at', '<=', $endDate))
+        ->when($startDate && !$endDate, fn($q) => $q->whereDate('created_at', '=', $startDate))
+        ->where('is_new', 1)
+        ->orderByDesc('id');
+
+    // Get Paginated Data
+    $tasks = $query->paginate($pageSize);
+    $taskIds = $tasks->pluck('id');
+
+    // Fetch Latest Logs for Each Task
+    $latestLogs = DB::table('task_time_logs as ttl')
+        ->join(
+            DB::raw('(SELECT task_id, MAX(created_at) as latest FROM task_time_logs GROUP BY task_id) as latest_logs'),
+            fn($join) => $join->on('ttl.task_id', '=', 'latest_logs.task_id')
+                              ->on('ttl.created_at', '=', 'latest_logs.latest')
+        )
+        ->whereIn('ttl.task_id', $taskIds)
+        ->get();
+
+    // Compute Total Time
+    $sumTotalTime = 0;
+    foreach ($latestLogs as $log) {
+        $createdAt = Carbon::parse($log->created_at);
+        $elapsedTime = Carbon::now()->diffInSeconds($createdAt);
+
+        if ($log->status == 0) { // Task is active
+            $sumTotalTime += ($log->total_time === '00:00:00')
+                ? $elapsedTime
+                : $elapsedTime + Carbon::parse($log->total_time)->diffInSeconds('00:00:00');
+        } else {
+            $sumTotalTime += Carbon::parse($log->total_time)->diffInSeconds('00:00:00');
+        }
     }
+
+    // Convert to "H:i:s" format with total hours continuing beyond 24
+    $formattedTotalTime = sprintf('%d:%02d:%02d', floor($sumTotalTime / 3600), ($sumTotalTime % 3600) / 60, $sumTotalTime % 60);
+
+    return [
+        'tasks' => $tasks,
+        'totalTime' => $formattedTotalTime,
+        'total' => $tasks->total(),
+    ];
+}
+
 
     public function createTask(array $taskData){
         $task = Task::create([
@@ -158,50 +211,36 @@ class TaskService{
             ], 401);
         }
 
-        $task->fill([
-            'title' => $taskData['title']??"",
-            'description' => $taskData['description']??"",
-            'client_id' => $taskData['clientId'],
-            'user_id' => $taskData['userId'],
-            'service_category_id' => $taskData['serviceCategoryId'],
-            'invoice_id' => $taskData['invoiceId']??null,
-            'status' => TaskStatus::from($taskData['status'])->value,
-            'connection_type_id' => $taskData['connectionTypeId']??null,
-            'start_date' => $taskData['startDate']??null,
-            'end_date' => $taskData['endDate']??null
-        ]);
+        // $task->fill([
+        //     'title' => $taskData['title']??"",
+        //     'description' => $taskData['description']??"",
+        //     'client_id' => $taskData['clientId'],
+        //     'user_id' => $taskData['userId'],
+        //     'service_category_id' => $taskData['serviceCategoryId'],
+        //     'invoice_id' => $taskData['invoiceId']??null,
+        //     'status' => TaskStatus::from($taskData['status'])->value,
+        //     'connection_type_id' => $taskData['connectionTypeId']??null,
+        //     'start_date' => $taskData['startDate']??null,
+        //     'end_date' => $taskData['endDate']??null
+        // ]);
 
-        // if($taskData['status'] == TaskStatus::DONE->value) {
+        $task->title = $taskData['title']??"";
+        $task->description = $taskData['description']??"";
+        $task->client_id = $taskData['clientId'];
+        $task->user_id = $taskData['userId'];
+        $task->service_category_id = $taskData['serviceCategoryId'];
+        $task->invoice_id = $taskData['invoiceId']??null;
+        $task->connection_type_id = $taskData['connectionTypeId']??null;
+        $task->start_date = $taskData['startDate']??null;
+        $task->end_date = $taskData['endDate']??null;
 
-        //     //$latestTimeLog = TaskTimeLog::find($taskData['taskTimeLogId']);
-
-        //     $taskTimeLogs = $task->timeLogs()->latest()->first();
-
-        //     $totalTime = $taskData['currentTime'];
-
-        //     /*if(!empty($latestTimeLog)){
-        //         $totalTime = gmdate('H:i:s', Carbon::now()->diffInSeconds($latestTimeLog->created_at));
-        //     }*/
-
-        //     if(count($taskTimeLogs) == 1 && $taskTimeLogs[0]->status->value == TaskTimeLogStatus::START->value){
-        //         $taskTimeLog = TaskTimeLog::create([
-        //             'start_at' => null,
-        //             'end_at' => null,
-        //             'type' => TaskTimeLogType::TIME_LOG->value,
-        //             'comment' => null,
-        //             'task_id' => $task->id,
-        //             'user_id' => $taskData['userId'],
-        //             'status' => TaskTimeLogStatus::STOP->value,
-        //             'total_time' => $totalTime,
-        //         ]);
-        //     }
-
-
-
-
-        // }
-
-
+        if($task->status != TaskStatus::DONE){
+            $task->status = TaskStatus::from($taskData['status'])->value;
+        } else{
+            return response()->json([
+                'message' => 'Task is already done',
+            ], 401);
+        }
 
         $task->save();
 
