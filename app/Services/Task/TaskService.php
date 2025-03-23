@@ -236,11 +236,11 @@ class TaskService{
 
         if($task->status != TaskStatus::DONE){
             $task->status = TaskStatus::from($taskData['status'])->value;
-        } else{
-            return response()->json([
-                'message' => 'Task is already done',
-            ], 401);
         }
+
+        /*return response()->json([
+                'message' => 'Task is already done',
+            ], 401);*/
 
         $task->save();
 
