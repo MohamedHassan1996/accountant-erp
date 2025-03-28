@@ -6,6 +6,7 @@ use App\Enums\Task\TaskStatus;
 use App\Enums\Task\TaskTimeLogStatus;
 use App\Enums\Task\TaskTimeLogType;
 use App\Models\Client\Client;
+use App\Models\Invoice\InvoiceDetail;
 use App\Models\ServiceCategory\ServiceCategory;
 use App\Models\User;
 use App\Traits\CreatedUpdatedBy;
@@ -127,6 +128,11 @@ class Task extends Model
     public function getLatestTimeLogIdAttribute()
     {
         return $this->timeLogs()->where('status', TaskTimeLogStatus::START->value)->latest()->first()->id ?? "";
+    }
+
+    public function invoiceDetails()
+    {
+        return $this->morphMany(InvoiceDetail::class, 'invoiceable');
     }
 
 }

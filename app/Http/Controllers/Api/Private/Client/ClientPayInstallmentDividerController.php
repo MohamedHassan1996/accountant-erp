@@ -50,7 +50,8 @@ class ClientPayInstallmentDividerController extends Controller
             $installmentsData[] = [
                 'startAt' => $currentDate->format('Y-m-d'),
                 'endAt' => $currentDate->copy()->addDays($allowedDaysToPay)->format('Y-m-d'),
-                'description' => '',
+                'parameterValueId' => '',
+                'parameterValueName' => '',
                 'amount' => round($installmentAmount, 2),
                 'payInstallmentSubData' => []
             ];

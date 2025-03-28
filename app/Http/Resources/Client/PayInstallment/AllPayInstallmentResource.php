@@ -2,11 +2,10 @@
 
 namespace App\Http\Resources\Client\PayInstallment;
 
-use App\Http\Resources\Client\PayInstallment\PayInstallmentSubDataResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class PayInstallmentResource extends JsonResource
+class AllPayInstallmentResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -20,8 +19,8 @@ class PayInstallmentResource extends JsonResource
             'startAt' => $this->start_at,
             'endAt' => $this->end_at,
             'amount' => $this->amount,
-            'parameterValueId' => $this->parameter_value_id??'',
-            'payInstallmentSubData' => count($this->payInstallmentSubData) ? PayInstallmentSubDataResource::collection($this->payInstallmentSubData) : []
+            'parameterValueName' => $this->parameterValue?->parameter_value??'',
+            'payInstallmentSubData' => count($this->payInstallmentSubData) ? AllPayInstallmentSubDataResource::collection($this->payInstallmentSubData) : []
         ];
 
     }

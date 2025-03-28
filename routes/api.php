@@ -26,7 +26,10 @@ use App\Http\Controllers\Api\Private\Client\ClientPaymentPeriodController;
 use App\Http\Controllers\Api\Private\Parameter\ParameterValueController;
 use App\Http\Controllers\Api\Private\ServiceCategory\ServiceCategoryController;
 use App\Http\Controllers\Api\Private\Client\ClientServiceCategoryDiscountController;
+use App\Http\Controllers\Api\Private\Invoice\AssignedInvoiceController;
 use App\Http\Controllers\Api\Private\Invoice\ClientEmailController;
+use App\Http\Controllers\Api\Private\Invoice\InvoiceDetailController;
+use App\Http\Controllers\Api\Private\Invoice\RecurringInvoiceController;
 use App\Http\Controllers\Api\Private\Invoice\SendEmailController;
 use App\Http\Controllers\Api\Private\Invoice\SendInvoiceController;
 use App\Http\Controllers\Api\Private\Reports\InvoiceCsvReportController;
@@ -162,6 +165,23 @@ Route::prefix('v1/user-active-tasks')->group(function(){
 Route::prefix('v1/invoices')->group(function(){
     Route::get('', [InvoiceController::class, 'index']);
     Route::post('create', [InvoiceController::class, 'create']);
+    Route::get('edit', [InvoiceController::class, 'edit']);
+    Route::put('update', [InvoiceController::class, 'update']);
+
+});
+
+Route::prefix('v1/invoice-details')->group(function(){
+    Route::get('', [InvoiceDetailController::class, 'index']);
+    Route::post('create', [InvoiceDetailController::class, 'create']);
+    Route::get('edit', [InvoiceDetailController::class, 'edit']);
+    Route::put('update', [InvoiceDetailController::class, 'update']);
+    Route::delete('delete', [InvoiceDetailController::class, 'delete']);
+});
+
+
+
+Route::prefix('v1/recurring-invoices')->group(function(){
+    Route::post('create', [RecurringInvoiceController::class, 'create']);
 });
 
 Route::prefix('v1/parameters')->group(function(){

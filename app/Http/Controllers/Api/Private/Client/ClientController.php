@@ -113,7 +113,7 @@ class ClientController extends Controller
 
                 $payInstallmentItem = ClientPayInstallment::create([
                     'client_id' => $client->id,
-                    'description' => $payInstallmentData['description']??"",
+                    'parameter_value_id' => $payInstallmentData['parameterValueId']??null,
                     'amount' => $payInstallmentData['amount'],
                     'start_at' => $payInstallmentData['startAt'],
                     'end_at' => $payInstallmentData['endAt']
@@ -125,7 +125,7 @@ class ClientController extends Controller
                     ClientPayInstallmentSubData::create([
                         'client_pay_installment_id' => $payInstallmentItem->id,
                         'price' => $payInstallmentItemSubDataItem['price'],
-                        'description' => $payInstallmentItemSubDataItem['description']??'',
+                        'parameter_value_id' => $payInstallmentItemSubDataItem['parameterValueId']??null
                     ]);
                 }
             }
@@ -184,7 +184,7 @@ class ClientController extends Controller
 
                     $payInstallmentItem = ClientPayInstallment::create([
                         'client_id' => $client->id,
-                        'description' => $payInstallmentData['description']??"",
+                        'parameter_value_id' => $payInstallmentData['parameterValueId']??null,
                         'amount' => $payInstallmentData['amount'],
                         'start_at' => $payInstallmentData['startAt'],
                         'end_at' => $payInstallmentData['endAt']
@@ -196,7 +196,7 @@ class ClientController extends Controller
                         ClientPayInstallmentSubData::create([
                             'client_pay_installment_id' => $payInstallmentItem->id,
                             'price' => $payInstallmentItemSubDataItem['price'],
-                            'description' => $payInstallmentItemSubDataItem['description']??'',
+                            'parameter_value_id' => $payInstallmentItemSubDataItem['parameterValueId']??null,
                         ]);
                     }
                 }

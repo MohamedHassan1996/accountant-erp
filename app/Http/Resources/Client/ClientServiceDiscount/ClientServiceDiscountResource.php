@@ -17,7 +17,7 @@ class ClientServiceDiscountResource extends JsonResource
         //dd($this->countries->toArray());
         return [
             'clientServiceDiscountId' => $this->id,
-            'serviceCategoryId' => $this->service_category_id,
+            'serviceCategoryIds' => $this->service_category_ids,
             'discount' => $this->discount,
             'category'=>$this->category,
             'type' => $this->type,

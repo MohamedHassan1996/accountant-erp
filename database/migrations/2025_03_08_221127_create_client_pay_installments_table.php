@@ -18,7 +18,8 @@ return new class extends Migration
             $table->date('start_at')->nullable();
             $table->date('end_at')->nullable();
             $table->decimal('amount', 10, 2)->nullable();
-            $table->string('description')->nullable();
+            $table->unsignedBigInteger('parameter_value_id')->nullable();
+            $table->foreign('parameter_value_id')->references('id')->on('parameter_values')->nullOnDelete();
             $table->unsignedBigInteger('client_id')->nullable();
             $table->foreign('client_id')->references('id')->on('clients')->nullOnDelete();
             $this->CreatedUpdatedByRelationship($table);

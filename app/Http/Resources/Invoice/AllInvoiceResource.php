@@ -28,6 +28,7 @@ class AllInvoiceResource extends JsonResource
             'totalAfterAdditionalTax' => $this->resource['totalAfterAdditionalTax'],
             'invoiceDiscount' => $this->resource['invoiceDiscount']??0,
             'totalInvoiceAfterDiscount' => $this->resource['totalInvoiceAfterDiscount'],
+            'totalCost' => $this->resource['totalCosts'],
 
         ];
     }

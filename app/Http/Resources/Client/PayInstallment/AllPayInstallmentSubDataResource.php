@@ -5,7 +5,7 @@ namespace App\Http\Resources\Client\PayInstallment;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class PayInstallmentSubDataResource extends JsonResource
+class AllPayInstallmentSubDataResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -14,11 +14,10 @@ class PayInstallmentSubDataResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-
         return [
             'payInstallmentSubDataId' => $this->id,
             'price' => $this->price,
-            'parameterValueId' => $this->parameter_value_id??'',
+            'parameterValueName' => $this->parameterValue?->parameter_value??'',
         ];
     }
 }

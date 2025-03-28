@@ -53,7 +53,7 @@ class ClientService{
     }
 
     public function editClient(string $clientId){
-        $client = Client::with(['addresses', 'contacts', 'payInstallments', 'payInstallments.payInstallmentSubData'])->find($clientId);
+        $client = Client::with(['addresses', 'contacts', 'payInstallments', 'payInstallments.payInstallmentSubData' , 'payInstallments.payInstallmentSubData.parameterValue', 'payInstallments.parameterValue'])->find($clientId);
 
         return $client;
 

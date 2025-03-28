@@ -3,6 +3,7 @@
 
 namespace App\Services\Select;
 
+use App\Services\Select\Invoice\InvoiceSelectService;
 use App\Services\Select\Parameter\ParameterSelectService;
 
 class SelectService
@@ -60,6 +61,7 @@ class SelectService
             'parameters' => ['getAllParameters', ParameterSelectService::class],
             'serviceCategories' => ['getAllServiceCategories', ServiceCategorySelectService::class],
             'bankAccounts' => ['getAllBankAccounts', ParameterSelectService::class],
+            'invoices' => ['getAllInvoices', InvoiceSelectService::class],
         ];
 
         $paramValue = null; // Initialize paramValue

@@ -17,7 +17,7 @@ class AllClientServiceDiscountResource extends JsonResource
 
         return [
             'clientServiceDiscountId' => $this->id,
-            'serviceCategoryId' => $this->service_category_id,
+            'serviceCategoryNames' => $this->serviceNames(),
             'discount' => $this->discount,
             'category'=>$this->category,
             'type' => $this->type,

@@ -3,9 +3,8 @@
 namespace App\Http\Controllers\Api\Private\Client;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\Client\PayInstallment\PayInstallmentResource;
+use App\Http\Resources\Client\PayInstallment\AllPayInstallmentSubDataResource;
 use App\Http\Resources\Client\PayInstallment\PayInstallmentSubDataResource;
-use App\Models\Client\ClientPayInstallment;
 use App\Models\Client\ClientPayInstallmentSubData;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -31,7 +30,7 @@ class ClientPayInstallmentSubDataController extends Controller
     {
         $allClientPayInstallments = ClientPayInstallmentSubData::where('client_pay_installment_id', $request->payInstallmentId)->get();
 
-        return PayInstallmentSubDataResource::collection($allClientPayInstallments);
+        return AllPayInstallmentSubDataResource::collection($allClientPayInstallments);
 
     }
 
@@ -48,7 +47,7 @@ class ClientPayInstallmentSubDataController extends Controller
             ClientPayInstallmentSubData::create([
                 'client_pay_installment_id' => $request->payInstallmentId,
                 'price' => $request->price,
-                'description' => $request->description??''
+                'parameter_value_id' => $request->parameterValueId??null
             ]);
 
 
@@ -89,7 +88,7 @@ class ClientPayInstallmentSubDataController extends Controller
             $payInstallmentSubData = ClientPayInstallmentSubData::find($request->payInstallmentSubDataId);
             $payInstallmentSubData->update([
                 'price' => $request->price,
-                'description' => $request->description??''
+                'parameter_value_id' => $request->parameterValueId??null
             ]);
             DB::commit();
             return response()->json([

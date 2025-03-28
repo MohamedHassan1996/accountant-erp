@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Private\Client;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Client\PayInstallment\PayInstallmentResource;
+use App\Http\Resources\Client\PayInstallment\AllPayInstallmentResource;
 use App\Models\Client\ClientPayInstallment;
 use App\Models\Client\ClientPayInstallmentSubData;
 use Illuminate\Http\Request;
@@ -29,7 +30,7 @@ class ClientPayInstallmentController extends Controller
     {
         $allClientPayInstallments = ClientPayInstallment::with('payInstallmentSubData')->where('client_id', $request->clientId)->get();
 
-        return PayInstallmentResource::collection($allClientPayInstallments);
+        return AllPayInstallmentResource::collection($allClientPayInstallments);
 
     }
 
@@ -62,7 +63,7 @@ class ClientPayInstallmentController extends Controller
                 'start_at' => $request->startAt,
                 'end_at' => $request->endAt,
                 'amount' => $request->amount,
-                'description' => $request->description
+                'parameter_value_id' => $request->parameterValueId
             ]);
 
             $payInstallment->payInstallmentSubData()->forceDelete();
@@ -71,7 +72,7 @@ class ClientPayInstallmentController extends Controller
                 ClientPayInstallmentSubData::create([
                     'client_pay_installment_id' => $payInstallment->id,
                     'price' => $payInstallmentSubDataItem['price'],
-                    'description' => $payInstallmentSubDataItem['description']
+                    'parameter_value_id' => $payInstallmentSubDataItem['parameterValueId']??null,
                 ]);
             }
 

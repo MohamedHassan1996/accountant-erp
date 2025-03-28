@@ -32,7 +32,7 @@ class ClientServiceDiscountService{
     public function createClientServiceDiscount(array $clientServiceDiscountData){
 
         $clientServiceDiscount = ClientServiceDiscount::create([
-            'service_category_id' => $clientServiceDiscountData['serviceCategoryId'],
+            'service_category_ids' => $clientServiceDiscountData['serviceCategoryIds'],
             'discount' => $clientServiceDiscountData['discount'],
             'category' => ServiceDiscountCategory::from($clientServiceDiscountData['category']),
             'type' => ClientServiceDiscountType::from($clientServiceDiscountData['type'])->value,
@@ -59,7 +59,7 @@ class ClientServiceDiscountService{
             throw new \Exception("ClientServiceDiscount not found for ID: " . $clientServiceDiscountData['clientServiceDiscountId']);
         }
         $clientServiceDiscount->fill([
-            'service_category_id' => $clientServiceDiscountData['serviceCategoryId'],
+            'service_category_ids' => $clientServiceDiscountData['serviceCategoryIds'],
             'discount' => $clientServiceDiscountData['discount'],
             'category' => ServiceDiscountCategory::from($clientServiceDiscountData['category']),
             'type' => ClientServiceDiscountType::from($clientServiceDiscountData['type'])->value,

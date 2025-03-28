@@ -29,7 +29,7 @@ class CreateClientServiceDiscountRequest extends FormRequest
     {
         return [
             'clientId' => ['required'],
-            'serviceCategoryId' => ['required'],
+            'serviceCategoryIds' => ['required'],
             'discount' => ['required'],
             'category' =>['nullable'],
             'type' => ['required', new Enum(ClientServiceDiscountType::class)],
