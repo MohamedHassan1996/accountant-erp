@@ -54,7 +54,11 @@ class Client extends Model
 
     public function getClientDiscount($serviceId)
     {
-        $discount = ClientServiceDiscount::where('client_id', $this->id)->where('service_category_id', $serviceId)->where('is_active', ClientServiceDiscountStatus::ACTIVE)->latest()->first();
+        $discount = ClientServiceDiscount::where('client_id', $this->id)
+        ->whereRaw("FIND_IN_SET(?, service_category_ids)", [$serviceId])
+        ->where('is_active', ClientServiceDiscountStatus::ACTIVE)
+        ->latest()
+        ->first();
 
         $service = ServiceCategory::find($serviceId);
 
