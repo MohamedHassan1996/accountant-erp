@@ -28,6 +28,7 @@ use App\Http\Controllers\Api\Private\ServiceCategory\ServiceCategoryController;
 use App\Http\Controllers\Api\Private\Client\ClientServiceCategoryDiscountController;
 use App\Http\Controllers\Api\Private\Invoice\AssignedInvoiceController;
 use App\Http\Controllers\Api\Private\Invoice\ClientEmailController;
+use App\Http\Controllers\Api\Private\Invoice\ImageToExcelController;
 use App\Http\Controllers\Api\Private\Invoice\InvoiceDetailController;
 use App\Http\Controllers\Api\Private\Invoice\RecurringInvoiceController;
 use App\Http\Controllers\Api\Private\Invoice\SendEmailController;
@@ -216,6 +217,10 @@ Route::prefix('v1/client-payment-period')->group(function(){
 
 Route::prefix('v1/export-invoice-report')->group(function(){
     Route::get('', [InvoiceReportExportController::class, 'index']);
+});
+
+Route::prefix('v1/image-to-excel')->group(function(){
+    Route::post('', [ImageToExcelController::class, 'index']);
 });
 
 Route::prefix('v1/send-invoice-email')->group(function(){

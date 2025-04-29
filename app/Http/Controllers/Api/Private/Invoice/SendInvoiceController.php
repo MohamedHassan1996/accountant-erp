@@ -195,6 +195,8 @@ use Smalot\PdfParser\Parser;
 use thiagoalessio\TesseractOCR\TesseractOCR;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Imagick\Driver;
+use Illuminate\Support\Facades\Process;
+
 class SendInvoiceController extends Controller
 {
     protected $uploadService;
@@ -205,22 +207,74 @@ class SendInvoiceController extends Controller
     }
 
     public function index(Request $request)
-    {
-        $uploadedFile = $this->uploadService->uploadFile($request->file, 'uploadedInvoices');
+{
+    $request->validate([
+        'files.*' => 'required|mimes:pdf|max:10240', // تحقق من كل ملف داخل المصفوفة
+    ]);
+
+    $results = [];
+
+    foreach ($request->file('files') as $uploaded) {
+        // رفع الملف
+        $uploadedFile = $this->uploadService->uploadFile($uploaded, 'uploadedInvoices');
         $pdfPath = storage_path('app/public/' . $uploadedFile);
 
         try {
-            $this->processInvoices($pdfPath);
-            return response()->json(['message' => 'Invoices sent successfully']);
+            $pythonScript = base_path('app/Http/Controllers/Api/Private/Invoice/image_pro.py');
+            $pythonPath = "C:\\Python312\\python.exe";
+
+            $command = [$pythonPath, $pythonScript, $pdfPath];
+            $process = Process::run($command);
+
+            if ($process->failed()) {
+                $results[] = [
+                    'file' => $uploaded->getClientOriginalName(),
+                    'error' => 'Python script failed',
+                    'stderr' => $process->errorOutput(),
+                    'stdout' => $process->output(),
+                ];
+                continue;
+            }
+
+            $stdout = trim($process->output());
+
+            if (str_contains($stdout, 'Python script started')) {
+                $stdout = str_replace('Python script started', '', $stdout);
+                $stdout = trim($stdout);
+            }
+
+            $cfList = json_decode($stdout, true);
+
+            // ابحث عن العميل وارسل له الفاتورة
+            $client = Client::where('cf', $cfList)->first();
+            if ($client) {
+                $this->sendInvoiceToClient($client->email, $pdfPath);
+            }
+
+            $results[] = [
+                'file' => $uploaded->getClientOriginalName(),
+                'codice_fiscale' => $cfList,
+                'status' => 'processed',
+            ];
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            $results[] = [
+                'file' => $uploaded->getClientOriginalName(),
+                'error' => $e->getMessage()
+            ];
         }
     }
+
+    return response()->json([
+        'message' => 'All files processed',
+        'results' => $results
+    ]);
+}
+
 
     /**
      * Process invoices: extract Codice Fiscale and send corresponding PDFs.
      */
-    private function processInvoices($pdfPath)
+    /*private function processInvoices($pdfPath)
     {
         $outputDir = storage_path('app/public/invoices');
 
@@ -247,12 +301,12 @@ class SendInvoiceController extends Controller
                 $this->sendInvoiceToClient($client->email, $clientPdf);
             }
         }
-    }
+    }*/
 
     /**
      * Convert PDF to images using Ghostscript for OCR processing.
      */
-    private function pdfToImages($pdfPath, $outputDir)
+    /*private function pdfToImages($pdfPath, $outputDir)
     {
         if (!is_dir($outputDir)) {
             mkdir($outputDir, 0777, true);
@@ -270,12 +324,12 @@ class SendInvoiceController extends Controller
         } else {
             throw new \Exception("Failed to convert PDF to images. Error: " . implode("\n", $output));
         }
-    }
+    }*/
 
     /**
      * Extract Codice Fiscale from an invoice image using OCR.
      */
-    private function extractCodiceFiscaleFromImage($imagePath)
+    /*private function extractCodiceFiscaleFromImage($imagePath)
     {
         try {
             $croppedImagePath = storage_path('app/public/invoices/cropped_' . basename($imagePath));
@@ -302,12 +356,12 @@ class SendInvoiceController extends Controller
         }
 
         return null;
-    }
+    }*/
 
     /**
      * Extract specific pages from the original PDF and create a new PDF.
      */
-    private function extractPagesFromPdf($pdfPath, $imagePaths)
+    /*private function extractPagesFromPdf($pdfPath, $imagePaths)
     {
         $pdf = new Fpdi();
         $pageNumbers = [];
@@ -333,7 +387,7 @@ class SendInvoiceController extends Controller
         $pdf->Output($clientPdfPath, 'F');
 
         return $clientPdfPath;
-    }
+    }*/
 
     /**
      * Send the extracted invoice PDF to the client.

@@ -4,6 +4,10 @@ namespace App\Http\Controllers\Api\Private\Reports;
 
 use App\Http\Controllers\Controller;
 use App\Models\Client\Client;
+use App\Models\Client\ClientAddress;
+use App\Models\Client\ClientBankAccount;
+use App\Models\Client\ClientPayInstallment;
+use App\Models\Client\ClientPayInstallmentSubData;
 use App\Models\Invoice\Invoice;
 use App\Models\Parameter\ParameterValue;
 use App\Models\Task\Task;
@@ -11,7 +15,7 @@ use App\Services\Reports\ReportService;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class InvoiceReportExportController extends Controller
@@ -30,16 +34,105 @@ class InvoiceReportExportController extends Controller
         if($request->type == 'pdf'){
             $invoice = Invoice::find($request->invoiceIds[0]);
 
-            $tasks = Task::where('invoice_id', $invoice->id)->get();
+            $invoiceItems = DB::table('invoice_details')
+                ->where('invoice_details.invoice_id', $invoice->id)
+                ->select([
+                    'invoice_details.price_after_discount',
+                    'invoice_details.invoiceable_id',
+                    'invoice_details.invoiceable_type',
+                    'invoice_details.description'
+                ])->get();
+
+            $invoiceItemsData = [];
+            $totalTax = 0;
+            $invoiceTotal = 0;
+
+            foreach ($invoiceItems as $index => $invoiceItem) {
+
+                if($invoiceItem->invoiceable_type == Task::class) {
+                    $invoiceItemData = Task::with('serviceCategory')->find($invoiceItem->invoiceable_id);
+                } elseif($invoiceItem->invoiceable_type == ClientPayInstallment::class || $invoiceItem->invoiceable_type) {
+                    $invoiceItemData = ClientPayInstallment::with('parameterValue')->find($invoiceItem->invoiceable_id);
+                } elseif($invoiceItem->invoiceable_type == ClientPayInstallmentSubData::class) {
+                    $invoiceItemData = ClientPayInstallmentSubData::with('parameterValue')->find($invoiceItem->serviceCategory->invoiceable_id);
+                }
+
+                $invoiceItemsData[] = [
+                    'description' =>  $invoiceItem->invoiceable_type == Task::class ?
+                    $invoiceItemData->serviceCategory->name :$invoiceItemData->parameterValue?->parameter_value??$invoiceItem->description,
+                    'priceAfterDiscount' => $invoiceItem->price_after_discount,
+                    'additionalTaxPercentage' => 22
+                ];
+
+
+                $totalTax += $invoiceItem->price_after_discount * 0.22;
+
+                $invoiceTotal += $invoiceItem->price_after_discount;
+
+                if($invoiceItem->invoiceable_type == Task::class && $invoiceItemData->serviceCategory->extra_is_pricable) {
+                    $invoiceItemsData[] = [
+                    'description' =>  $invoiceItemData->serviceCategory->extra_price_description,
+                    'priceAfterDiscount' => $invoiceItemData->serviceCategory->extra_price,
+                    'additionalTaxPercentage' => 0
+                    ];
+
+                    $invoiceTotal += $invoiceItemData->serviceCategory->extra_price;
+                }
+
+
+            }
 
             $client = Client::find($invoice->client_id);
+
+            $clientAddress = ClientAddress::where('client_id',$client->id)->first();
+
+            $clientBankAccount = ClientBankAccount::where('client_id',$client->id)->first();
+
+            if($clientAddress){
+                $clientAddressFormatted = $clientAddress->address;
+            }
+
+            if($clientBankAccount){
+                $clientBankAccountFormatted = $clientBankAccount->iban;
+            }
+
+
+            if($client->total_tax > 0){
+                $invoiceItemsData[] = [
+                    'description' =>  "client tax",
+                    'priceAfterDiscount' => $client->total_tax . "%",
+                    'additionalTaxPercentage' => 0
+                ];
+
+                $invoiceTotal += $invoiceTotal * ($client->total_tax / 100);
+            }
+
+            if($invoice->discount_amount > 0){
+                if($invoice->discount_type == 0){
+                    $invoiceTotal -= $invoiceTotal * ($invoice->discount_amount / 100);
+                }else{
+                    $invoiceTotal -= $invoice->discount_amount;
+                }
+                $invoiceItemsData[] = [
+                    'description' =>  "invoice discount",
+                    'priceAfterDiscount' => $client->discount_type == 0 ? $invoice->discount_amount . "%" : $invoice->discount_amount,
+                    'additionalTaxPercentage' => 0
+                ];
+
+            }
+
 
             $paymentMethod = ParameterValue::find($invoice->payment_type_id ?? null);
 
             $pdf = PDF::loadView('invoice_pdf_report', [
                 'invoice' => $invoice,
-                'tasks' => $tasks,
+                'invoiceItems' => $invoiceItemsData,
+                'invoiceTotalTax' => $totalTax,
+                'invoiceTotal' => $invoiceTotal,
+                'invoiceTotalWithTax' => $invoiceTotal,
                 'client' => $client,
+                'clientAddress' => $clientAddressFormatted ?? "",
+                'clientBankAccount' => $clientBankAccountFormatted ?? "",
                 'paymentMethod' => $paymentMethod->parameter_value ?? "",
             ]);
 
