@@ -30,7 +30,7 @@ class AdminTaskExportController extends Controller
 
     public function index(Request $request)
     {
-    // Get task data from service
+        // Get task data from service
         $tasks = $this->taskService->allTasks();
 
         // Transform using your resource
@@ -42,7 +42,8 @@ class AdminTaskExportController extends Controller
 
         // Define headers
         $headers = [
-            'Numero ticket','Cliente' ,'Oggetto', 'Servizio', 'Utente', 'Totale ore', 'Ora inizio','Data creazione', 'Stato'
+            'Numero ticket', 'Cliente', 'Oggetto', 'Servizio',
+            'Utente', 'Totale ore', 'Ora inizio', 'Data creazione', 'Stato'
         ];
 
         // Fill header row
@@ -53,12 +54,9 @@ class AdminTaskExportController extends Controller
         }
 
         // Style header
-        $sheet->getStyle('A1:' . chr(ord('A') + count($headers) - 1) . '1')
-            ->getFont()->setBold(true);
-        $sheet->getStyle('A1:' . chr(ord('A') + count($headers) - 1) . '1')
-            ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle('A1:' . chr(ord('A') + count($headers) - 1) . '1')
-            ->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle('A1:I1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:I1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A1:I1')->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
 
         // Fill data rows
         $row = 2;
@@ -69,59 +67,59 @@ class AdminTaskExportController extends Controller
         ];
 
         foreach ($transformed as $item) {
+            $item['status'] = $statusTranslation[$item['status']->value] ?? $item['status'];
 
-            $item['status'] = $statusTranslation[$item['status']->value];
-
-
-// Parse using the correct format (day/month/year hour:minute:second)
-        $carbonDate = Carbon::createFromFormat('d/m/Y H:i:s', $item['startTime']);
-
-// Format it with AM/PM
-        $formatted = $carbonDate->format('d/m/Y h:i:s A');
+            $formatted = '';
+            if (!empty($item['startTime'])) {
+                try {
+                    $carbonDate = Carbon::createFromFormat('d/m/Y H:i:s', $item['startTime']);
+                    $formatted = $carbonDate->format('d/m/Y h:i:s A');
+                } catch (\Exception $e) {
+                    $formatted = $item['startTime']; // fallback if format fails
+                }
+            }
 
             $sheet
-            ->setCellValue('A' . $row, $item['number'] ?? '')
-            ->setCellValue('B' . $row, $item['clientName'] ?? '')
+                ->setCellValue('A' . $row, $item['number'] ?? '')
+                ->setCellValue('B' . $row, $item['clientName'] ?? '')
                 ->setCellValue('C' . $row, $item['title'] ?? '')
                 ->setCellValue('D' . $row, $item['serviceCategoryName'] ?? '')
                 ->setCellValue('E' . $row, $item['accountantName'] ?? '')
                 ->setCellValue('F' . $row, $item['totalHours'] ?? '')
-                ->setCellValue('G' . $row, $formatted ?? '')
+                ->setCellValue('G' . $row, $formatted)
                 ->setCellValue('H' . $row, $item['createdAt'] ?? '')
                 ->setCellValue('I' . $row, $item['status'] ?? '');
-                // ->setCellValue('N' . $row, $item['startTime'] ?? '');
             $row++;
         }
 
-
-
-        // Apply border
+        // Apply border and styling
         $sheet->getStyle('A1:I' . ($row - 1))
             ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
 
-        // Auto size columns
         foreach (range('A', 'I') as $colLetter) {
             $sheet->getColumnDimension($colLetter)->setAutoSize(true);
         }
 
-        // Auto filter
         $sheet->setAutoFilter('A1:I1');
 
-        // Save file
+        // Prepare file
         $fileName = 'tasks_' . now()->format('Y_m_d_H_i_s') . '.xlsx';
-        $filePath = 'public/tasks_exports/' . $fileName;
+        $filePath = 'tasks_exports/' . $fileName;
 
+        // Write to memory
+        ob_start();
         $writer = new Xlsx($spreadsheet);
-        Storage::makeDirectory('public/tasks_exports'); // Make sure directory exists
-        $writer->save(storage_path('app/' . $filePath));
+        $writer->save('php://output');
+        $excelOutput = ob_get_clean();
+
+        // Store in Laravel storage/public without manually creating directory
+        Storage::disk('public')->put($filePath, $excelOutput);
 
         // Generate public URL
-        $url = asset('storage/tasks_exports/' . $fileName);
+        $url = asset('storage/' . $filePath);
 
         return response()->json([
-            'path' => 'https://accountant-api.testingelmo.com'. $url,
+            'path' => 'https://accountant-api.testingelmo.com' . parse_url($url, PHP_URL_PATH),
         ]);
     }
-
-
 }
