@@ -119,7 +119,7 @@ class AdminTaskExportController extends Controller
         $url = asset('storage/tasks_exports/' . $fileName);
 
         return response()->json([
-            'path' => 'https://accountant-api.testingelmo.com/'. $url,
+            'path' => 'https://accountant-api.testingelmo.com'. $url,
         ]);
     }
 
