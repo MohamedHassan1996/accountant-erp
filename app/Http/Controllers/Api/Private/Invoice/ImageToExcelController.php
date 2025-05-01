@@ -2,26 +2,9 @@
 namespace App\Http\Controllers\Api\Private\Invoice;
 
 use App\Http\Controllers\Controller;
-use App\Mail\InvoiceEmail;
-use App\Models\Client\Client;
-use App\Models\Invoice\Invoice;
-use App\Services\Reports\ReportService;
 use App\Services\Upload\UploadService;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Response;
-use Illuminate\Support\Facades\Storage;
-use Spatie\PdfToImage\Pdf;
-use setasign\Fpdi\Fpdi;
-use setasign\Fpdi\PdfReader;
-use Smalot\PdfParser\Parser;
-use thiagoalessio\TesseractOCR\TesseractOCR;
-use Intervention\Image\ImageManager;
-use Intervention\Image\Drivers\Imagick\Driver;
 use Illuminate\Support\Facades\Process;
-use Symfony\Component\Process\Exception\ProcessFailedException;
 
 
 class ImageToExcelController extends Controller

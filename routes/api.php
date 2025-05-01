@@ -36,6 +36,7 @@ use App\Http\Controllers\Api\Private\Invoice\SendInvoiceController;
 use App\Http\Controllers\Api\Private\Reports\InvoiceCsvReportController;
 use App\Http\Controllers\Api\Private\Reports\InvoicePdfReportController;
 use App\Http\Controllers\Api\Private\Reports\InvoiceReportExportController;
+use App\Http\Controllers\Api\Private\Task\AdminTaskExportController;
 use App\Http\Controllers\ImportClientController;
 use App\Http\Controllers\ImportServiceCategoryController;
 
@@ -232,6 +233,10 @@ Route::prefix('v1/client-email')->group(function(){
 
 Route::prefix('v1/send-uploaded-invoice')->group(function(){
     Route::post('', [SendInvoiceController::class, 'index']);
+});
+
+Route::prefix('v1/admin-ticket-export')->group(function(){
+    Route::get('', [AdminTaskExportController::class, 'index']);
 });
 
 
