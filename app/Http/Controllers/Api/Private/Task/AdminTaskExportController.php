@@ -5,7 +5,7 @@ use App\Enums\Task\TaskStatus;
 use App\Exports\TasksExport;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\AdminTask\AllAdminTaskResource;
-use App\Services\Task\TaskService;
+use App\Services\Task\ExportTaskService;
 use App\Services\Upload\UploadService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -23,7 +23,7 @@ class AdminTaskExportController extends Controller
     protected $taskService;
 
 
-    public function __construct(TaskService $taskService)
+    public function __construct(ExportTaskService $taskService)
     {
         $this->taskService = $taskService;
     }
