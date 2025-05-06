@@ -365,6 +365,7 @@ class InvoiceController extends Controller
                 'invoiceDetailId' => $invoiceDetail->id,
                 'invoiceableType' => $invoiceableType,
                 'invoiceableId' => $invoiceDetail->invoiceable_id??'',
+                'description' => $invoiceDetail->invoiceable->description??'',
             ];
         }
 
