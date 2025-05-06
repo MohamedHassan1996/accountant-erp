@@ -82,7 +82,19 @@ class InvoiceReportExportController extends Controller
 
             }
 
+
+
             $client = Client::find($invoice->client_id);
+
+            if($client->total_tax > 0){
+                $invoiceItemsData[] = [
+                    'description' =>  $client->total_tax_description??'',
+                    'priceAfterDiscount' => $client->total_tax > 0 ? $invoiceTotal * ($client->total_tax / 100): 0,
+                    'additionalTaxPercentage' => 0
+                ];
+
+                $invoiceTotal += $invoiceTotal * ($client->total_tax / 100);
+            }
 
             $clientAddress = ClientAddress::where('client_id',$client->id)->first();
 
@@ -96,16 +108,6 @@ class InvoiceReportExportController extends Controller
                 $clientBankAccountFormatted = $clientBankAccount->iban;
             }
 
-
-            if($client->total_tax > 0){
-                $invoiceItemsData[] = [
-                    'description' =>  $client->total_tax_description??'',
-                    'priceAfterDiscount' => $client->total_tax > 0 ? $invoiceTotal * ($client->total_tax / 100): 0,
-                    'additionalTaxPercentage' => 0
-                ];
-
-                $invoiceTotal += $invoiceTotal * ($client->total_tax / 100);
-            }
 
             if($invoice->discount_amount > 0){
                 if($invoice->discount_type == 0){
