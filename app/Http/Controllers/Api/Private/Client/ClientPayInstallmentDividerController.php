@@ -35,6 +35,8 @@ class ClientPayInstallmentDividerController extends Controller
 
         $clientEndDataAdd = ParameterValue::where('id', $client->payment_type_id)->first();
 
+        $clientEndDataAddMonth = ceil($clientEndDataAdd->description / 30);
+
 
         $installmentAmount = 0;
         if ($client) {
@@ -49,11 +51,20 @@ class ClientPayInstallmentDividerController extends Controller
 
 
         foreach ( range(1, $installmentNumbers) as $installmentNumber ) {
+
+            $endDate = $currentDate->copy()->addMonths($clientEndDataAddMonth);
+
+            $isSpecialMonthEnd = in_array($endDate->format('m-d'), ['08-31', '12-31']);
+
+            if ($isSpecialMonthEnd && $allowedDaysToPay == 0) {
+                $endDate->addDays(10);
+            } else {
+                $endDate->addDays($allowedDaysToPay);
+            }
+
             $installmentsData[] = [
                 'startAt' => $currentDate->format('Y-m-d'),
-                'endAt' => $currentDate->copy()
-                ->addDays($allowedDaysToPay + (int) ($clientEndDataAdd->description ?? 0))
-                ->format('Y-m-d'),
+                'endAt' => $endDate->format('Y-m-d'),
                 'parameterValueName' => '',
                 'amount' => round($installmentAmount, 2),
                 'payInstallmentSubData' => []
