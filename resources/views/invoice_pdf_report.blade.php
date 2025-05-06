@@ -63,9 +63,9 @@
 
     <!-- Header -->
     <div class="header flex-between">
-        <div>
+        {{-- <div>
             <img src="https://via.placeholder.com/150x60?text=Elmo+Logo" alt="Elmo Tech" class="logo">
-        </div>
+        </div> --}}
         <div style="text-align: right;">
             <h2 style="margin-bottom: 5px;">{{ $invoice->number }}</h2>
             <div>del {{ $invoice->created_at->format('d/m/Y') }}</div>
@@ -81,6 +81,8 @@
             <div>P.IVA 01234567890</div>
             <div>C.F. RSSMRA80A01H501Z</div>
         </div>
+        <br>
+        <br>
         <div>
             <div class="section-title">DESTINATARIO</div>
             <div><strong>{{ $client->ragione_sociale }}</strong></div>
