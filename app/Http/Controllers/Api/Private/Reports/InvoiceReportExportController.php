@@ -129,7 +129,7 @@ class InvoiceReportExportController extends Controller
                 'invoiceItems' => $invoiceItemsData,
                 'invoiceTotalTax' => $totalTax,
                 'invoiceTotal' => $invoiceTotal,
-                'invoiceTotalWithTax' => $invoiceTotal,
+                'invoiceTotalWithTax' => $invoiceTotal + $totalTax,
                 'client' => $client,
                 'clientAddress' => $clientAddressFormatted ?? "",
                 'clientBankAccount' => $clientBankAccountFormatted ?? "",

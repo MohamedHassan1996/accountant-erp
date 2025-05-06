@@ -140,12 +140,12 @@
     <div class="box">
         <table>
             <tr>
-                <td>Vat</td>
-                <td class="text-right">{{ number_format($invoiceTotalTax, 2) }} €</td>
-            </tr>
-            <tr>
                 <td>Imponibile</td>
                 <td class="text-right">{{ number_format($invoiceTotal, 2) }} €</td>
+            </tr>
+            <tr>
+                <td>Iva</td>
+                <td class="text-right">{{ number_format($invoiceTotalTax, 2) }} €</td>
             </tr>
             <tr>
                 <td>Totale fattura</td>
