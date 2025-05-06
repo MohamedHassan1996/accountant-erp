@@ -29,13 +29,15 @@ class ClientPayInstallmentDividerController extends Controller
 
         $client = Client::find($request->clientId);
 
+        $client->price = $request->price;
+
+        $client->save();
+
+        $clientEndDataAdd = ParameterValue::where('id', $client->payment_type_id)->first();
+
 
         $installmentAmount = 0;
         if ($client) {
-            $client->price = $request->price;
-
-            $client->save();
-
             $installmentAmount = $client->price / $installmentNumbers;
         }
 
@@ -49,8 +51,9 @@ class ClientPayInstallmentDividerController extends Controller
         foreach ( range(1, $installmentNumbers) as $installmentNumber ) {
             $installmentsData[] = [
                 'startAt' => $currentDate->format('Y-m-d'),
-                'endAt' => $currentDate->copy()->addDays($allowedDaysToPay)->format('Y-m-d'),
-                'parameterValueId' => '',
+                $currentDate->copy()
+                ->addDays($allowedDaysToPay + (int) ($clientEndDataAdd->description ?? 0))
+                ->format('Y-m-d'),
                 'parameterValueName' => '',
                 'amount' => round($installmentAmount, 2),
                 'payInstallmentSubData' => []
