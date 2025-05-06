@@ -99,8 +99,8 @@ class InvoiceReportExportController extends Controller
 
             if($client->total_tax > 0){
                 $invoiceItemsData[] = [
-                    'description' =>  "client tax",
-                    'priceAfterDiscount' => $client->total_tax . "%",
+                    'description' =>  $client->total_tax_description??'',
+                    'priceAfterDiscount' => $client->total_tax > 0 ? $invoiceTotal * ($client->total_tax / 100): 0,
                     'additionalTaxPercentage' => 0
                 ];
 
