@@ -73,8 +73,8 @@ class RecurringInvoiceController extends Controller
 
                     $invoiceDetail = new InvoiceDetail([
                         'invoice_id' => $invoice->id, // Invoice ID
-                        'price' => $payInstallmentData['amount'],
-                        'price_after_discount' => $payInstallmentData['amount']
+                        'price' => $payInstallmentSubData['amount'],
+                        'price_after_discount' => $payInstallmentSubData['amount']
                     ]);
 
                     $payInstallmentSubDataDb->invoiceDetails()->save($invoiceDetail);
