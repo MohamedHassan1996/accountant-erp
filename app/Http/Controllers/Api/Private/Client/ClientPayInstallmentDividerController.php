@@ -29,13 +29,13 @@ class ClientPayInstallmentDividerController extends Controller
 
         $client = Client::find($request->clientId);
 
-        $client->price = $request->price;
-
-        $client->save();
-
 
         $installmentAmount = 0;
         if ($client) {
+            $client->price = $request->price;
+
+            $client->save();
+
             $installmentAmount = $client->price / $installmentNumbers;
         }
 
