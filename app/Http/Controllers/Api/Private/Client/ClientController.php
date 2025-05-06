@@ -170,13 +170,17 @@ class ClientController extends Controller
 
             $client = $this->clientService->updateClient($updateClientRequest->validated());
 
+
             if($previousPayStepsId != $updateClientRequest->validated()['payStepsId']){
 
                 $clientPayInstallments = ClientPayInstallment::where('client_id', $client->id)->get();
                 if($client->pay_steps_id != null && count($clientPayInstallments) > 0){
                     ClientPayInstallment::where('client_id', $client->id)->forceDelete();
                 }
-                    $payInstallments = $updateClientRequest->validated()['payInstallments'];
+
+
+                $payInstallments = $updateClientRequest->validated()['payInstallments'];
+
 
                 foreach($payInstallments as $payInstallment){
 
