@@ -10,8 +10,8 @@ class InvoiceSelectService
     public function getAllInvoices(?int $clientId = null)
     {
         return Invoice::select([
-                DB::raw("CONCAT(number, ' - ', DATE_FORMAT(created_at, '%d/%m/%Y')) as value"),
-                'number as label'
+                'id as value',
+                DB::raw("CONCAT(number, ' - ', DATE_FORMAT(created_at, '%d/%m/%Y')) as label")
             ])
             ->when($clientId !== null, function ($query) use ($clientId) {
                 $query->where('client_id', $clientId);
