@@ -174,7 +174,7 @@ class ClientController extends Controller
             $client = $this->clientService->updateClient($updateClientRequest->validated());
 
 
-            if($previousPayStepsId != $updateClientRequest->validated()['payStepsId']){
+            if($client->has_recurring_invoice != 1){
 
                 $clientPayInstallments = ClientPayInstallment::where('client_id', $client->id)->get();
                 if($client->pay_steps_id != null && count($clientPayInstallments) > 0){
