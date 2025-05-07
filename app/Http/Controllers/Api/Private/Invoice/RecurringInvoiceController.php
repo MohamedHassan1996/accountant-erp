@@ -47,7 +47,7 @@ class RecurringInvoiceController extends Controller
                 //     $endDate->addDays(10);
                 // }
 
-                $clientEndDataAdd = ParameterValue::where('id', $payInstallmentData->payment_type_id)->first();
+                $clientEndDataAdd = ParameterValue::where('id', $payInstallmentData['paymentTypeId'])->first();
 
                 $clientEndDataAddMonth = ceil($clientEndDataAdd->description / 30);
 
