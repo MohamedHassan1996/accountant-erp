@@ -29,7 +29,16 @@ class ClientPayInstallmentDividerController extends Controller
 
         $client = Client::find($request->clientId);
 
+        $clientEndDataAdd = 0;
+
+        $clientEndDataAddMonth = 0;
+
         $installmentAmount = 0;
+
+        $allowedDaysToPay = 0; // Fetch from the client table
+
+
+
         if ($client) {
 
             $client->price = $request->price;
