@@ -31,7 +31,7 @@ class ClientPayInstallmentDividerController extends Controller
 
         $client->price = $request->price;
 
-        $client->pay_steps_id = $request->payStepsId;
+        $client->payment_type_id = $request->payStepsId;
 
         $client->save();
 
