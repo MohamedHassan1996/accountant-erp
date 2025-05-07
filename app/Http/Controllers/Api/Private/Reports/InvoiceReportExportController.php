@@ -51,11 +51,14 @@ class InvoiceReportExportController extends Controller
 
                 if($invoiceItem->invoiceable_type == Task::class) {
                     $invoiceItemData = Task::with('serviceCategory')->find($invoiceItem->invoiceable_id);
-                } elseif($invoiceItem->invoiceable_type == ClientPayInstallment::class || $invoiceItem->invoiceable_type) {
+                } elseif($invoiceItem->invoiceable_type == ClientPayInstallment::class) {
                     $invoiceItemData = ClientPayInstallment::with('parameterValue')->find($invoiceItem->invoiceable_id);
                 } elseif($invoiceItem->invoiceable_type == ClientPayInstallmentSubData::class) {
                     $invoiceItemData = ClientPayInstallmentSubData::with('parameterValue')->find($invoiceItem->invoiceable_id);
-                    dd($invoiceItemData);
+                }
+
+                if($index == 2){
+                    dd($invoiceItem->invoiceable_type == ClientPayInstallmentSubData::class);
                 }
 
                 $invoiceItemsData[] = [
