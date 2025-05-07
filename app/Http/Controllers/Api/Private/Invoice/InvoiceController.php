@@ -66,6 +66,7 @@ class InvoiceController extends Controller
             ->where('tasks.is_new',  1)
             ->select([
                 'invoices.id as invoiceId',
+                'invoices.created_at as invoiceCreatedAt',
                 'clients.id as clientId',
                 'clients.total_tax as clientTotalTax',
                 'clients.ragione_sociale as clientName',
@@ -106,6 +107,7 @@ class InvoiceController extends Controller
                     'key' => $key,
                     'invoiceId' => $invoice->invoiceId??"",
                     'invoiceNumber' => $invoice->invoiceNumber ?? "",
+                    'invoiceDate' => $invoice->invoiceCreatedAt ?? "",
                     'clientId' => $invoice->clientId ?? "",
                     'clientName' => $invoice->clientName ?? "",
                     'clientAddableToBulkInvoice' => $invoice->clientAddableToBulkInvoice ?? "",
