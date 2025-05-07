@@ -19,6 +19,7 @@ class ClientPayInstallment extends Model
         'amount',
         'parameter_value_id',
         'client_id',
+        'payment_type_id',
     ];
 
     public function payInstallmentSubData(){

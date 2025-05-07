@@ -198,6 +198,7 @@ Route::get('', ReportController::class);
 });
 Route::prefix('v1/selects')->group(function(){
     Route::get('', [SelectController::class, 'getSelects']);
+    Route::get('invoices', [SelectController::class, 'getAllInvoices']);
 });
 
 Route::prefix('v1/import-clients')->group(function(){

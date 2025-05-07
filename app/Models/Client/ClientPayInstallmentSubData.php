@@ -18,6 +18,7 @@ class ClientPayInstallmentSubData extends Model
         'price',
         'parameter_value_id',
         'client_pay_installment_id',
+        //'payment_type_id'
     ];
 
     public function invoiceDetails()

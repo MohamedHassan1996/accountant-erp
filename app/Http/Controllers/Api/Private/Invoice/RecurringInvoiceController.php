@@ -41,10 +41,28 @@ class RecurringInvoiceController extends Controller
             $bankAccount = ParameterValue::where('parameter_id', 7)->where('is_default', 1)->first();
 
             foreach ($createTaskRequest->payInstallments as  $payInstallmentData) {
-                $endDate = Carbon::parse($payInstallmentData['endAt']);
+                // $endDate = Carbon::parse($payInstallmentData['endAt']);
 
-                if ($endDate->format('d-m') === '31-08' || $endDate->format('d-m') === '31-12') {
+                // if ($endDate->format('d-m') === '31-08' || $endDate->format('d-m') === '31-12') {
+                //     $endDate->addDays(10);
+                // }
+
+                $clientEndDataAdd = ParameterValue::where('id', $payInstallmentData->payment_type_id)->first();
+
+                $clientEndDataAddMonth = ceil($clientEndDataAdd->description / 30);
+
+
+                $allowedDaysToPay = $client->allowed_days_to_pay ?? 0; // Fetch from the client table
+
+                $startDate = Carbon::parse($payInstallmentData['startAt']);
+                $endDate = $startDate->copy()->addMonths($clientEndDataAddMonth);
+
+                $isSpecialMonthEnd = in_array($endDate->format('m-d'), ['08-31', '12-31']);
+
+                if ($isSpecialMonthEnd && $allowedDaysToPay == 0) {
                     $endDate->addDays(10);
+                } else {
+                    $endDate->addDays($allowedDaysToPay);
                 }
 
                 $invoice = Invoice::create([

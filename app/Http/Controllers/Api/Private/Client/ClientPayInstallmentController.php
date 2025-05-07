@@ -63,7 +63,8 @@ class ClientPayInstallmentController extends Controller
                 'start_at' => $request->startAt,
                 'end_at' => $request->endAt,
                 'amount' => $request->amount,
-                'parameter_value_id' => $request->parameterValueId
+                'parameter_value_id' => $request->parameterValueId,
+                'payment_type_id' => $request->paymentTypeId??null
             ]);
 
             $payInstallment->payInstallmentSubData()->forceDelete();
@@ -73,6 +74,7 @@ class ClientPayInstallmentController extends Controller
                     'client_pay_installment_id' => $payInstallment->id,
                     'price' => $payInstallmentSubDataItem['price'],
                     'parameter_value_id' => $payInstallmentSubDataItem['parameterValueId']??null,
+                    'payment_type_id' => $payInstallmentSubDataItem['paymentTypeId']??null,
                 ]);
             }
 

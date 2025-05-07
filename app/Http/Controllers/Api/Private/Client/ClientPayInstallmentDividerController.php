@@ -67,6 +67,7 @@ class ClientPayInstallmentDividerController extends Controller
                 'endAt' => $endDate->subDays(1)->format('Y-m-d'),
                 'parameterValueName' => '',
                 'amount' => round($installmentAmount, 2),
+                'paymentTypeId' => $client?->payment_type_id ?? $request->paymentTypeId ?? "",
                 'payInstallmentSubData' => []
             ];
 

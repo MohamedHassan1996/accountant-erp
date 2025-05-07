@@ -47,7 +47,8 @@ class ClientPayInstallmentSubDataController extends Controller
             ClientPayInstallmentSubData::create([
                 'client_pay_installment_id' => $request->payInstallmentId,
                 'price' => $request->price,
-                'parameter_value_id' => $request->parameterValueId??null
+                'parameter_value_id' => $request->parameterValueId??null,
+                'payment_type_id' => $request->paymentTypeId??null
             ]);
 
 
