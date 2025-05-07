@@ -31,6 +31,8 @@ class ClientPayInstallmentDividerController extends Controller
 
         $client->price = $request->price;
 
+        $client->pay_steps_id = $request->payStepsId;
+
         $client->save();
 
         $clientEndDataAdd = ParameterValue::where('id', $client->payment_type_id)->first();

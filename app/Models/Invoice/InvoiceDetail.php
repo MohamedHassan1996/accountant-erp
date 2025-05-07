@@ -17,6 +17,7 @@ class InvoiceDetail extends Model
         'invoiceable_type',
         'price',
         'price_after_discount',
-        'extra_price'
+        'extra_price',
+        'description'
     ];
 }
