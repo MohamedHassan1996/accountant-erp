@@ -55,6 +55,7 @@ class InvoiceReportExportController extends Controller
                     $invoiceItemData = ClientPayInstallment::with('parameterValue')->find($invoiceItem->invoiceable_id);
                 } elseif($invoiceItem->invoiceable_type == ClientPayInstallmentSubData::class) {
                     $invoiceItemData = ClientPayInstallmentSubData::with('parameterValue')->find($invoiceItem->invoiceable_id);
+                    dd($invoiceItemData);
                 }
 
                 $invoiceItemsData[] = [
