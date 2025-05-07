@@ -76,10 +76,10 @@
     <div class="flex-between" style="margin-bottom: 30px;">
         <div>
             <div class="section-title">DA</div>
-            <div><strong>Mario Rossi Srl</strong></div>
-            <div>Via Roma 123, 00100 Roma (RM)</div>
-            <div>P.IVA 01234567890</div>
-            <div>C.F. RSSMRA80A01H501Z</div>
+            <div><strong>Elaborazioni Srl</strong></div>
+            <div>Via Stazione, 9/B, 26013, Crema (CR)</div>
+            <div>P.IVA 00987920196</div>
+            <div>C.F. 00987920196</div>
         </div>
         <br>
         <br>

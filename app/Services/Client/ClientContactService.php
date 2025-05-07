@@ -36,6 +36,7 @@ class ClientContactService{
             'note' => $phoneData['note']??"",
             'parameter_value_id' => $phoneData['parameterValueId'],
             'client_id' => $phoneData['clientId'],
+            'cf' => $phoneData['cf']??"",
         ]);
 
         return $phone;
@@ -61,6 +62,7 @@ class ClientContactService{
             'email' => $phoneData['email']??"",
             'note' => $phoneData['note']??"",
             'parameter_value_id' => $phoneData['parameterValueId'],
+            'cf' => $phoneData['cf']??"",
         ]);
 
         $phone->save();

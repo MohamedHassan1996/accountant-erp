@@ -33,6 +33,7 @@ class CreateClientContactRequest extends FormRequest
             'note' => ['nullable'],
             'parameterValueId' => ['nullable'],
             'clientId' => ['nullable'],
+            'cf' => ['nullable'],
         ];
     }
 

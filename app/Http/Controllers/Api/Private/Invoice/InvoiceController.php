@@ -19,6 +19,7 @@ use App\Enums\Client\ClientServiceDiscountType;
 use App\Enums\Client\ServiceDiscountCategory;
 use App\Http\Resources\Invoice\AllInvoiceCollection;
 use App\Enums\ServiceCategory\ServiceCategoryAddToInvoiceStatus;
+use App\Models\Client\ClientAddress;
 use App\Models\Client\ClientPayInstallment;
 use App\Models\Client\ClientPayInstallmentSubData;
 use App\Models\Invoice\InvoiceDetail;
@@ -369,12 +370,20 @@ class InvoiceController extends Controller
             ];
         }
 
+
+        $clientAddress = ClientAddress::where('client_id', $invoice->client_id)->first();
+
+
         return response()->json([
             'data' => [
                 'invoiceNumber' => $invoice->number,
                 'invoiceId' => $invoice->id,
                 'endAt' => $invoice->end_at,
                 'clientId' => $invoice->client_id,
+                'clientName' => $invoice->client->ragione_sociale,
+                'clientPiva' => $invoice->client->p_iva??'',
+                'clientCodeFiscale' => $invoice->client->codice_fiscale??'',
+                'clientAddress' => $clientAddress->address??'',
                 'paymentTypeId' => $invoice->payment_type_id,
                 'discountType' => $invoice->discount_type??'',
                 'discountAmount' => $invoice->discount_amount??0,
