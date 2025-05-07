@@ -29,24 +29,36 @@ class ClientPayInstallmentDividerController extends Controller
 
         $client = Client::find($request->clientId);
 
-        $client->price = $request->price;
-
-        $client->payment_type_id = $request->paymentTypeId??null;
-
-        $client->save();
-
-        $clientEndDataAdd = ParameterValue::where('id', $client->payment_type_id)->first();
-
-        $clientEndDataAddMonth = ceil($clientEndDataAdd->description / 30);
-
-
         $installmentAmount = 0;
         if ($client) {
+
+            $client->price = $request->price;
+
+            $client->payment_type_id = $request->paymentTypeId??null;
+
+            $client->save();
+
+            $clientEndDataAdd = ParameterValue::where('id', $client->payment_type_id)->first();
+
+            $clientEndDataAddMonth = ceil($clientEndDataAdd->description / 30);
+
             $installmentAmount = $client->price / $installmentNumbers;
+
+            $allowedDaysToPay = $client->allowed_days_to_pay ?? 0; // Fetch from the client table
+
+        } else {
+
+
+            $clientEndDataAdd = ParameterValue::where('id', $request->paymentTypeId)->first();
+
+            $clientEndDataAddMonth = ceil($clientEndDataAdd->description / 30);
+
+            $installmentAmount = $request->price / $installmentNumbers;
+
+
         }
 
 
-        $allowedDaysToPay = $client->allowed_days_to_pay ?? 0; // Fetch from the client table
 
         $installmentsData = [];
         $currentDate = now()->startOfMonth(); // First day of the current month
