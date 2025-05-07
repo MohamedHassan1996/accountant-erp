@@ -59,7 +59,7 @@ class InvoiceReportExportController extends Controller
 
                 $invoiceItemsData[] = [
                     'description' =>  $invoiceItem->invoiceable_type == Task::class ?
-                    $invoiceItemData->serviceCategory->name :$invoiceItemData->parameterValue?->parameter_value??$invoiceItem->description,
+                    $invoiceItemData->serviceCategory->name :$invoiceItemData->parameterValue?->description??$invoiceItem->description,
                     'priceAfterDiscount' => $invoiceItem->price_after_discount,
                     'additionalTaxPercentage' => 22
                 ];
