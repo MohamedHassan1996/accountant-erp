@@ -19,6 +19,7 @@ class AllPayInstallmentResource extends JsonResource
             'startAt' => $this->start_at,
             'endAt' => $this->end_at,
             'amount' => $this->amount,
+            'paymentTypeId' => $this->payment_type_id??'',
             'parameterValueName' => $this->parameterValue?->description??'',
             'payInstallmentSubData' => count($this->payInstallmentSubData) ? AllPayInstallmentSubDataResource::collection($this->payInstallmentSubData) : []
         ];
