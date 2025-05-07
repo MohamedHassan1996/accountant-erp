@@ -381,13 +381,13 @@ class InvoiceController extends Controller
                 'endAt' => $invoice->end_at,
                 'clientId' => $invoice->client_id,
                 'clientName' => $invoice->client->ragione_sociale,
-                'clientPiva' => $invoice->client->p_iva??'',
-                'clientCodeFiscale' => $invoice->client->codice_fiscale??'',
+                'clientPiva' => $invoice->client->iva??'',
+                'clientCodeFiscale' => $invoice->client->cf??'',
                 'clientAddress' => $clientAddress->address??'',
-                'paymentTypeId' => $invoice->payment_type_id,
+                'paymentTypeId' => $invoice->payment_type_id??'',
                 'discountType' => $invoice->discount_type??'',
                 'discountAmount' => $invoice->discount_amount??0,
-                'bankAccountId' => $invoice->bank_account_id,
+                'bankAccountId' => $invoice->bank_account_id??'',
                 'invoiceDetails' => $invoiceDetailsData
             ]
         ]);
