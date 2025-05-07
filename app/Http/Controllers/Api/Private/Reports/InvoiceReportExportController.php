@@ -111,16 +111,18 @@ class InvoiceReportExportController extends Controller
 
 
             if($invoice->discount_amount > 0){
+
+                $invoiceItemsData[] = [
+                    'description' =>  "sconto",
+                    'priceAfterDiscount' => $client->discount_type == 0 ? $invoiceTotal * ($invoice->discount_amount / 100) : $invoice->discount_amount,
+                    'additionalTaxPercentage' => 0
+                ];
+
                 if($invoice->discount_type == 0){
                     $invoiceTotal -= $invoiceTotal * ($invoice->discount_amount / 100);
                 }else{
                     $invoiceTotal -= $invoice->discount_amount;
                 }
-                $invoiceItemsData[] = [
-                    'description' =>  "sconto",
-                    'priceAfterDiscount' => $client->discount_type == 0 ? $invoice->discount_amount . "%" : $invoice->discount_amount,
-                    'additionalTaxPercentage' => 0
-                ];
 
             }
 
