@@ -54,7 +54,7 @@ class InvoiceReportExportController extends Controller
                 } elseif($invoiceItem->invoiceable_type == ClientPayInstallment::class || $invoiceItem->invoiceable_type) {
                     $invoiceItemData = ClientPayInstallment::with('parameterValue')->find($invoiceItem->invoiceable_id);
                 } elseif($invoiceItem->invoiceable_type == ClientPayInstallmentSubData::class) {
-                    $invoiceItemData = ClientPayInstallmentSubData::with('parameterValue')->find($invoiceItem->serviceCategory->invoiceable_id);
+                    $invoiceItemData = ClientPayInstallmentSubData::with('parameterValue')->find($invoiceItem->invoiceable_id);
                 }
 
                 $invoiceItemsData[] = [
@@ -116,7 +116,7 @@ class InvoiceReportExportController extends Controller
                     $invoiceTotal -= $invoice->discount_amount;
                 }
                 $invoiceItemsData[] = [
-                    'description' =>  "invoice discount",
+                    'description' =>  "sconto",
                     'priceAfterDiscount' => $client->discount_type == 0 ? $invoice->discount_amount . "%" : $invoice->discount_amount,
                     'additionalTaxPercentage' => 0
                 ];
