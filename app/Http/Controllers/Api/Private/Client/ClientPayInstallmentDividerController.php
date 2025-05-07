@@ -75,7 +75,7 @@ class ClientPayInstallmentDividerController extends Controller
 
         foreach ( range(1, $installmentNumbers) as $installmentNumber ) {
 
-            $endDate = $currentDate->copy()->addMonths($clientEndDataAddMonth);
+            $endDate = $currentDate->copy()->addMonths($clientEndDataAddMonth)->subDays(1);
 
             $isSpecialMonthEnd = in_array($endDate->format('m-d'), ['08-31', '12-31']);
 
@@ -87,7 +87,7 @@ class ClientPayInstallmentDividerController extends Controller
 
             $installmentsData[] = [
                 'startAt' => $currentDate->format('Y-m-d'),
-                'endAt' => $endDate->subDays(1)->format('Y-m-d'),
+                'endAt' => $endDate->format('Y-m-d'),
                 'parameterValueName' => '',
                 'amount' => round($installmentAmount, 2),
                 'paymentTypeId' => $client?->payment_type_id ?? $request->paymentTypeId ?? "",
