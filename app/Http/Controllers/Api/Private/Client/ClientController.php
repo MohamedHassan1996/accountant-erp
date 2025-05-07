@@ -127,8 +127,6 @@ class ClientController extends Controller
                         'client_pay_installment_id' => $payInstallmentItem->id,
                         'price' => $payInstallmentItemSubDataItem['price'],
                         'parameter_value_id' => $payInstallmentItemSubDataItem['parameterValueId']??null,
-                        'payment_type_id' => $payInstallmentItemSubDataItem['paymentTypeId']??null
-
                     ]);
                 }
             }
@@ -205,7 +203,6 @@ class ClientController extends Controller
                             'client_pay_installment_id' => $payInstallmentItem->id,
                             'price' => $payInstallmentItemSubDataItem['price'],
                             'parameter_value_id' => $payInstallmentItemSubDataItem['parameterValueId']??null,
-                            'payment_type_id' => $payInstallmentItemSubDataItem['paymentTypeId']??null
                         ]);
                     }
                 }

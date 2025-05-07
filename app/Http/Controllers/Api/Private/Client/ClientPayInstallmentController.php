@@ -7,6 +7,7 @@ use App\Http\Resources\Client\PayInstallment\PayInstallmentResource;
 use App\Http\Resources\Client\PayInstallment\AllPayInstallmentResource;
 use App\Models\Client\ClientPayInstallment;
 use App\Models\Client\ClientPayInstallmentSubData;
+use App\Models\Invoice\InvoiceDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -67,14 +68,37 @@ class ClientPayInstallmentController extends Controller
                 'payment_type_id' => $request->paymentTypeId??null
             ]);
 
+            $invoiceDetail = InvoiceDetail::where('invoiceable_id', $payInstallment->id)->where('invoiceable_type', ClientPayInstallment::class)->first();
+
+            if($invoiceDetail){
+                $invoiceDetail->update([
+                    'price' => $payInstallment->amount,
+                    'price_after_discount' => $payInstallment->amount,
+                    'extra_price' => 0,
+                    'start_at' => $request->startAt,
+                    'end_at' => $request->endAt,
+                    'description' => $payInstallment->parameterValue->description
+                 ]);
+            }
+
             $payInstallment->payInstallmentSubData()->forceDelete();
 
             foreach($payInstallmentSubData as $payInstallmentSubDataItem){
-                ClientPayInstallmentSubData::create([
+                $item = ClientPayInstallmentSubData::create([
                     'client_pay_installment_id' => $payInstallment->id,
                     'price' => $payInstallmentSubDataItem['price'],
                     'parameter_value_id' => $payInstallmentSubDataItem['parameterValueId']??null,
-                    'payment_type_id' => $payInstallmentSubDataItem['paymentTypeId']??null,
+                ]);
+
+                $invoiceDetail = InvoiceDetail::create([
+                    'invoiceable_id' => $item->id,
+                    'invoiceable_type' => ClientPayInstallmentSubData::class,
+                    'price' => $payInstallmentSubDataItem['price'],
+                    'price_after_discount' => $payInstallmentSubDataItem['price'],
+                    'extra_price' => 0,
+                    'start_at' => $request->startAt,
+                    'end_at' => $request->endAt,
+                    'description' => $payInstallment->parameterValue->description
                 ]);
             }
 
