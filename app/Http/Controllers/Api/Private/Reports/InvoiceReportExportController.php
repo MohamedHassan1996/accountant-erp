@@ -129,6 +129,8 @@ class InvoiceReportExportController extends Controller
 
             $paymentMethod = ParameterValue::find($invoice->payment_type_id ?? null);
 
+            dd($invoiceItemsData);
+
             $pdf = PDF::loadView('invoice_pdf_report', [
                 'invoice' => $invoice,
                 'invoiceItems' => $invoiceItemsData,
