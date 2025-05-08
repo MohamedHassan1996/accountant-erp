@@ -338,9 +338,11 @@ class InvoiceReportExportController extends Controller
         // Fill rows
         $row = 2;
 
+        dd($data['invoiceItems']);
+
         foreach ($data['invoiceItems'] as $entry) {
             $sheet
-                ->setCellValue('A' . $row, $data['cliente']->ragione_sociale ?? '')
+                ->setCellValue('A' . $row, $data['client']->ragione_sociale ?? '')
                 ->setCellValue('B' . $row, $entry['invoiceItems']->description ?? '')
                 ->setCellValue('C' . $row, $entry['invoiceItems']->priceAfterDiscount ?? 0)
                 ->setCellValue('D' . $row, $entry['quantita'] ?? 1)
