@@ -17,6 +17,11 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+
 
 class InvoiceReportExportController extends Controller
 {
@@ -199,6 +204,8 @@ class InvoiceReportExportController extends Controller
     public function index(Request $request){
         if($request->type == 'pdf'){
             return $this->generateInvoicePdf($this->getInvoiceData($request));
+        } elseif($request->type == 'csv'){
+            return $this->generateInvoiceExcel($this->getInvoiceData($request));
         }
     }
 
@@ -307,5 +314,69 @@ class InvoiceReportExportController extends Controller
 
         return response()->json(['path' => env('APP_URL') . $url]);
     }
+
+    public function generateInvoiceExcel(array $data)
+    {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Define headers
+        $headers = ['Cliente', 'Descrizione', 'Prezzo unitario', 'Quantità', 'Prezzo Totale', 'Data prestazione'];
+
+        // Fill headers
+        $col = 'A';
+        foreach ($headers as $header) {
+            $sheet->setCellValue($col . '1', $header);
+            $col++;
+        }
+
+        // Style headers
+        $sheet->getStyle('A1:F1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:F1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A1:F1')->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+
+        // Fill rows
+        $row = 2;
+
+        dd($data);
+        foreach ($data as $entry) {
+            $sheet
+                ->setCellValue('A' . $row, $entry['cliente'] ?? '')
+                ->setCellValue('B' . $row, $entry['descrizione'] ?? '')
+                ->setCellValue('C' . $row, $entry['prezzo_unitario'] ?? 0)
+                ->setCellValue('D' . $row, $entry['quantita'] ?? 1)
+                ->setCellValue('E' . $row, ($entry['prezzo_unitario'] ?? 0) * ($entry['quantita'] ?? 1))
+                ->setCellValue('F' . $row, $entry['data_prestazione'] ?? Carbon::now()->format('d/m/Y'));
+            $row++;
+        }
+
+        // Apply borders and autosize
+        $sheet->getStyle('A1:F' . ($row - 1))
+            ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+
+        foreach (range('A', 'F') as $colLetter) {
+            $sheet->getColumnDimension($colLetter)->setAutoSize(true);
+        }
+
+        $sheet->setAutoFilter('A1:F1');
+
+        // Write to memory and store
+        $fileName = 'user_' . now()->format('Y_m_d_H_i_s') . '.xlsx';
+        $filePath = 'exportedInvoices/' . $fileName;
+
+        ob_start();
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('php://output');
+        $excelOutput = ob_get_clean();
+
+        Storage::disk('public')->put($filePath, $excelOutput);
+
+        $url = asset('storage/' . $filePath);
+
+        return response()->json([
+            'path' => env('APP_URL') . parse_url($url, PHP_URL_PATH),
+        ]);
+    }
+
 
 }
