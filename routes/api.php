@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\Private\Client\ClientBankAccountController;
 use App\Http\Controllers\Api\Private\Client\ClientContactController;
 use App\Http\Controllers\Api\Private\Client\ClientPayInstallmentController;
 use App\Http\Controllers\Api\Private\Client\ClientPayInstallmentDividerController;
+use App\Http\Controllers\Api\Private\Client\ClientPayInstallmentEndDateController;
 use App\Http\Controllers\Api\Private\Client\ClientPayInstallmentSubDataController;
 use App\Http\Controllers\Api\Private\Client\ClientPaymentPeriodController;
 use App\Http\Controllers\Api\Private\Parameter\ParameterValueController;
@@ -239,6 +240,11 @@ Route::prefix('v1/send-uploaded-invoice')->group(function(){
 Route::prefix('v1/admin-ticket-export')->group(function(){
     Route::get('', [AdminTaskExportController::class, 'index']);
 });
+
+Route::prefix('v1/installment-end-at')->group(function(){
+    Route::get('', [ClientPayInstallmentEndDateController::class, 'index']);
+});
+
 
 
 
