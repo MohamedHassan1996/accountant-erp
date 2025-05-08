@@ -338,7 +338,7 @@ class InvoiceReportExportController extends Controller
         // Fill rows
         $row = 2;
 
-        dd($data['invoiceItems'][0]->description);
+        dd($data['invoiceItems'][0]['description']);
 
         foreach ($data['invoiceItems'] as $entry) {
             $sheet
