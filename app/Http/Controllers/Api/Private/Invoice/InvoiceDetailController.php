@@ -56,6 +56,7 @@ class InvoiceDetailController extends Controller
                 'price' => $request->price,
                 'price_after_discount' => $request->priceAfterDiscount,
                 'extra_price' => 0,
+                'description' => $request->description
             ]);
 
             $invoiceDetail->save();
