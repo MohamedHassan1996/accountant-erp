@@ -338,16 +338,14 @@ class InvoiceReportExportController extends Controller
         // Fill rows
         $row = 2;
 
-        dd($data['invoiceItems'][0]['description']);
-
         foreach ($data['invoiceItems'] as $entry) {
             $sheet
                 ->setCellValue('A' . $row, $data['client']->ragione_sociale ?? '')
-                ->setCellValue('B' . $row, $entry['invoiceItems']->description ?? '')
-                ->setCellValue('C' . $row, $entry['invoiceItems']->priceAfterDiscount ?? 0)
+                ->setCellValue('B' . $row, $entry['invoiceItems']['description'] ?? '')
+                ->setCellValue('C' . $row, $entry['invoiceItems']['priceAfterDiscount'] ?? 0)
                 ->setCellValue('D' . $row, $entry['quantita'] ?? 1)
-                ->setCellValue('E' . $row, ($entry['invoiceItems']->priceAfterDiscount ?? 0) * ($entry['quantita'] ?? 1))
-                ->setCellValue('F' . $row, $entry['data_prestazione'] ?? Carbon::now()->format('d/m/Y'));
+                ->setCellValue('E' . $row, ($entry['invoiceItems']['priceAfterDiscount'] ?? 0) * ($entry['quantita'] ?? 1))
+                ->setCellValue('F' . $row, Carbon::parse($data['invoice']->created_at)->format('d/m/Y'));
             $row++;
         }
 
