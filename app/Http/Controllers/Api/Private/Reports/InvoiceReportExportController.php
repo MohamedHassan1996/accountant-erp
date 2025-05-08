@@ -342,10 +342,10 @@ class InvoiceReportExportController extends Controller
             dd($entry);
             $sheet
                 ->setCellValue('A' . $row, $data['client']->ragione_sociale ?? '')
-                ->setCellValue('B' . $row, $entry['invoiceItems']['description'] ?? '')
-                ->setCellValue('C' . $row, $entry['invoiceItems']['priceAfterDiscount'] ?? 0)
+                ->setCellValue('B' . $row, $entry['description'] ?? '')
+                ->setCellValue('C' . $row, $entry['priceAfterDiscount'] ?? 0)
                 ->setCellValue('D' . $row, $entry['quantita'] ?? 1)
-                ->setCellValue('E' . $row, ($entry['invoiceItems']['priceAfterDiscount'] ?? 0) * ($entry['quantita'] ?? 1))
+                ->setCellValue('E' . $row, ($entry['priceAfterDiscount'] ?? 0) * ($entry['quantita'] ?? 1))
                 ->setCellValue('F' . $row, Carbon::parse($data['invoice']->created_at)->format('d/m/Y'));
             $row++;
         }
