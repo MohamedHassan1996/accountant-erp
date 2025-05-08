@@ -315,7 +315,7 @@ class InvoiceReportExportController extends Controller
         return response()->json(['path' => env('APP_URL') . $url]);
     }
 
-    public function generateInvoiceExcel(array $data)
+    public function generateInvoiceExcel($data)
     {
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
@@ -338,7 +338,7 @@ class InvoiceReportExportController extends Controller
         // Fill rows
         $row = 2;
 
-        dd($data);
+        dd($data->toArray());
         foreach ($data as $entry) {
             $sheet
                 ->setCellValue('A' . $row, $entry['cliente'] ?? '')
