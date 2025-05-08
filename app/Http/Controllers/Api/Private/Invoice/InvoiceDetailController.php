@@ -87,7 +87,8 @@ class InvoiceDetailController extends Controller
                 'extraPrice' => $invoiceDetail->extra_price,
                 'invoiceId' => $invoiceDetail->invoice_id,
                 'invoiceableId' => $invoiceDetail->invoiceable_id,
-                'invoiceableType' => $invoiceDetail->invoiceable_type
+                'invoiceableType' => $invoiceDetail->invoiceable_type,
+                'description' => $invoiceDetail->description
             ]
         ]);
     }
