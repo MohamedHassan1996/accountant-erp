@@ -35,8 +35,6 @@ class ClientPayInstallmentEndDateController extends Controller
 
         $installmentEndDataAdd = ParameterValue::where('id', $request->paymentTypeId)->first();
 
-        dd($installmentEndDataAdd);
-
 
         $installmentEndDataAddMonth = ceil($installmentEndDataAdd->description / 30);
 
