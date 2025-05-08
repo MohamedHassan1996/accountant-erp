@@ -339,7 +339,6 @@ class InvoiceReportExportController extends Controller
         $row = 2;
 
         foreach ($data['invoiceItems'] as $entry) {
-            dd($entry);
             $sheet
                 ->setCellValue('A' . $row, $data['client']->ragione_sociale ?? '')
                 ->setCellValue('B' . $row, $entry['description'] ?? '')
