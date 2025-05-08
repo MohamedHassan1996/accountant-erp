@@ -102,6 +102,7 @@ class InvoiceDetailController extends Controller
             $invoiceDetail->price = $request->price;
             $invoiceDetail->price_after_discount = $request->priceAfterDiscount;
             $invoiceDetail->extra_price = 0;
+            $invoiceDetail->description = $request->description;
             $invoiceDetail->save();
 
             DB::commit();
