@@ -77,7 +77,8 @@ class RecurringInvoiceController extends Controller
 
                 $payInstallment = ClientPayInstallment::find($payInstallmentData['payInstallmentId']);
 
-                $payInstallmentDescription = ParameterValue::where('id', $payInstallment->payment_type_id)->first();
+                $payInstallmentDescription = ParameterValue::where('id', $payInstallment->parameter_value_id)->first();
+
                 $invoiceDetail = new InvoiceDetail([
                     'invoice_id' => $invoice->id, // Invoice ID
                     'price' => $payInstallmentData['amount'],
@@ -92,7 +93,7 @@ class RecurringInvoiceController extends Controller
                     $payInstallmentSubDataDb = ClientPayInstallmentSubData::find($payInstallmentSubData['payInstallmentSubDataId']);
 
 
-                    $payInstallmentSubDataDbtDescription = ParameterValue::where('id', $payInstallmentSubDataDb->payment_type_id)->first();
+                    $payInstallmentSubDataDbtDescription = ParameterValue::where('id', $payInstallmentSubDataDb->parameter_value_id)->first();
 
                     $invoiceDetail = new InvoiceDetail([
                         'invoice_id' => $invoice->id, // Invoice ID

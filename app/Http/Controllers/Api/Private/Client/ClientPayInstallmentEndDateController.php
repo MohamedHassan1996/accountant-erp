@@ -35,9 +35,7 @@ class ClientPayInstallmentEndDateController extends Controller
 
         $installmentEndDataAdd = ParameterValue::where('id', $request->paymentTypeId)->first();
 
-
         $installmentEndDataAddMonth = ceil($installmentEndDataAdd->description / 30);
-
 
         $endDate = $startAt->copy()->addMonths($installmentEndDataAddMonth)->endOfMonth();
 
@@ -48,8 +46,6 @@ class ClientPayInstallmentEndDateController extends Controller
         } else {
             $endDate->addDays($allowedDaysToPay);
         }
-
-
 
         return response()->json([
             'endAt' => $endDate->format('Y-m-d'),
