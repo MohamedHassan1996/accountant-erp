@@ -238,7 +238,7 @@ class InvoiceReportExportController extends Controller
                 ? $invoiceItemData->serviceCategory->name
                 : $invoiceItemData->parameterValue?->description ?? $invoiceItem->description;
 
-                        dd($description);
+            dd($invoiceItemData);
 
 
             $invoiceItemsData[] = [
