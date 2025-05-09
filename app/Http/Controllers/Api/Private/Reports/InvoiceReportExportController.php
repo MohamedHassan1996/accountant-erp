@@ -233,9 +233,13 @@ class InvoiceReportExportController extends Controller
                 default => null
             };
 
+
             $description = $invoiceItem->invoiceable_type == Task::class
                 ? $invoiceItemData->serviceCategory->name
                 : $invoiceItemData->parameterValue?->description ?? $invoiceItem->description;
+
+                        dd($description);
+
 
             $invoiceItemsData[] = [
                 'description' => $description,
