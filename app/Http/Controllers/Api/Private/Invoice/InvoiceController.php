@@ -490,15 +490,21 @@ class InvoiceController extends Controller
 
             $task = $invoice->invoiceableType == Task::class ? Task::with('serviceCategory')->find($invoice->invoiceableId) : "";
 
-            $description = $invoice->invoiceDetailDescription;
+            $description = "";
 
             if ($task && $description == null) {
                 $description = $task->serviceCategory->name;
             } elseif($invoice->invoiceableType == ClientPayInstallment::class && $description == null) {
-                $description = ClientPayInstallment::with('parameterValue')->find($invoice->invoiceableId)->description;
+                $description = ClientPayInstallment::with('parameterValue')->find($invoice->invoiceableId)?->parameterValue?->description;
 
             }elseif($invoice->invoiceableType == ClientPayInstallmentSubData::class && $description == null) {
-                $description = ClientPayInstallment::with('parameterValue')->find($invoice->invoiceableId)->description;
+                $description = ClientPayInstallment::with('parameterValue')->find($invoice->invoiceableId)?->parameterValue?->description;
+            }else{
+                $description = $invoice->invoiceDetailDescription;
+            }
+
+            if($invoice->invoiceDetailDescription != null) {
+                $description = $invoice->invoiceDetailDescription;
             }
 
             $formattedData[$search]['tasks'][] = [
