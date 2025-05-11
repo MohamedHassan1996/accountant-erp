@@ -106,7 +106,7 @@
             @foreach($invoiceItems as $item)
                 <tr>
                     <td>{{ $item['description'] }}</td>
-                    <td class="text-right">{{ is_string($item['priceAfterDiscount'])? $item['priceAfterDiscount']: number_format($item['priceAfterDiscount'], 2) }}</td>
+                    <td class="text-right">{{ is_string($item['price'])? $item['price']: number_format($item['price'], 2) }}</td>
                     <td class="text-right">{{ is_string($item['priceAfterDiscount'])? $item['priceAfterDiscount']: number_format($item['priceAfterDiscount'], 2) }}</td>
                     <td class="text-right">{{ $item['additionalTaxPercentage']}}%</td>
                 </tr>
