@@ -72,6 +72,10 @@ class InvoiceReportExportController extends Controller
                 ? $invoiceItemData->serviceCategory->name
                 : $invoiceItemData->parameterValue?->description ?? $invoiceItem->description;
 
+            if($invoiceItem->description != null){
+                $description = $invoiceItem->description;
+            }
+
 
             $invoiceItemsData[] = [
                 'description' => $description,
