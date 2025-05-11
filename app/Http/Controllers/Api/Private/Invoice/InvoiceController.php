@@ -495,9 +495,8 @@ class InvoiceController extends Controller
             if ($task && $description == null) {
                 $description = $task->serviceCategory->name;
             } elseif($invoice->invoiceableType == ClientPayInstallment::class && $description == null) {
-                $description = ClientPayInstallment::with('parameterValue')->find($invoice->invoiceableId);
+                $description = ClientPayInstallment::with('parameterValue')->find($invoice->invoiceableId)?->parameterValue?->description;
 
-                dd($description);
 
             }elseif($invoice->invoiceableType == ClientPayInstallmentSubData::class && $description == null) {
                 $description = ClientPayInstallment::with('parameterValue')->find($invoice->invoiceableId)?->parameterValue?->description;
@@ -511,7 +510,7 @@ class InvoiceController extends Controller
                 'taskId' => $invoice->invoiceDetailId,
                 'taskTitle' => $task->title??"",
                 'taskNumber' => $task->number??"",
-                'serviceCategoryName' => $task?->serviceCategory?->name??'',
+                'serviceCategoryName' => $description,
                 'price' =>$invoice->invoiceDetailPrice,
                 'priceAfterDiscount' =>$invoice->invoiceDetailPriceAfterDiscount,
                 'extraPrice' => $invoice->invoiceDetailExtraPrice??0,
