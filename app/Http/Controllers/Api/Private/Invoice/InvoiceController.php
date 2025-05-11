@@ -405,6 +405,7 @@ class InvoiceController extends Controller
             //->whereNull('invoice_details.deleted_at')
             ->select([
                 'invoices.id as invoiceId',
+                'invoices.created_at as invoiceCreatedAt',
                 'clients.id as clientId',
                 'clients.total_tax as clientTotalTax',
                 'clients.ragione_sociale as clientName',
@@ -442,6 +443,11 @@ class InvoiceController extends Controller
         foreach ($allInvoices as $index =>$invoice) {
             $key = $invoice->invoiceId;
 
+            $invoiceClientPayInstallment = InvoiceDetail::where('invoice_id', $invoice->invoiceId)->where('invoiceable_type', ClientPayInstallment::class)->first();
+
+            if ($invoiceClientPayInstallment) {
+                $invoiceDate = ClientPayInstallment::find($invoiceClientPayInstallment->invoiceable_id)->start_at;
+            }
 
             if (!in_array($key, array_column($formattedData, 'key'))) {
                 $formattedData[] = [
@@ -459,7 +465,8 @@ class InvoiceController extends Controller
                     'invoiceDiscountAmount' => $invoice->invoiceDiscountAmount,
                     'clientTotalTax' => $invoice->clientTotalTax,
                     'invoiceDiscount' => 0,
-                    'totalInvoiceAfterDiscount' => 0
+                    'totalInvoiceAfterDiscount' => 0,
+                    'invoiceDate' => $invoiceDate != null ? $invoiceDate->format('d/m/Y') : $invoice->invoiceCreatedAt->format('d/m/Y')
                 ];
 
                 /*if(count($formattedData) >1) {
