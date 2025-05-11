@@ -265,7 +265,7 @@ class InvoiceReportExportController extends Controller
             $invoiceItemsData[] = [
                 'description' => $client->total_tax_description ?? '',
                 'priceAfterDiscount' => $invoiceTotal * ($client->total_tax / 100) * 0.22,
-                'additionalTaxPercentage' => 0
+                'additionalTaxPercentage' => 22
             ];
             $invoiceTotal += $invoiceTotal * ($client->total_tax / 100) * 0.22;
         }
