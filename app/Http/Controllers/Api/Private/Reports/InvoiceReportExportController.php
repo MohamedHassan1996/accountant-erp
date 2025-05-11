@@ -48,6 +48,7 @@ class InvoiceReportExportController extends Controller
         $invoiceItems = DB::table('invoice_details')
             ->where('invoice_details.invoice_id', $invoice->id)
             ->select([
+                'invoice_details.price',
                 'invoice_details.price_after_discount',
                 'invoice_details.invoiceable_id',
                 'invoice_details.invoiceable_type',
@@ -79,6 +80,7 @@ class InvoiceReportExportController extends Controller
 
             $invoiceItemsData[] = [
                 'description' => $description,
+                'price' => $invoiceItem->price,
                 'priceAfterDiscount' => $invoiceItem->price_after_discount,
                 'additionalTaxPercentage' => 22
             ];
@@ -90,7 +92,8 @@ class InvoiceReportExportController extends Controller
             if ($invoiceItem->invoiceable_type == Task::class && $invoiceItemData->serviceCategory->extra_is_pricable) {
                 $invoiceItemsData[] = [
                     'description' => $invoiceItemData->serviceCategory->extra_price_description,
-                    'priceAfterDiscount' => $invoiceItemData->serviceCategory->extra_price,
+                    'price' => $invoiceItem->price == 0 ? $invoiceItemData->serviceCategory->extra_price : $invoiceItem->price,
+                    'priceAfterDiscount' => $invoiceItem->price_after_discount == 0 ? $invoiceItemData->serviceCategory->extra_price : $invoiceItem->price,
                     'additionalTaxPercentage' => 0
                 ];
 
@@ -103,6 +106,7 @@ class InvoiceReportExportController extends Controller
         if ($client->total_tax > 0) {
             $invoiceItemsData[] = [
                 'description' => $client->total_tax_description ?? '',
+                'price' => $invoiceTotal * ($client->total_tax / 100),
                 'priceAfterDiscount' => $invoiceTotal * ($client->total_tax / 100),
                 'additionalTaxPercentage' => 22
             ];
@@ -124,6 +128,7 @@ class InvoiceReportExportController extends Controller
 
             $invoiceItemsData[] = [
                 'description' => "sconto",
+                'price' => $discountValue,
                 'priceAfterDiscount' => $discountValue,
                 'additionalTaxPercentage' => 0
             ];
