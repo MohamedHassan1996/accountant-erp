@@ -264,10 +264,10 @@ class InvoiceReportExportController extends Controller
         if ($client->total_tax > 0) {
             $invoiceItemsData[] = [
                 'description' => $client->total_tax_description ?? '',
-                'priceAfterDiscount' => $invoiceTotal * ($client->total_tax / 100),
+                'priceAfterDiscount' => $invoiceTotal * ($client->total_tax / 100) * 0.22,
                 'additionalTaxPercentage' => 0
             ];
-            $invoiceTotal += $invoiceTotal * ($client->total_tax / 100);
+            $invoiceTotal += $invoiceTotal * ($client->total_tax / 100) * 0.22;
         }
 
         $clientAddressFormatted = ClientAddress::where('client_id', $client->id)->first()?->address ?? "";
