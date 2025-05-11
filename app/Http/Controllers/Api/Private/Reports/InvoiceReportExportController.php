@@ -222,7 +222,8 @@ class InvoiceReportExportController extends Controller
             ])->get();
 
         $invoiceItemsData = [];
-        $totalTax = 0;
+        //$totalTax = 0;
+        $invoiceTotalToCalcTax = 0;
         $invoiceTotal = 0;
 
         foreach ($invoiceItems as $invoiceItem) {
@@ -245,8 +246,9 @@ class InvoiceReportExportController extends Controller
                 'additionalTaxPercentage' => 22
             ];
 
-            $totalTax += $invoiceItem->price_after_discount * 0.22;
+            //$totalTax += $invoiceItem->price_after_discount * 0.22;
             $invoiceTotal += $invoiceItem->price_after_discount;
+            $invoiceTotalToCalcTax += $invoiceItem->price_after_discount;
 
             if ($invoiceItem->invoiceable_type == Task::class && $invoiceItemData->serviceCategory->extra_is_pricable) {
                 $invoiceItemsData[] = [
@@ -268,9 +270,10 @@ class InvoiceReportExportController extends Controller
                 'additionalTaxPercentage' => 22
             ];
 
-            $totalTax += ($invoiceTotal * ($client->total_tax / 100) * 0.22);
+            //$totalTax += ($invoiceTotal * ($client->total_tax / 100) * 0.22);
 
             $invoiceTotal += $invoiceTotal * ($client->total_tax / 100);
+            $invoiceTotalToCalcTax += $invoiceTotal * ($client->total_tax / 100);
 
         }
 
@@ -289,16 +292,21 @@ class InvoiceReportExportController extends Controller
             ];
 
             $invoiceTotal -= $discountValue;
+
+            $invoiceTotalToCalcTax -= $discountValue;
+
         }
 
         $paymentMethod = ParameterValue::find($invoice->payment_type_id ?? null);
 
+        $invoiceTotalToCalcTax = $invoiceTotalToCalcTax + ($invoiceTotalToCalcTax * 0.22);
+
         return [
             'invoice' => $invoice,
             'invoiceItems' => $invoiceItemsData,
-            'invoiceTotalTax' => $totalTax,
+            'invoiceTotalTax' => $invoiceTotalToCalcTax,
             'invoiceTotal' => $invoiceTotal,
-            'invoiceTotalWithTax' => $invoiceTotal + $totalTax,
+            'invoiceTotalWithTax' => $invoiceTotal + $invoiceTotalToCalcTax,
             'client' => $client,
             'clientAddress' => $clientAddressFormatted,
             'clientBankAccount' => $clientBankAccountFormatted,
