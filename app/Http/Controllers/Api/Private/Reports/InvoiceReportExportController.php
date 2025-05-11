@@ -299,7 +299,7 @@ class InvoiceReportExportController extends Controller
 
         $paymentMethod = ParameterValue::find($invoice->payment_type_id ?? null);
 
-        $invoiceTotalToCalcTax = $invoiceTotalToCalcTax + ($invoiceTotalToCalcTax * 0.22);
+        $invoiceTotalToCalcTax = $invoiceTotalToCalcTax * 0.22;
 
         return [
             'invoice' => $invoice,
