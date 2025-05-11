@@ -267,9 +267,11 @@ class InvoiceReportExportController extends Controller
                 'priceAfterDiscount' => $invoiceTotal * ($client->total_tax / 100),
                 'additionalTaxPercentage' => 22
             ];
+
+            $totalTax += ($invoiceTotal * ($client->total_tax / 100) * 0.22);
+
             $invoiceTotal += $invoiceTotal * ($client->total_tax / 100);
 
-            $totalTax += ($invoiceTotal* 0.22);
         }
 
         $clientAddressFormatted = ClientAddress::where('client_id', $client->id)->first()?->address ?? "";
