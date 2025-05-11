@@ -419,6 +419,7 @@ class InvoiceController extends Controller
                 'invoice_details.invoiceable_id as invoiceableId',
                 'invoice_details.invoiceable_type as invoiceableType',
                 'invoice_details.extra_price as invoiceDetailExtraPrice',
+                'invoice_details.description as invoiceDetailDescription',
                 /*'tasks.id as taskId',
                 'tasks.status as taskStatus',
                 'tasks.title as taskTitle',
@@ -485,13 +486,24 @@ class InvoiceController extends Controller
             $formattedData[$search]['totalPriceAfterDiscount'] += $invoice->invoiceDetailPriceAfterDiscount;
             $formattedData[$search]['totalCosts'] += $invoice->invoiceDetailExtraPrice??0;
 
-            $task = $invoice->invoiceableType == 'App\Models\Task\Task' ? Task::with('serviceCategory')->find($invoice->invoiceableId) : "";
+            $task = $invoice->invoiceableType == Task::class ? Task::with('serviceCategory')->find($invoice->invoiceableId) : "";
+
+            $description = $invoice->invoiceDetailDescription;
+
+            if ($task && $description == null) {
+                $description = $task->serviceCategory->name;
+            } elseif($invoice->invoiceable_type == ClientPayInstallment::class && $description == null) {
+                $description = ClientPayInstallment::with('parameterValue')->find($invoice->invoiceableId)->description;
+
+            }elseif($invoice->invoiceable_type == ClientPayInstallmentSubData::class && $description == null) {
+                $description = ClientPayInstallment::with('parameterValue')->find($invoice->invoiceableId)->description;
+            }
 
             $formattedData[$search]['tasks'][] = [
                 'taskId' => $invoice->invoiceDetailId,
                 'taskTitle' => $task->title??"",
                 'taskNumber' => $task->number??"",
-                'serviceCategoryName' => $task?->serviceCategory?->name??"",
+                'serviceCategoryName' => $task?->serviceCategory?->name??'',
                 'price' =>$invoice->invoiceDetailPrice,
                 'priceAfterDiscount' =>$invoice->invoiceDetailPriceAfterDiscount,
                 'extraPrice' => $invoice->invoiceDetailExtraPrice??0,
