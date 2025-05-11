@@ -446,6 +446,8 @@ class InvoiceController extends Controller
 
             $invoiceClientPayInstallment = InvoiceDetail::where('invoice_id', $invoice->invoiceId)->where('invoiceable_type', ClientPayInstallment::class)->first();
 
+            $invoiceDate = $invoice->invoiceCreatedAt;
+
             if ($invoiceClientPayInstallment) {
                 $invoiceDate = ClientPayInstallment::find($invoiceClientPayInstallment->invoiceable_id)->start_at;
             }
@@ -467,7 +469,7 @@ class InvoiceController extends Controller
                     'clientTotalTax' => $invoice->clientTotalTax,
                     'invoiceDiscount' => 0,
                     'totalInvoiceAfterDiscount' => 0,
-                    'invoiceDate' => $invoiceDate != null ? $invoiceDate->format('d/m/Y') : $invoice->invoiceCreatedAt->format('d/m/Y')
+                    'invoiceDate' => $invoiceDate
                 ];
 
                 /*if(count($formattedData) >1) {
