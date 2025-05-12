@@ -32,7 +32,10 @@ class ClientPaymentPeriodController extends Controller
         $paymentDate = Carbon::now(); // Set to the current date
 
         if ($clientsPaymentPeriod && (int) $clientsPaymentPeriod->description > 0) {
-            $paymentDate = Carbon::now()->addDays((int) $clientsPaymentPeriod->description);
+
+            $numberOfMonthsToAdd = ceil($clientsPaymentPeriod->description / 30);
+
+            $paymentDate = Carbon::now()->addMonths($numberOfMonthsToAdd)->endOfMonth();
         }
 
         return response()->json([
