@@ -55,7 +55,7 @@ class RecurringInvoiceController extends Controller
                 $allowedDaysToPay = $client->allowed_days_to_pay ?? 0; // Fetch from the client table
 
                 $startDate = Carbon::parse($payInstallmentData['startAt']);
-                $endDate = $startDate->copy()->addMonths($clientEndDataAddMonth)->endOfMonth();
+                $endDate = $startDate->copy()->addMonths($clientEndDataAddMonth);
 
                 dd($endDate);
 
