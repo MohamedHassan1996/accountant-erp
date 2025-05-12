@@ -79,7 +79,7 @@ class ClientPayInstallmentDividerController extends Controller
 
             $isSpecialMonthEnd = in_array($endDate->format('m-d'), ['08-31', '12-31']);
 
-            if ($isSpecialMonthEnd && $allowedDaysToPay == 0) {
+            if ($isSpecialMonthEnd) {
                 $endDate->addDays(10);
             } else {
                 $endDate->addDays($allowedDaysToPay);

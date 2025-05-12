@@ -37,7 +37,7 @@ class ClientPayInstallmentEndDateController extends Controller
 
         $installmentEndDataAddMonth = ceil($installmentEndDataAdd->description / 30);
 
-        $endDate = $startAt->copy()->addMonths($installmentEndDataAddMonth)->endOfMonth();
+        $endDate = $startAt->copy()->addMonths($installmentEndDataAddMonth)->subDays(1);
 
         $isSpecialMonthEnd = in_array($endDate->format('m-d'), ['08-31', '12-31']);
 
