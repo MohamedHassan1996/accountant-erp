@@ -56,7 +56,6 @@ class RecurringInvoiceController extends Controller
 
                 $startDate = Carbon::parse($payInstallmentData['startAt']);
                 $endDate = $startDate->copy()->addMonths($clientEndDataAddMonth)->endOfMonth();
-                dd($endDate);
 
                 $isSpecialMonthEnd = in_array($endDate->format('m-d'), ['08-31', '12-31']);
 
@@ -65,6 +64,7 @@ class RecurringInvoiceController extends Controller
                 } else {
                     $endDate->addDays($allowedDaysToPay);
                 }
+                dd($endDate);
 
                 $invoice = Invoice::create([
                     'client_id' => $createTaskRequest->clientId,
