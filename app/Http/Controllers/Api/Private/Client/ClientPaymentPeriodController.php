@@ -41,10 +41,10 @@ class ClientPaymentPeriodController extends Controller
 
         if ($clientsPaymentPeriod && (int) $clientsPaymentPeriod->description > 0) {
 
-            dd($clientsPaymentPeriod->description);
 
-            $numberOfMonthsToAdd = ceil($clientsPaymentPeriod->description / 30);
+            $numberOfMonthsToAdd = ceil((int) $clientsPaymentPeriod->description / 30);
 
+            dd($numberOfMonthsToAdd);
 
             $paymentDate = $startAt->addMonths($numberOfMonthsToAdd)->subDays(1);
 
