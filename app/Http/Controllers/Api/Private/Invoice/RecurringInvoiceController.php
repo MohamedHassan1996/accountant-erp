@@ -64,8 +64,6 @@ class RecurringInvoiceController extends Controller
                 } else {
                     $endDate->addDays($allowedDaysToPay);
                 }
-                dd($endDate);
-
                 $invoice = Invoice::create([
                     'client_id' => $createTaskRequest->clientId,
                     'end_at' => $endDate,
