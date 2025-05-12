@@ -367,7 +367,8 @@ class InvoiceController extends Controller
 
 
             if($invoiceDetail->invoiceable_type == ClientPayInstallment::class) {
-                $startAt = Carbon::parse($invoiceDetail->invoiceable->start_at)->format('d/m/Y');
+                $clientPayInstallment = ClientPayInstallment::find($invoiceDetail->invoiceable_id)->start_at;
+                $startAt = Carbon::parse($clientPayInstallment)->format('d/m/Y');
             }
 
 
