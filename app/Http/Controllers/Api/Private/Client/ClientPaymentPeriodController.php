@@ -31,17 +31,21 @@ class ClientPaymentPeriodController extends Controller
 
         $paymentDate = Carbon::now(); // Set to the current date
 
+        $client = Client::find($request->clientId);
+
         $allowedDaysToPay = $client?->allowed_days_to_pay ?? 0; // Fetch from the client table
+
+        $startAt = $request->startAt ?? Carbon::now();
 
         if ($clientsPaymentPeriod && (int) $clientsPaymentPeriod->description > 0) {
 
             $numberOfMonthsToAdd = ceil($clientsPaymentPeriod->description / 30);
 
-            $paymentDate = Carbon::now()->addMonths($numberOfMonthsToAdd)->endOfMonth();
+            $paymentDate = $startAt->addMonths($numberOfMonthsToAdd)->endOfMonth();
 
             $isSpecialMonthEnd = in_array($paymentDate->format('m-d'), ['08-31', '12-31']);
 
-            if ($isSpecialMonthEnd && $allowedDaysToPay == 0) {
+            if ($isSpecialMonthEnd) {
                 $paymentDate->addDays(10);
             } else {
                 $paymentDate->addDays($allowedDaysToPay);
