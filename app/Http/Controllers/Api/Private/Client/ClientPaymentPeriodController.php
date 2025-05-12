@@ -43,6 +43,8 @@ class ClientPaymentPeriodController extends Controller
 
             $paymentDate = $startAt->addMonths($numberOfMonthsToAdd)->subDays(1);
 
+            dd($paymentDate);
+
             $isSpecialMonthEnd = in_array($paymentDate->format('m-d'), ['08-31', '12-31']);
 
             if ($isSpecialMonthEnd) {
