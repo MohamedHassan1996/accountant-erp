@@ -44,7 +44,7 @@ class ClientPaymentPeriodController extends Controller
 
             $numberOfMonthsToAdd = ceil((int) $clientsPaymentPeriod->description / 30);
 
-            $paymentDate = $startAt->copy()->addMonths($numberOfMonthsToAdd)->subDays(1);
+            $paymentDate = Carbon::parse($startAt)->copy()->addMonths($numberOfMonthsToAdd)->subDays(1);
 
             $isSpecialMonthEnd = in_array($paymentDate->format('m-d'), ['08-31', '12-31']);
 
