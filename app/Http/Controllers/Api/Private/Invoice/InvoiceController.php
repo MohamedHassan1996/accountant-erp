@@ -572,9 +572,9 @@ class InvoiceController extends Controller
 
             $endDate = Carbon::parse($request->endAt);
 
-            if ($endDate->format('d-m') === '31-08' || $endDate->format('d-m') === '31-12') {
-                $endDate->addDays(10);
-            }
+            // if ($endDate->format('d-m') === '31-08' || $endDate->format('d-m') === '31-12') {
+            //     $endDate->addDays(10);
+            // }
 
             $invoice->end_at = $endDate;
             $invoice->payment_type_id = $request->paymentTypeId;
