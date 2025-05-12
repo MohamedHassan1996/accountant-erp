@@ -60,6 +60,8 @@ class InvoiceReportExportController extends Controller
         $invoiceTotalToCalcTax = 0;
         $invoiceTotal = 0;
 
+        $invoiceStartAt = Carbon::parse($invoice->created_at)->format('d/m/Y');
+
         foreach ($invoiceItems as $invoiceItem) {
             $invoiceItemData = match ($invoiceItem->invoiceable_type) {
                 Task::class => Task::with('serviceCategory')->find($invoiceItem->invoiceable_id),
@@ -72,6 +74,10 @@ class InvoiceReportExportController extends Controller
             $description = $invoiceItem->invoiceable_type == Task::class
                 ? $invoiceItemData->serviceCategory->name
                 : $invoiceItemData->parameterValue?->description ?? $invoiceItem->description;
+
+            $invoiceStartAt = $invoiceItem->invoiceable_type == ClientPayInstallment::class
+                ? Carbon::parse(ClientPayInstallment::find($invoiceItem->invoiceable_id)->start_at)->format('d/m/Y')
+                : $invoiceStartAt;
 
             if($invoiceItem->description != null){
                 $description = $invoiceItem->description;
@@ -145,6 +151,7 @@ class InvoiceReportExportController extends Controller
 
         return [
             'invoice' => $invoice,
+            'startAt' => $invoiceStartAt,
             'invoiceItems' => $invoiceItemsData,
             'invoiceTotalTax' => $invoiceTotalToCalcTax,
             'invoiceTotal' => $invoiceTotal,
