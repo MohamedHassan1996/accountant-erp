@@ -151,7 +151,7 @@ class InvoiceReportExportController extends Controller
 
         return [
             'invoice' => $invoice,
-            'startAt' => $invoiceStartAt,
+            'invoiceStartAt' => $invoiceStartAt,
             'invoiceItems' => $invoiceItemsData,
             'invoiceTotalTax' => $invoiceTotalToCalcTax,
             'invoiceTotal' => $invoiceTotal,

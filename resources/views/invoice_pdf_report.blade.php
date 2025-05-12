@@ -68,7 +68,7 @@
         </div> --}}
         <div style="text-align: right;">
             <h2 style="margin-bottom: 5px;">{{ $invoice->number }}</h2>
-            <div>del {{ $invoice->created_at->format('d/m/Y') }}</div>
+            <div>del {{ $invoiceStartAt }}</div>
         </div>
     </div>
 
