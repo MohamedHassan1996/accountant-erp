@@ -37,9 +37,13 @@ class ClientPaymentPeriodController extends Controller
 
         $startAt = $request->startAt ?? Carbon::now();
 
+                    dd($client, $allowedDaysToPay, $startAt);
+
+
         if ($clientsPaymentPeriod && (int) $clientsPaymentPeriod->description > 0) {
 
             $numberOfMonthsToAdd = ceil($clientsPaymentPeriod->description / 30);
+
 
             $paymentDate = $startAt->addMonths($numberOfMonthsToAdd)->subDays(1);
 
