@@ -353,6 +353,9 @@ class InvoiceController extends Controller
 
         $invoiceableType = "";
 
+        $startAt = Carbon::parse($invoice->create_at)->format('d/m/Y');
+
+
         foreach ($invoice->invoiceDetails as $invoiceDetail) {
             if($invoiceDetail->invoiceable_type == Task::class) {
                 $invoiceableType = "task";
@@ -361,6 +364,12 @@ class InvoiceController extends Controller
             if($invoiceDetail->invoiceable_type == ClientPayInstallment::class || $invoiceDetail->invoiceable_type == ClientPayInstallmentSubData::class) {
                 $invoiceableType = "recurring";
             }
+
+
+            if($invoiceDetail->invoiceable_type == ClientPayInstallment::class) {
+                $startAt = Carbon::parse($invoiceDetail->invoiceable->start_at)->format('d/m/Y');
+            }
+
 
             $invoiceDetailsData[] = [
                 'price' => $invoiceDetail->price,
@@ -380,6 +389,7 @@ class InvoiceController extends Controller
             'data' => [
                 'invoiceNumber' => $invoice->number,
                 'invoiceId' => $invoice->id,
+                'startAt' => $startAt,
                 'endAt' => $invoice->end_at,
                 'clientId' => $invoice->client_id,
                 'clientName' => $invoice->client->ragione_sociale,
