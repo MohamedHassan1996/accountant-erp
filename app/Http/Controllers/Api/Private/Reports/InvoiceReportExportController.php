@@ -302,7 +302,7 @@ class InvoiceReportExportController extends Controller
         $record40 = $xml->addChild('Record');
         $record40->addAttribute('type', '40');
         $record40->addChild('TotalRecords', $transactionCount);
-        $record40->addChild('TotalAmount', number_format($totalAmount * 100, 0, '', ''));
+        $record40->addChild('TotalAmount', number_format($data['invoiceTotalWithTax'] * 100, 0, '', ''));
 
         // === Record 50: File Footer ===
         $record50 = $xml->addChild('Record');
