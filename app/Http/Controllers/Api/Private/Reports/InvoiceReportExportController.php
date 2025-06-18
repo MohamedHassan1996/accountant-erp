@@ -244,77 +244,83 @@ class InvoiceReportExportController extends Controller
 
     public function generateInvoiceXml(array $data)
     {
-    function safeXml(string $value): string
-    {
-        return htmlspecialchars($value, ENT_XML1 | ENT_QUOTES, 'UTF-8');
-    }
+        function safeXml(string $value): string
+        {
+            return htmlspecialchars($value, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+        }
 
-    // Create the root element
-    $xml = new \SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><RibaCBI></RibaCBI>');
+        $xml = new \SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><RibaCBI></RibaCBI>');
 
-    // === Record 14: File Header ===
-    $record14 = $xml->addChild('Record');
-    $record14->addAttribute('type', '14');
+        // === Record 14: File Header ===
+        $record14 = $xml->addChild('Record');
+        $record14->addAttribute('type', '14');
 
-    $iban = $data['client']['bank_iban'] ?? 'IT00X0000000000000000000000';
-    $senderAbi = substr($iban, 5, 5); // ABI from IBAN
+        $iban = $data['client']['bank_iban'] ?? 'IT00X0000000000000000000000';
+        $senderAbi = substr($iban, 5, 5);
 
-    $record14->addChild('SenderABI', safeXml($senderAbi));
-    $record14->addChild('CreationDate', now()->format('dmy'));
-    $record14->addChild('FlowDate', now()->format('dmy'));
-    $record14->addChild('Version', 'E');
+        $record14->addChild('SenderABI', safeXml($senderAbi));
+        $record14->addChild('CreationDate', now()->format('dmy'));
+        $record14->addChild('FlowDate', now()->format('dmy'));
+        $record14->addChild('Version', 'E');
 
-    // === Record 20: Client/Biller Info ===
-    $record20 = $xml->addChild('Record');
-    $record20->addAttribute('type', '20');
+        // === Record 20: Client/Biller Info ===
+        $record20 = $xml->addChild('Record');
+        $record20->addAttribute('type', '20');
 
-    $clientVat = $data['client']['iva'] ?? null;
-    $clientFiscal = $data['client']['cf'] ?? null;
-    $clientName = $data['client']['ragione_sociale'] ?? 'CLIENTE SCONOSCIUTO';
+        $clientVat = $data['client']['iva'] ?? null;
+        $clientFiscal = $data['client']['cf'] ?? null;
+        $clientName = $data['client']['ragione_sociale'] ?? 'CLIENTE SCONOSCIUTO';
 
-    $record20->addChild('ClientCode', safeXml($clientVat ?? $clientFiscal ?? 'ND'));
-    $record20->addChild('FiscalCode', safeXml($clientFiscal ?? 'ND'));
-    $record20->addChild('ClientName', safeXml($clientName));
+        $record20->addChild('ClientCode', safeXml($clientVat ?? $clientFiscal ?? 'ND'));
+        $record20->addChild('FiscalCode', safeXml($clientFiscal ?? 'ND'));
+        $record20->addChild('ClientName', safeXml($clientName));
 
-    // === Record 30: Payment Entries ===
-    $totalAmount = 0;
-    $transactionCount = 0;
+        // === Record 30: Payment Entries ===
+        $totalAmount = 0;
+        $transactionCount = 0;
 
-    foreach ($data['invoiceItems'] as $item) {
-        $record30 = $xml->addChild('Record');
-        $record30->addAttribute('type', '30');
+        foreach ($data['invoiceItems'] as $item) {
+            $record30 = $xml->addChild('Record');
+            $record30->addAttribute('type', '30');
 
-        $dueDate = Carbon::createFromFormat('d/m/Y', $data['invoiceStartAt'] ?? now()->format('d/m/Y'));
+            $dueDate = Carbon::createFromFormat('d/m/Y', $data['invoiceStartAt'] ?? now()->format('d/m/Y'));
 
-        $record30->addChild('DueDate', $dueDate->format('dmy'));
+            $record30->addChild('DueDate', $dueDate->format('dmy'));
 
-        $amountInCents = number_format(($item['priceAfterDiscount'] ?? 0) * 100, 0, '', '');
-        $record30->addChild('Amount', $amountInCents);
+            $amountInCents = number_format(($item['priceAfterDiscount'] ?? 0) * 100, 0, '', '');
+            $record30->addChild('Amount', $amountInCents);
 
-        $record30->addChild('PayerName', safeXml($clientName));
-        $record30->addChild('PayerIBAN', safeXml($iban));
-        $record30->addChild('Description', safeXml($item['description'] ?? 'Pagamento'));
+            $record30->addChild('PayerName', safeXml($clientName));
+            $record30->addChild('PayerIBAN', safeXml($iban));
+            $record30->addChild('Description', safeXml($item['description'] ?? 'Pagamento'));
 
-        $totalAmount += $item['priceAfterDiscount'] ?? 0;
-        $transactionCount++;
-    }
+            $totalAmount += $item['priceAfterDiscount'] ?? 0;
+            $transactionCount++;
+        }
 
-    // === Record 40: Summary ===
-    $record40 = $xml->addChild('Record');
-    $record40->addAttribute('type', '40');
-    $record40->addChild('TotalRecords', $transactionCount);
-    $record40->addChild('TotalAmount', number_format($totalAmount * 100, 0, '', ''));
+        // === Record 40: Summary ===
+        $record40 = $xml->addChild('Record');
+        $record40->addAttribute('type', '40');
+        $record40->addChild('TotalRecords', $transactionCount);
+        $record40->addChild('TotalAmount', number_format($totalAmount * 100, 0, '', ''));
 
-    // === Record 50: File Footer ===
-    $record50 = $xml->addChild('Record');
-    $record50->addAttribute('type', '50');
-    $record50->addChild('TotalLines', $xml->count() + 1); // Includes this record
+        // === Record 50: File Footer ===
+        $record50 = $xml->addChild('Record');
+        $record50->addAttribute('type', '50');
+        $record50->addChild('TotalLines', $xml->count() + 1); // Includes this record
 
-    // === Return as downloadable XML file ===
-    return response($xml->asXML(), 200)
-        ->header('Content-Type', 'application/xml')
-        ->header('Content-Disposition', 'attachment; filename="riba_cbi.xml"');
+        // === Save to storage/exportedInvoices/ folder ===
+        $fileName = 'riba_' . now()->format('Y_m_d_H_i_s') . '.xml';
+        $filePath = 'exportedInvoices/' . $fileName;
 
+        // Ensure public disk is set and symbolic link exists (`php artisan storage:link`)
+        Storage::disk('public')->put($filePath, $xml->asXML());
+
+        $url = asset('storage/' . $filePath);
+
+        return response()->json([
+            'path' => env('APP_URL') . parse_url($url, PHP_URL_PATH),
+        ]);
     }
 
 
