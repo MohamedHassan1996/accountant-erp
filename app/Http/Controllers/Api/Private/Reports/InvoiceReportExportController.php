@@ -39,6 +39,8 @@ class InvoiceReportExportController extends Controller
             return $this->generateInvoicePdf($this->getInvoiceData($request));
         } elseif($request->type == 'csv'){
             return $this->generateInvoiceExcel($this->getInvoiceData($request));
+        }elseif($request->type == 'xml'){
+            return $this->generateInvoiceXml($this->getInvoiceData($request));
         }
     }
 
@@ -238,6 +240,72 @@ class InvoiceReportExportController extends Controller
         return response()->json([
             'path' => env('APP_URL') . parse_url($url, PHP_URL_PATH),
         ]);
+    }
+
+    public function generateInvoiceXml(array $data)
+    {
+        $xml = new \SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><RibaCBI></RibaCBI>');
+
+        // === Record 14: File Header ===
+        $record14 = $xml->addChild('Record');
+        $record14->addAttribute('type', '14');
+        $record14->addChild('SenderABI', '12345'); // Replace with your ABI
+        $record14->addChild('CreationDate', now()->format('dmy'));
+        $record14->addChild('FlowDate', now()->format('dmy'));
+        $record14->addChild('Version', 'E');
+
+        // === Record 20: Client/Biller Info ===
+        $record20 = $xml->addChild('Record');
+        $record20->addAttribute('type', '20');
+
+        $clientVat = $data['client']['iva'] ?? null;
+        $clientFiscal = $data['client']['cf'] ?? null;
+        $clientName = $data['client']['ragione_sociale'] ?? 'CLIENTE SCONOSCIUTO';
+
+        $record20->addChild('ClientCode', $clientVat ?? $clientFiscal);
+        $record20->addChild('FiscalCode', $clientFiscal ?? 'ND');
+        $record20->addChild('ClientName', $clientName);
+
+        // === Record 30: Payment Entries ===
+        $totalAmount = 0;
+        $transactionCount = 0;
+
+        foreach ($data['invoiceItems'] as $item) {
+            $record30 = $xml->addChild('Record');
+            $record30->addAttribute('type', '30');
+
+            $record30->addChild(
+                'DueDate',
+                Carbon::createFromFormat('d/m/Y', $data['invoiceStartAt'])->format('dmy')
+            );
+
+            $amountInCents = number_format($item['priceAfterDiscount'] * 100, 0, '', '');
+            $record30->addChild('Amount', $amountInCents);
+
+            $record30->addChild('PayerName', $clientName);
+            $record30->addChild('PayerIBAN', $data['client']['bank_iban'] ?? 'IT00X0000000000000000000000');
+            $record30->addChild('Description', $item['description']);
+
+            $totalAmount += $item['priceAfterDiscount'];
+            $transactionCount++;
+        }
+
+        // === Record 40: Summary ===
+        $record40 = $xml->addChild('Record');
+        $record40->addAttribute('type', '40');
+        $record40->addChild('TotalRecords', $transactionCount);
+        $record40->addChild('TotalAmount', number_format($totalAmount * 100, 0, '', ''));
+
+        // === Record 50: File Footer ===
+        $record50 = $xml->addChild('Record');
+        $record50->addAttribute('type', '50');
+        $record50->addChild('TotalLines', $xml->count() + 1); // includes <Record type="50"> itself
+
+        // === Return XML File as Response ===
+        return response($xml->asXML(), 200)
+            ->header('Content-Type', 'application/xml')
+            ->header('Content-Disposition', 'attachment; filename="riba_cbi.xml"');
+
     }
 
 
