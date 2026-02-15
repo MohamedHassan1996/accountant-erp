@@ -8,15 +8,23 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 
-class Parameter extends Model
+class ParameterValueS extends Model
 {
     use HasFactory;
     use SoftDeletes;
     use CreatedUpdatedBy;
-
     protected $fillable = [
-        'parameter_name',
+        'parameter_id',
+        'parameter_value',
+        'description',
         'parameter_order',
+        'is_default',
     ];
+
+
+    public function scopeParameterOrder($query, $paraOrder)
+    {
+        return $query->where('parameter_id', $paraOrder);
+    }
 
 }
