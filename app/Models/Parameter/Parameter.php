@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 
-class ParameterS extends Model
+class Parameter extends Model
 {
     use HasFactory;
     use SoftDeletes;
@@ -16,7 +16,7 @@ class ParameterS extends Model
 
     protected $fillable = [
         'parameter_name',
-        'parameter_order',
+        'parameter_order'
     ];
 
 }

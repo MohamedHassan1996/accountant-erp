@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 
-class ParameterValueS extends Model
+class ParameterValue extends Model
 {
     use HasFactory;
     use SoftDeletes;
@@ -18,7 +18,7 @@ class ParameterValueS extends Model
         'parameter_value',
         'description',
         'parameter_order',
-        'is_default',
+        'is_default'
     ];
 
 
