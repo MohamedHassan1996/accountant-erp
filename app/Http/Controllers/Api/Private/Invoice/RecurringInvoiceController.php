@@ -51,7 +51,8 @@ class RecurringInvoiceController extends Controller
 
         foreach ($createTaskRequest->payInstallments as $payInstallmentData) {
 
-            $startDate = Carbon::parse($payInstallmentData['startAt']);
+            // Always start from month 1 (January) of the current year
+            $startDate = Carbon::now()->startOfYear()->day(1);
 
             // Adjust start date if it falls on weekend or holiday
             $startDate = $this->adjustForWeekendsAndHolidays($startDate, $holidays);

@@ -25,11 +25,12 @@ class CreateClientBankAccountRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'bankId' => ['nullable', 'exists:parameter_values,id'],
             'iban' => ['nullable'],
             'abi' => ['nullable'],
             'cab' => ['nullable'],
             'isMain' => ['required'],
-            'clientId' => ['nullable']
+            'clientId' => ['nullable'],
         ];
     }
 
