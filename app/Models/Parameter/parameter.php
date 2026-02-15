@@ -16,7 +16,7 @@ class Parameter extends Model
 
     protected $fillable = [
         'parameter_name',
-        'parameter_order'
+        'parameter_order',
     ];
 
 }

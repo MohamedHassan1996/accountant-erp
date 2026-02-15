@@ -18,7 +18,7 @@ class ParameterValue extends Model
         'parameter_value',
         'description',
         'parameter_order',
-        'is_default'
+        'is_default',
     ];
 
 
