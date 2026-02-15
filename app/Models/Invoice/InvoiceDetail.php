@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class InvoiceDetail extends Model
 {
-    use HasFactory; //SoftDeletes;//, CreatedUpdatedBy;
+    use HasFactory, SoftDeletes; //CreatedUpdatedBy;
 
     protected $fillable = [
         'invoice_id',
