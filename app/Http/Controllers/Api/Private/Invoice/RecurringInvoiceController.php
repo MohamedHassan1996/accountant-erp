@@ -25,7 +25,7 @@ class RecurringInvoiceController extends Controller
         $this->taskService = $taskService;
     }
 
-    public function create(Request $createTaskRequest)
+    /*public function create(Request $createTaskRequest)
     {
         try {
             DB::beginTransaction();
@@ -123,5 +123,122 @@ class RecurringInvoiceController extends Controller
         }
 
 
+    }*/
+    
+    public function create(Request $createTaskRequest)
+{
+    try {
+        DB::beginTransaction();
+
+        $client = Client::find($createTaskRequest->clientId);
+
+        if (count($client->payInstallments) > 0) {
+            $client->has_recurring_invoice = true;
+            $client->save();
+        }
+
+        $bankAccount = ParameterValue::where('parameter_id', 7)
+            ->where('is_default', 1)
+            ->first();
+
+        foreach ($createTaskRequest->payInstallments as $payInstallmentData) {
+
+            $allowedDaysToPay = $client->allowed_days_to_pay ?? 0;
+
+            $startDate = Carbon::parse($payInstallmentData['startAt']);
+
+            /**
+             * ✅ 1. استخدم endAt من الريكوست لو موجود
+             * 🔁 2. وإلا احسبه بالمنطق الحالي
+             */
+            if (!empty($payInstallmentData['endAt'])) {
+
+                $endDate = Carbon::parse($payInstallmentData['endAt']);
+
+            } else {
+
+                $clientEndDataAdd = ParameterValue::where(
+                    'id',
+                    $payInstallmentData['paymentTypeId']
+                )->first();
+
+                $clientEndDataAddMonth = ceil($clientEndDataAdd->description / 30);
+
+                $endDate = $startDate->copy()
+                    ->addMonths($clientEndDataAddMonth)
+                    ->subDays(1);
+
+                $isSpecialMonthEnd = in_array(
+                    $endDate->format('m-d'),
+                    ['08-31', '12-31']
+                );
+
+                if ($isSpecialMonthEnd) {
+                    $endDate->addDays(10);
+                } else {
+                    $endDate->addDays($allowedDaysToPay);
+                }
+            }
+
+            $invoice = Invoice::create([
+                'client_id'        => $createTaskRequest->clientId,
+                'end_at'           => $endDate,
+                'payment_type_id'  => $createTaskRequest->paymentTypeId,
+                'discount_type'    => null,
+                'discount_amount'  => 0,
+                'bank_account_id'  => $bankAccount?->id ?? null,
+            ]);
+
+            $payInstallment = ClientPayInstallment::find(
+                $payInstallmentData['payInstallmentId']
+            );
+
+            $payInstallmentDescription = ParameterValue::where(
+                'id',
+                $payInstallment->parameter_value_id
+            )->first();
+
+            $invoiceDetail = new InvoiceDetail([
+                'invoice_id'            => $invoice->id,
+                'price'                 => $payInstallmentData['amount'],
+                'price_after_discount'  => $payInstallmentData['amount'],
+                'description'           => $payInstallmentDescription?->description ?? ''
+            ]);
+
+            $payInstallment->invoiceDetails()->save($invoiceDetail);
+
+            foreach ($payInstallmentData['payInstallmentSubData'] as $payInstallmentSubData) {
+
+                $payInstallmentSubDataDb = ClientPayInstallmentSubData::find(
+                    $payInstallmentSubData['payInstallmentSubDataId']
+                );
+
+                $payInstallmentSubDataDescription = ParameterValue::where(
+                    'id',
+                    $payInstallmentSubDataDb->parameter_value_id
+                )->first();
+
+                $invoiceDetail = new InvoiceDetail([
+                    'invoice_id'            => $invoice->id,
+                    'price'                 => $payInstallmentSubData['price'],
+                    'price_after_discount'  => $payInstallmentSubData['price'],
+                    'description'           => $payInstallmentSubDataDescription?->description ?? ''
+                ]);
+
+                $payInstallmentSubDataDb->invoiceDetails()->save($invoiceDetail);
+            }
+        }
+
+        DB::commit();
+
+        return response()->json([
+            'message' => __('messages.success.created')
+        ], 200);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        throw $e;
     }
+}
+
 }

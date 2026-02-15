@@ -68,17 +68,47 @@ class TaskTimeLogController extends Controller
             foreach ($latestPlayedTasks as $latestTask) {
                 // Get the latest time log's created_at timestamp
                 $latestTimeLog = $latestTask->latestTimeLog;
-
+                
+                if (!$latestTimeLog) {
+    continue;
+}
+                
                 if($latestTimeLog->status != TaskTimeLogStatus::START){
                    continue;
                 }
 
 
-                // Calculate the difference in HH:MM:SS format
-                $totalTime = $latestTimeLog
-                    ? gmdate('H:i:s', Carbon::now()->diffInSeconds($latestTimeLog->created_at))
-                    : '00:00:00';
-
+                if ($latestTimeLog) {
+                
+                    // مدة الجلسة الحالية بالثواني
+                    $currentSeconds = Carbon::now()->diffInSeconds($latestTimeLog->created_at);
+                
+                    // الوقت القديم
+                    $previousTime = $latestTimeLog->total_time;
+                
+                    // لو مفيش وقت قديم
+                    if (empty($previousTime) || $previousTime === '00:00:00' || $previousTime == 0) {
+                
+                        $totalSeconds = $currentSeconds;
+                
+                    } else {
+                
+                        // تحويل الوقت القديم لثواني
+                        $previousSeconds = Carbon::createFromFormat(
+                            'H:i:s',
+                            $previousTime
+                        )->diffInSeconds(Carbon::today());
+                
+                        // الجمع
+                        $totalSeconds = $previousSeconds + $currentSeconds;
+                    }
+                
+                    // الشكل النهائي
+                    $totalTime = gmdate('H:i:s', $totalSeconds);
+                
+                } else {
+                    $totalTime = '00:00:00';
+                }
                 // Create the new TaskTimeLog record
                 TaskTimeLog::create([
                     'start_at'   => null,

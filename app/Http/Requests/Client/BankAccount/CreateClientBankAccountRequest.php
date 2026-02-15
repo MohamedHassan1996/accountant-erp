@@ -25,7 +25,7 @@ class CreateClientBankAccountRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'iban' => ['required'],
+            'iban' => ['nullable'],
             'abi' => ['nullable'],
             'cab' => ['nullable'],
             'isMain' => ['required'],

@@ -23,87 +23,169 @@ class ClientPayInstallmentDividerController extends Controller
     /**
      * Display a listing of the resource.
      */
+    // public function index(Request $request)
+    // {
+    //     $installmentNumbers = ParameterValue::where('id', $request->payStepsId)->pluck('description')->first();
+
+    //     $client = Client::find($request->clientId);
+
+    //     $clientEndDataAdd = 0;
+
+    //     $clientEndDataAddMonth = 0;
+
+    //     $installmentAmount = 0;
+
+    //     $allowedDaysToPay = 0; // Fetch from the client table
+
+
+
+    //     if ($client) {
+
+    //         $client->price = $request->price;
+
+    //         $client->payment_type_id = $request->paymentTypeId??null;
+
+    //         $client->save();
+
+    //         $clientEndDataAdd = ParameterValue::where('id', $client->payment_type_id)->first();
+
+    //         $clientEndDataAddMonth = ceil($clientEndDataAdd->description / 30);
+
+    //         $installmentAmount = $client->price / $installmentNumbers;
+
+    //         $allowedDaysToPay = $client->allowed_days_to_pay ?? 0; // Fetch from the client table
+
+    //     } else {
+
+
+    //         $clientEndDataAdd = ParameterValue::where('id', $request->paymentTypeId)->first();
+
+    //         $clientEndDataAddMonth = ceil($clientEndDataAdd->description / 30);
+
+    //         $installmentAmount = $request->price / $installmentNumbers;
+
+
+    //     }
+
+
+
+    //     $installmentsData = [];
+    //     $currentDate = now()->startOfMonth(); // First day of the current month
+
+
+    //     foreach ( range(1, $installmentNumbers) as $installmentNumber ) {
+
+    //         $endDate = $currentDate->copy()->addMonths($clientEndDataAddMonth)->subDays(1);
+
+    //         $isSpecialMonthEnd = in_array($endDate->format('m-d'), ['08-31', '12-31']);
+
+    //         if ($isSpecialMonthEnd) {
+    //             $endDate->addDays(10);
+    //         } else {
+    //             $endDate->addDays($allowedDaysToPay);
+    //         }
+
+    //         $installmentsData[] = [
+    //             'startAt' => $currentDate->format('Y-m-d'),
+    //             'endAt' => $endDate->format('Y-m-d'),
+    //             'parameterValueName' => '',
+    //             'amount' => round($installmentAmount, 2),
+    //             'paymentTypeId' => $client?->payment_type_id ?? $request->paymentTypeId ?? "",
+    //             'payInstallmentSubData' => []
+    //         ];
+
+    //         $currentDate->addMonth(); // Move to the next month
+    //     }
+
+    //     return response()->json([
+    //         'data' => [
+    //             'payInstallments' => $installmentsData
+    //         ]
+    //     ]);
+
+    // }
+    
     public function index(Request $request)
-    {
-        $installmentNumbers = ParameterValue::where('id', $request->payStepsId)->pluck('description')->first();
+{
+    // عدد الأقساط
+    $installmentNumbers = ParameterValue::where('id', $request->payStepsId)
+        ->pluck('description')
+        ->first();
 
-        $client = Client::find($request->clientId);
+    // جلب العميل إذا موجود
+    $client = Client::find($request->clientId);
 
-        $clientEndDataAdd = 0;
+    $clientEndDataAddMonth = 0;
+    $installmentAmount = 0;
+    $allowedDaysToPay = 0;
 
-        $clientEndDataAddMonth = 0;
+    // إذا العميل موجود
+    if ($client) {
+        $client->price = $request->price;
+        $client->payment_type_id = $request->paymentTypeId ?? null;
+        $client->save();
 
-        $installmentAmount = 0;
+        $clientEndDataAdd = ParameterValue::where('id', $client->payment_type_id)->first();
+        $clientEndDataAddMonth = ceil($clientEndDataAdd->description / 30);
 
-        $allowedDaysToPay = 0; // Fetch from the client table
+        $installmentAmount = $client->price / $installmentNumbers;
+        $allowedDaysToPay = $client->allowed_days_to_pay ?? 0;
 
+    } else {
+        $clientEndDataAdd = ParameterValue::where('id', $request->paymentTypeId)->first();
+        $clientEndDataAddMonth = ceil($clientEndDataAdd->description / 30);
 
-
-        if ($client) {
-
-            $client->price = $request->price;
-
-            $client->payment_type_id = $request->paymentTypeId??null;
-
-            $client->save();
-
-            $clientEndDataAdd = ParameterValue::where('id', $client->payment_type_id)->first();
-
-            $clientEndDataAddMonth = ceil($clientEndDataAdd->description / 30);
-
-            $installmentAmount = $client->price / $installmentNumbers;
-
-            $allowedDaysToPay = $client->allowed_days_to_pay ?? 0; // Fetch from the client table
-
-        } else {
-
-
-            $clientEndDataAdd = ParameterValue::where('id', $request->paymentTypeId)->first();
-
-            $clientEndDataAddMonth = ceil($clientEndDataAdd->description / 30);
-
-            $installmentAmount = $request->price / $installmentNumbers;
-
-
-        }
-
-
-
-        $installmentsData = [];
-        $currentDate = now()->startOfMonth(); // First day of the current month
-
-
-        foreach ( range(1, $installmentNumbers) as $installmentNumber ) {
-
-            $endDate = $currentDate->copy()->addMonths($clientEndDataAddMonth)->subDays(1);
-
-            $isSpecialMonthEnd = in_array($endDate->format('m-d'), ['08-31', '12-31']);
-
-            if ($isSpecialMonthEnd) {
-                $endDate->addDays(10);
-            } else {
-                $endDate->addDays($allowedDaysToPay);
-            }
-
-            $installmentsData[] = [
-                'startAt' => $currentDate->format('Y-m-d'),
-                'endAt' => $endDate->format('Y-m-d'),
-                'parameterValueName' => '',
-                'amount' => round($installmentAmount, 2),
-                'paymentTypeId' => $client?->payment_type_id ?? $request->paymentTypeId ?? "",
-                'payInstallmentSubData' => []
-            ];
-
-            $currentDate->addMonth(); // Move to the next month
-        }
-
-        return response()->json([
-            'data' => [
-                'payInstallments' => $installmentsData
-            ]
-        ]);
-
+        $installmentAmount = $request->price / $installmentNumbers;
     }
+
+    // عدد الشهور بين الأقساط
+    $monthsBetweenInstallments = intval(12 / $installmentNumbers);
+
+    // بداية السنة الحالية
+    $yearStart = now()->startOfYear();
+
+    // الشهر الذي يبدأ منه القسط الأول
+    $firstInstallmentMonth = 12 - (($installmentNumbers - 1) * $monthsBetweenInstallments);
+
+    $installmentsData = [];
+
+    for ($i = 0; $i < $installmentNumbers; $i++) {
+
+        // بداية القسط
+        $startDate = $yearStart->copy()
+            ->addMonths($firstInstallmentMonth - 1)
+            ->addMonths($i * $monthsBetweenInstallments);
+
+        // نهاية القسط
+        $endDate = $startDate->copy()
+            ->addMonths($clientEndDataAddMonth)
+            ->subDays(1);
+
+        // معالجة شهور خاصة
+        $isSpecialMonthEnd = in_array($endDate->format('m-d'), ['08-31', '12-31']);
+        if ($isSpecialMonthEnd) {
+            $endDate->addDays(10);
+        } else {
+            $endDate->addDays($allowedDaysToPay);
+        }
+
+        $installmentsData[] = [
+            'startAt' => $startDate->format('Y-m-d'),
+            'endAt' => $endDate->format('Y-m-d'),
+            'parameterValueName' => '',
+            'amount' => round($installmentAmount, 2),
+            'paymentTypeId' => $client?->payment_type_id ?? $request->paymentTypeId ?? "",
+            'payInstallmentSubData' => []
+        ];
+    }
+
+    return response()->json([
+        'data' => [
+            'payInstallments' => $installmentsData
+        ]
+    ]);
+}
+
 
 
 }

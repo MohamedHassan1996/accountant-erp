@@ -25,6 +25,7 @@ class ClientResource extends JsonResource
             'note' => $this->note??"",
             'phone' => $this->phone??"",
             'email' => $this->email??"",
+            'emailF24' => $this->email_f24??"",
             'price' => $this->price??0,
             'monthlyPrice' => $this->monthly_price??0,
             'hoursPerMonth' => $this->hours_per_month??0,

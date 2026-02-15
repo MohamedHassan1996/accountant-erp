@@ -114,5 +114,25 @@ class ClientPayInstallmentController extends Controller
 
 
     }
+    
+        public function delete(Request $request)
+    {
+
+        try {
+            DB::beginTransaction();
+            $clientPayInstallment = ClientPayInstallment::find($request->payInstallmentId);
+            $clientPayInstallment->payInstallmentSubData()->delete();
+            $clientPayInstallment->delete();
+            DB::commit();
+            return response()->json([
+                'message' => __('messages.success.deleted')
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    }
+
 
 }

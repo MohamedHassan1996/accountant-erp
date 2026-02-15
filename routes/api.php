@@ -40,6 +40,9 @@ use App\Http\Controllers\Api\Private\Reports\InvoiceReportExportController;
 use App\Http\Controllers\Api\Private\Task\AdminTaskExportController;
 use App\Http\Controllers\ImportClientController;
 use App\Http\Controllers\ImportServiceCategoryController;
+use App\Http\Controllers\Api\Private\Client\ClientPaymentExportController;
+use App\Http\Controllers\Api\Private\Client\ImportClientBankAccountController;
+use App\Http\Controllers\Api\Private\Invoice\RecurringInvoiceToAllClientsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -103,6 +106,7 @@ Route::prefix('v1/client-pay-installments')->group(function(){
     Route::post('create', [ClientPayInstallmentController::class, 'create']);
     Route::get('edit', [ClientPayInstallmentController::class, 'edit']);
     Route::put('update', [ClientPayInstallmentController::class, 'update']);
+    Route::delete('delete', [ClientPayInstallmentController::class, 'delete']);
 });
 
 Route::prefix('v1/client-pay-installment-sub-data')->group(function(){
@@ -222,6 +226,10 @@ Route::prefix('v1/export-invoice-report')->group(function(){
     Route::get('', [InvoiceReportExportController::class, 'index']);
 });
 
+Route::prefix('v1/export-client-payment')->group(function(){
+    Route::get('', [ClientPaymentExportController::class, 'index']);
+});
+
 Route::prefix('v1/image-to-excel')->group(function(){
     Route::post('', [ImageToExcelController::class, 'index']);
 });
@@ -247,6 +255,13 @@ Route::prefix('v1/installment-end-at')->group(function(){
 
 
 
+Route::prefix('v1/import-client-bank-accounts')->group(function(){
+    Route::post('', [ImportClientBankAccountController::class, 'import']);
+});
 
+
+Route::prefix('v1/clients/recurring-all-invoices')->group(function(){
+    Route::post('create', [RecurringInvoiceToAllClientsController::class, 'create']);
+});
 
 

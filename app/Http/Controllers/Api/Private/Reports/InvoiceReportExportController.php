@@ -44,7 +44,7 @@ class InvoiceReportExportController extends Controller
         }
     }
 
-    private function getInvoiceData(Request $request){
+    /*private function getInvoiceData(Request $request){
         $invoice = Invoice::findOrFail($request->invoiceIds[0]);
 
         $invoiceItems = DB::table('invoice_details')
@@ -110,6 +110,8 @@ class InvoiceReportExportController extends Controller
         }
 
         $client = Client::find($invoice->client_id);
+        
+                $clientAddressData = ClientAddress::where('client_id', $client->id)->first();
 
         if ($client->total_tax > 0) {
             $invoiceItemsData[] = [
@@ -127,7 +129,17 @@ class InvoiceReportExportController extends Controller
         }
 
         $clientAddressFormatted = ClientAddress::where('client_id', $client->id)->first()?->address ?? "";
-        $clientBankAccountFormatted = ClientBankAccount::where('client_id', $client->id)->first()?->iban ?? "";
+        $clientBankAccount = ClientBankAccount::where('client_id', $client->id)->where('is_main', 1)->first();
+
+        $clientBankAccountFormatted = [];
+        
+        if($clientBankAccount != null){
+            $clientBankAccountFormatted = [
+                'iban' => $clientBankAccount->iban??"",
+                'abi' => $clientBankAccount->abi??"",
+                'cab' => $clientBankAccount->cab??""
+            ];
+        }
 
         if ($invoice->discount_amount > 0) {
             $discountValue = $invoice->discount_type == 0
@@ -153,6 +165,7 @@ class InvoiceReportExportController extends Controller
 
         return [
             'invoice' => $invoice,
+            'clientAddressData' => $clientAddressData->toArray(),
             'invoiceStartAt' => $invoiceStartAt,
             'invoiceItems' => $invoiceItemsData,
             'invoiceTotalTax' => $invoiceTotalToCalcTax,
@@ -164,7 +177,173 @@ class InvoiceReportExportController extends Controller
             'paymentMethod' => $paymentMethod->parameter_value ?? "",
         ];
 
+    }*/
+    
+        private function getInvoiceData(Request $request){
+        $invoice = Invoice::findOrFail($request->invoiceIds[0]);
+
+        $invoiceItems = DB::table('invoice_details')
+            ->where('invoice_details.invoice_id', $invoice->id)
+            ->select([
+                'invoice_details.price',
+                'invoice_details.price_after_discount',
+                'invoice_details.invoiceable_id',
+                'invoice_details.invoiceable_type',
+                'invoice_details.description'
+            ])->get();
+
+        $invoiceItemsData = [];
+        //$totalTax = 0;
+        $invoiceTotalToCalcTax = 0;
+        $invoiceTotal = 0;
+
+        $invoiceStartAt = Carbon::parse($invoice->created_at)->format('d/m/Y');
+
+        foreach ($invoiceItems as $invoiceItem) {
+            $invoiceItemData = match ($invoiceItem->invoiceable_type) {
+                Task::class => Task::with('serviceCategory')->find($invoiceItem->invoiceable_id),
+                ClientPayInstallment::class => ClientPayInstallment::with('parameterValue')->find($invoiceItem->invoiceable_id),
+                ClientPayInstallmentSubData::class => ClientPayInstallmentSubData::with('parameterValue')->find($invoiceItem->invoiceable_id),
+                default => null
+            };
+
+
+            $description = $invoiceItem->invoiceable_type == Task::class
+                ? $invoiceItemData->serviceCategory->name
+                : $invoiceItemData->parameterValue?->description ?? $invoiceItem->description;
+
+            $invoiceStartAt = $invoiceItem->invoiceable_type == ClientPayInstallment::class
+                ? Carbon::parse(ClientPayInstallment::find($invoiceItem->invoiceable_id)->start_at)->format('d/m/Y')
+                : $invoiceStartAt;
+
+            if($invoiceItem->description != null){
+                $description = $invoiceItem->description;
+            }
+
+
+            $invoiceItemsData[] = [
+                'description' => $description,
+                'price' => $invoiceItem->price,
+                'priceAfterDiscount' => $invoiceItem->price_after_discount,
+                'additionalTaxPercentage' => 22
+            ];
+
+            //$totalTax += $invoiceItem->price_after_discount * 0.22;
+            $invoiceTotal += $invoiceItem->price_after_discount;
+            $invoiceTotalToCalcTax += $invoiceItem->price_after_discount;
+
+            if ($invoiceItem->invoiceable_type == Task::class && $invoiceItemData->serviceCategory->extra_is_pricable) {
+                $invoiceItemsData[] = [
+                    'description' => $invoiceItemData->serviceCategory->extra_price_description,
+                    'price' => $invoiceItem->price == 0 ? $invoiceItemData->serviceCategory->extra_price : $invoiceItem->price,
+                    'priceAfterDiscount' => $invoiceItem->price_after_discount == 0 ? $invoiceItemData->serviceCategory->extra_price : $invoiceItem->price,
+                    'additionalTaxPercentage' => 0
+                ];
+
+                $invoiceTotal += $invoiceItemData->serviceCategory->extra_price;
+            }
+        }
+
+        $client = Client::find($invoice->client_id);
+        
+
+        if ($client->total_tax > 0) {
+            $invoiceItemsData[] = [
+                'description' => $client->total_tax_description ?? '',
+                'price' => $invoiceTotal * ($client->total_tax / 100),
+                'priceAfterDiscount' => $invoiceTotal * ($client->total_tax / 100),
+                'additionalTaxPercentage' => 22
+            ];
+
+            //$totalTax += ($invoiceTotal * ($client->total_tax / 100) * 0.22);
+            
+            $invoiceTotal += $invoiceTotal * ($client->total_tax / 100);
+            
+
+            
+            $invoiceTotalToCalcTax += $invoiceTotalToCalcTax * ($client->total_tax / 100);
+            
+
+
+
+        }
+        
+        
+
+        $clientAddressFormatted = ClientAddress::where('client_id', $client->id)->first()?->address ?? "";
+        
+        $clientBankAccount = ClientBankAccount::where('client_id', $client->id)->where('is_main', 1)->first();
+
+        $clientBankAccountFormatted = [];
+        
+        if($clientBankAccount != null){
+            $clientBankAccountFormatted = [
+                'iban' => $clientBankAccount->iban??"",
+                'abi' => $clientBankAccount->abi??"",
+                'cab' => $clientBankAccount->cab??"",
+                'bankName' => $clientBankAccount->banca
+            ];
+        }
+        
+        $clientAddressData = ClientAddress::where('client_id', $client->id)->first();
+        
+
+        if ($invoice->discount_amount > 0) {
+            $discountValue = $invoice->discount_type == 0
+                ? $invoiceTotal * ($invoice->discount_amount / 100)
+                : $invoice->discount_amount;
+                
+            $invoiceItemsData[] = [
+                'description' => "sconto",
+                'price' => $discountValue,
+                'priceAfterDiscount' => $discountValue,
+                'additionalTaxPercentage' => 0
+            ];
+
+            $invoiceTotal -= $discountValue;
+
+            $invoiceTotalToCalcTax -= $discountValue;
+
+        }
+
+
+
+        $paymentMethod = ParameterValue::find($invoice->payment_type_id ?? null);
+
+        $invoiceTotalToCalcTax = $invoiceTotalToCalcTax * 0.22;
+        
+        $bankAccount = null;
+        
+        if($invoice->bank_account_id){
+            $bankAccount = ParameterValue::where('id',$invoice->bank_account_id)->first();
+        }else{
+            $bankAccount = ParameterValue::where('parameter_order', 7)->where('is_default', 1)->first();
+        }
+            
+            
+
+        return [
+            'invoice' => $invoice,
+            'clientAddressData' => $clientAddressData->toArray(),
+            'invoiceStartAt' => $invoiceStartAt,
+            'invoiceItems' => $invoiceItemsData,
+            'invoiceTotalTax' => $invoiceTotalToCalcTax,
+            'invoiceTotal' => $invoiceTotal,
+            'invoiceTotalWithTax' => $invoiceTotal + $invoiceTotalToCalcTax,
+            'client' => $client,
+            'clientAddress' => $clientAddressFormatted,
+            'clientBankAccount' => $clientBankAccountFormatted,
+            'paymentMethod' => $paymentMethod->code ?? "",
+            'bankAccount' => [
+                'iban' => $bankAccount->parameter_value??'',
+                'abi' => $bankAccount->description2??'',
+                'cab' => $bankAccount->description3??'',
+                'bankName' => $bankAccount->description??''
+            ],
+        ];
+
     }
+
 
     private function generateInvoicePdf(array $data)
     {
@@ -242,86 +421,228 @@ class InvoiceReportExportController extends Controller
         ]);
     }
 
-    public function generateInvoiceXml(array $data)
-    {
-        function safeXml(string $value): string
-        {
-            return htmlspecialchars($value, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+public function generateInvoiceXml(array $data)
+{
+    $safe = fn($v) => htmlspecialchars(trim((string)$v), ENT_XML1 | ENT_QUOTES, 'UTF-8');
+
+    $parseDate = function ($value) {
+        try {
+            if (!$value) return now()->format('Y-m-d');
+            $clean = trim(explode(' ', (string)$value)[0]);
+            if (str_contains($clean, '/')) {
+                return \Carbon\Carbon::createFromFormat('d/m/Y', $clean)->format('Y-m-d');
+            }
+            return \Carbon\Carbon::parse($clean)->format('Y-m-d');
+        } catch (\Exception $e) {
+            return now()->format('Y-m-d');
         }
+    };
 
-        $xml = new \SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><RibaCBI></RibaCBI>');
+    $usePassepartout = !empty($data['client']['sdi_code']) && $data['client']['sdi_code'] !== '0000000';
 
-        // === Record 14: File Header ===
-        $record14 = $xml->addChild('Record');
-        $record14->addAttribute('type', '14');
+    /* ================= 1. بناء الهيكل الأساسي بدون Namespaces مؤقتاً ================= */
+    // نبدأ بـ Root مؤقت بدون Namespace لتجنب مشكلة توريث الـ prefix p: أو ظهور xmlns=""
+    $xml = new \SimpleXMLElement(
+        '<?xml version="1.0" encoding="windows-1252"?>' .
+        '<?xml-stylesheet type="text/xsl" href="fatturaordinaria_v1.2.xsl"?>' .
+        '<FatturaElettronica versione="FPR12"></FatturaElettronica>'
+    );
 
-        $iban = $data['client']['bank_iban'] ?? 'IT00X0000000000000000000000';
-        $senderAbi = substr($iban, 5, 5);
+    /* ================= HEADER ================= */
+    $header = $xml->addChild('FatturaElettronicaHeader');
 
-        $record14->addChild('SenderABI', safeXml($senderAbi));
-        $record14->addChild('CreationDate', now()->format('dmy'));
-        $record14->addChild('FlowDate', now()->format('dmy'));
-        $record14->addChild('Version', 'E');
-
-        // === Record 20: Client/Biller Info ===
-        $record20 = $xml->addChild('Record');
-        $record20->addAttribute('type', '20');
-
-        $clientVat = $data['client']['iva'] ?? null;
-        $clientFiscal = $data['client']['cf'] ?? null;
-        $clientName = $data['client']['ragione_sociale'] ?? 'CLIENTE SCONOSCIUTO';
-
-        $record20->addChild('ClientCode', safeXml($clientVat ?? $clientFiscal ?? 'ND'));
-        $record20->addChild('FiscalCode', safeXml($clientFiscal ?? 'ND'));
-        $record20->addChild('ClientName', safeXml($clientName));
-
-        // === Record 30: Payment Entries ===
-        $totalAmount = 0;
-        $transactionCount = 0;
-
-        foreach ($data['invoiceItems'] as $item) {
-            $record30 = $xml->addChild('Record');
-            $record30->addAttribute('type', '30');
-
-            $dueDate = Carbon::createFromFormat('d/m/Y', $data['invoiceStartAt'] ?? now()->format('d/m/Y'));
-
-            $record30->addChild('DueDate', $dueDate->format('dmy'));
-
-            $amountInCents = number_format(($item['priceAfterDiscount'] ?? 0) * 100, 0, '', '');
-            $record30->addChild('Amount', $amountInCents);
-
-            $record30->addChild('PayerName', safeXml($clientName));
-            $record30->addChild('PayerIBAN', safeXml($iban));
-            $record30->addChild('Description', safeXml($item['description'] ?? 'Pagamento'));
-
-            $totalAmount += $item['priceAfterDiscount'] ?? 0;
-            $transactionCount++;
-        }
-
-        // === Record 40: Summary ===
-        $record40 = $xml->addChild('Record');
-        $record40->addAttribute('type', '40');
-        $record40->addChild('TotalRecords', $transactionCount);
-        $record40->addChild('TotalAmount', number_format($data['invoiceTotalWithTax'] * 100, 0, '', ''));
-
-        // === Record 50: File Footer ===
-        $record50 = $xml->addChild('Record');
-        $record50->addAttribute('type', '50');
-        $record50->addChild('TotalLines', $xml->count() + 1); // Includes this record
-
-        // === Save to storage/exportedInvoices/ folder ===
-        $fileName = 'riba_' . now()->format('Y_m_d_H_i_s') . '.xml';
-        $filePath = 'exportedInvoices/' . $fileName;
-
-        // Ensure public disk is set and symbolic link exists (`php artisan storage:link`)
-        Storage::disk('public')->put($filePath, $xml->asXML());
-
-        $url = asset('storage/' . $filePath);
-
-        return response()->json([
-            'path' => env('APP_URL') . parse_url($url, PHP_URL_PATH),
-        ]);
+    /* --- DatiTrasmissione --- */
+    $trasm = $header->addChild('DatiTrasmissione');
+    $idTras = $trasm->addChild('IdTrasmittente');
+    if ($usePassepartout) {
+        $idTras->addChild('IdPaese', 'SM');
+        $idTras->addChild('IdCodice', '03473');
+        $trasm->addChild('CodiceDestinatario', $safe($data['client']['sdi']));
+    } else {
+        $idTras->addChild('IdPaese', 'IT');
+        $idTras->addChild('IdCodice', '00987920196');
+        $trasm->addChild('CodiceDestinatario', $safe($data['client']['sdi'] ?? '0000000'));
     }
 
+    DB::transaction(function () use (&$invoiceNewNumber) {
+        $latestInvoice = Invoice::lockForUpdate()
+            ->whereNotNull('invoice_xml_number')
+            ->latest('id')
+            ->first();
+        $lastNumber = $latestInvoice?->invoice_xml_number ?? '1/57';
+        $parts = explode('/', $lastNumber);
+        $parts[1] = (int) $parts[1] + 1;
+        $invoiceNewNumber = implode('/', $parts);
+    });
+
+    $trasm->addChild('ProgressivoInvio', $invoiceNewNumber);
+    $trasm->addChild('FormatoTrasmissione', 'FPR12');
+
+    /* --- CedentePrestatore --- */
+    $ced = $header->addChild('CedentePrestatore');
+    $datiCed = $ced->addChild('DatiAnagrafici');
+    $ivaCed = $datiCed->addChild('IdFiscaleIVA');
+    $ivaCed->addChild('IdPaese', 'IT');
+    $ivaCed->addChild('IdCodice', '00987920196');
+    $datiCed->addChild('CodiceFiscale', '00987920196');
+    $anaCed = $datiCed->addChild('Anagrafica');
+    $anaCed->addChild('Denominazione', 'ELABORAZIONI SRL');
+    $datiCed->addChild('RegimeFiscale', 'RF01');
+
+    $sedeCed = $ced->addChild('Sede');
+    $sedeCed->addChild('Indirizzo', 'VIA STAZIONE 9/B');
+    $sedeCed->addChild('CAP', '26013');
+    $sedeCed->addChild('Comune', 'CREMA');
+    $sedeCed->addChild('Provincia', 'CR');
+    $sedeCed->addChild('Nazione', 'IT');
+
+    $rea = $ced->addChild('IscrizioneREA');
+    $rea->addChild('Ufficio', 'CR');
+    $rea->addChild('NumeroREA', '126442');
+    $rea->addChild('CapitaleSociale', '10000.00');
+    $rea->addChild('SocioUnico', 'SM');
+    $rea->addChild('StatoLiquidazione', 'LN');
+
+    $contatti = $ced->addChild('Contatti');
+    $contatti->addChild('Telefono', '037386998');
+    $contatti->addChild('Email', 'info@studiocrottibignami.it');
+
+    /* --- CessionarioCommittente --- */
+    $cess = $header->addChild('CessionarioCommittente');
+    $datiCess = $cess->addChild('DatiAnagrafici');
+    if (!empty($data['client']['iva'])) {
+        $ivaCess = $datiCess->addChild('IdFiscaleIVA');
+        $ivaCess->addChild('IdPaese', 'IT');
+        $ivaCess->addChild('IdCodice', $safe($data['client']['iva']));
+    }
+    if (!empty($data['client']['cf'])) {
+        $datiCess->addChild('CodiceFiscale', $safe($data['client']['cf']));
+    }
+    $anaCess = $datiCess->addChild('Anagrafica');
+    $anaCess->addChild('Denominazione', $safe($data['client']['ragione_sociale']));
+
+    $provRaw = $data['clientAddressData']['province'] ?? '';
+    $prov = strtoupper(substr(trim($provRaw), 0, 2)) ?: 'XX';
+    $sedeCess = $cess->addChild('Sede');
+    $sedeCess->addChild('Indirizzo', $safe($data['clientAddressData']['address']));
+    $sedeCess->addChild('CAP', $safe($data['clientAddressData']['cap'] ?? '00000'));
+    $sedeCess->addChild('Comune', $safe($data['clientAddressData']['city']));
+    $sedeCess->addChild('Provincia', $prov);
+    $sedeCess->addChild('Nazione', 'IT');
+
+    /* --- Terzo Intermediario --- */
+    $terzo = $header->addChild('TerzoIntermediarioOSoggettoEmittente');
+    $datiTerzo = $terzo->addChild('DatiAnagrafici');
+    $ivaTerzo = $datiTerzo->addChild('IdFiscaleIVA');
+    $ivaTerzo->addChild('IdPaese', 'SM');
+    $ivaTerzo->addChild('IdCodice', '03473');
+    $anaTerzo = $datiTerzo->addChild('Anagrafica');
+    $anaTerzo->addChild('Denominazione', 'Passepartout S.p.A');
+
+    $header->addChild('SoggettoEmittente', 'TZ');
+
+    /* ================= BODY ================= */
+    $body = $xml->addChild('FatturaElettronicaBody');
+    $gen = $body->addChild('DatiGenerali');
+    $doc = $gen->addChild('DatiGeneraliDocumento');
+    $doc->addChild('TipoDocumento', 'TD01');
+    $doc->addChild('Divisa', 'EUR');
+    $doc->addChild('Data', $parseDate($data['invoiceStartAt']));
+    $doc->addChild('Numero', $safe($data['invoice']['number']));
+    $doc->addChild('ImportoTotaleDocumento', number_format((float)$data['invoiceTotalWithTax'], 2, '.', ''));
+
+    // Causale من أول بند
+    foreach ($data['invoiceItems'] as $item) {
+        if ((float)($item['priceAfterDiscount'] ?? 0) > 0 && !empty($item['description'])) {
+            $doc->addChild('Causale', $safe($item['description']));
+            break;
+        }
+    }
+
+    $beni = $body->addChild('DatiBeniServizi');
+    $line = 1;
+    foreach (array_values($data['invoiceItems']) as $item) {
+        if ((float)($item['priceAfterDiscount'] ?? 0) <= 0) continue;
+
+        $det = $beni->addChild('DettaglioLinee');
+        $det->addChild('NumeroLinea', (string)$line);
+        $codArt = $det->addChild('CodiceArticolo');
+        $codArt->addChild('CodiceTipo', 'PRESTAZIONE');
+        $codArt->addChild('CodiceValore', str_pad((string)$line, 8, '0', STR_PAD_LEFT));
+        $det->addChild('Descrizione', $safe($item['description'] ?? 'Senza descrizione'));
+        $det->addChild('Quantita', '1.00');
+        $det->addChild('UnitaMisura', 'NR');
+        $det->addChild('PrezzoUnitario', number_format((float)$item['priceAfterDiscount'], 2, '.', ''));
+        $det->addChild('PrezzoTotale', number_format((float)$item['priceAfterDiscount'], 2, '.', ''));
+        $det->addChild('AliquotaIVA', number_format((float)($item['additionalTaxPercentage'] ?? 22), 2, '.', ''));
+        $line++;
+    }
+
+    $riep = $beni->addChild('DatiRiepilogo');
+    $riep->addChild('AliquotaIVA', '22.00');
+    $riep->addChild('ImponibileImporto', number_format((float)$data['invoiceTotal'], 2, '.', ''));
+    $riep->addChild('Imposta', number_format((float)$data['invoiceTotalTax'], 2, '.', ''));
+    $riep->addChild('EsigibilitaIVA', 'I');
+
+    /* ================= PAGAMENTO ================= */
+    $pag = $body->addChild('DatiPagamento');
+    $pag->addChild('CondizioniPagamento', 'TP02');
+    $detPag = $pag->addChild('DettaglioPagamento');
+    $modalita = $data['paymentMethod'];
+    $detPag->addChild('ModalitaPagamento', $modalita);
+    $detPag->addChild('DataScadenzaPagamento', $parseDate($data['invoice']['end_at'] ?? $data['invoiceStartAt']));
+    $detPag->addChild('ImportoPagamento', number_format((float)$data['invoiceTotalWithTax'], 2, '.', ''));
+
+    if ($modalita === 'MP05') {
+        $detPag->addChild('IstitutoFinanziario', 'BANCO BPM SPA');
+        $detPag->addChild('ABI', '05034');
+        $detPag->addChild('CAB', '56760');
+        $detPag->addChild('IBAN', 'IT00X0503456760000000000000');
+    } elseif ($modalita === 'MP12') {
+        $detPag->addChild('IstitutoFinanziario', $data['clientBankAccount']['bankName'] ?? '');
+        $detPag->addChild('ABI', $data['clientBankAccount']['abi'] ?? '');
+        $detPag->addChild('CAB', $data['clientBankAccount']['cab'] ?? '');
+    }
+
+    /* ================= 2. تحويل الهيكل لإضافة p: Namespaces ================= */
+    $dom = new \DOMDocument('1.0', 'windows-1252');
+    $dom->preserveWhiteSpace = false;
+    $dom->formatOutput = true;
+    $dom->loadXML($xml->asXML());
+
+    $root = $dom->documentElement;
+    
+    // إنشاء عنصر جديد يحمل التاج p: والفراغ المسمي الصحيح
+    $ns = 'http://ivaservizi.agenziaentrate.gov.it/docs/xsd/fatture/v1.2';
+    $newRoot = $dom->createElementNS($ns, 'p:FatturaElettronica');
+    
+    // نقل الخصائص والـ Namespaces الأخرى
+    $newRoot->setAttribute('versione', $root->getAttribute('versione'));
+    $newRoot->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ds', 'http://www.w3.org/2000/09/xmldsig#');
+    $newRoot->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
+
+    // نقل كافة العناصر الأبناء من الجذر القديم للجديد
+    while ($root->hasChildNodes()) {
+        $newRoot->appendChild($root->firstChild);
+    }
+
+    $dom->replaceChild($newRoot, $root);
+    $xmlContent = $dom->saveXML();
+
+    /* ================= SAVE & RETURN ================= */
+    $clientIva = $data['client']['iva'] ?? '00000000000';
+    $fileName = $clientIva . '_1-2026.xml';
+    $path = 'exportedInvoices/' . $fileName;
+
+    \Storage::disk('local')->put($path, $xmlContent);
+    Invoice::where('id', $data['invoice']['id'])->update(['invoice_xml_number' => $invoiceNewNumber]);
+
+    return response()->json([
+        'data' => [
+            'name' => $fileName,
+            'content' => mb_convert_encoding($xmlContent, 'UTF-8', 'WINDOWS-1252'),
+        ]
+    ]);
+}
 
 }

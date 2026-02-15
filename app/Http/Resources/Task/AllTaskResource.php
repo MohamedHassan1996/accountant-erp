@@ -5,6 +5,7 @@ namespace App\Http\Resources\Task;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\DB;
 
 class AllTaskResource extends JsonResource
 {
@@ -56,6 +57,9 @@ class AllTaskResource extends JsonResource
                 $formattedEndTime = Carbon::parse($endTime[1]->created_at)->format('d/m/Y H:i:s');
             }
         }
+        
+                $client = DB::table('clients')->where('id', $this->client_id)->first();
+
 
         return [
             'taskId' => $this->id,
@@ -63,7 +67,7 @@ class AllTaskResource extends JsonResource
             'number' => $this->number,
             'status' => $this->status,
             'accountantName' => $this->user->full_name,
-            'clientName' => $this->client->ragione_sociale,
+            'clientName' => $client->ragione_sociale,
             'serviceCategoryName' => $this->serviceCategory->name,
             'totalHours' => $this->total_hours,
             'createdAt' => Carbon::parse($this->created_at)->format('d/m/Y'),

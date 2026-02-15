@@ -159,6 +159,7 @@
             </tr>
         </table>
     </div>
+    
 
     <!-- Payment Info -->
     <table style="margin-top: 30px; font-size: 13px;">
@@ -169,7 +170,7 @@
             </td>
             <td>
                 <div style="font-weight: 600; color: #7f8fa6;">IBAN</div>
-                <div>{{ $clientBankAccount }}</div>
+                <div>{{ $clientBankAccount['iban'] }}</div>
             </td>
             <td>
                 <div style="font-weight: 600; color: #7f8fa6;">DATA SCADENZA</div>

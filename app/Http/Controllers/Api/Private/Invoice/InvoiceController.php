@@ -64,7 +64,9 @@ class InvoiceController extends Controller
             ->whereNull('invoices.deleted_at')
             ->whereNull('tasks.deleted_at')
             ->where('tasks.is_new',  1)
-            ->select([
+            ->when(!empty($filters['unassigned']), function ($query) {
+                $query->whereDate('tasks.created_at', '>', Carbon::parse('2026-01-04'));
+            })->select([
                 'invoices.id as invoiceId',
                 'invoices.created_at as invoiceCreatedAt',
                 'clients.id as clientId',
@@ -89,7 +91,18 @@ class InvoiceController extends Controller
                 'service_categories.extra_is_pricable as extraIsPricable',
                 'service_categories.extra_code as extraCode',
                 'service_categories.extra_price as extraPrice',
-            ])
+            ])->when(isset($filters['startAt']) && isset($filters['endAt']), function ($query) use ($filters) {
+                return $query->whereBetween('tasks.created_at', [
+                    Carbon::parse($filters['startAt'])->startOfDay(),
+                    Carbon::parse($filters['endAt'])->endOfDay(),
+                ]);
+            })
+            ->when(isset($filters['startAt']) && !isset($filters['endAt']), function ($query) use ($filters) {
+                return $query->where('tasks.created_at', '>=', Carbon::parse($filters['startAt'])->startOfDay());
+            })
+            ->when(!isset($filters['startAt']) && isset($filters['endAt']), function ($query) use ($filters) {
+                return $query->where('tasks.created_at', '<=', Carbon::parse($filters['endAt'])->endOfDay());
+            })
             ->get();
 
         $invoiceIndexer = 0;
@@ -369,7 +382,7 @@ class InvoiceController extends Controller
 
             if($invoiceDetail->invoiceable_type == ClientPayInstallment::class) {
                 $clientPayInstallment = ClientPayInstallment::find($invoiceDetail->invoiceable_id)->start_at;
-                $startAt = Carbon::parse($clientPayInstallment)->format('d/m/Y');
+                $startAt = Carbon::parse($clientPayInstallment)->format('Y-m-d');
             }
 
 
@@ -415,6 +428,9 @@ class InvoiceController extends Controller
             ->leftJoin('clients', 'invoices.client_id', '=', 'clients.id')
             ->whereNull('invoices.deleted_at')
             //->whereNull('invoice_details.deleted_at')
+            ->when($filters['unassigned'] == 0, function ($query) {
+                $query->whereDate('invoice_details.created_at', '>', Carbon::parse('2026-01-04'));
+            })
             ->select([
                 'invoices.id as invoiceId',
                 'invoices.created_at as invoiceCreatedAt',
@@ -448,6 +464,21 @@ class InvoiceController extends Controller
                 'service_categories.extra_code as extraCode',
                 'service_categories.extra_price as extraPrice',*/
             ])
+            ->when(isset($filters['clientId']), function ($query) use ($filters) {
+                return $query->where('clients.id', $filters['clientId']);
+            })
+            ->when(isset($filters['startAt']) && isset($filters['endAt']), function ($query) use ($filters) {
+                return $query->whereBetween('invoices.created_at', [
+                    Carbon::parse($filters['startAt'])->startOfDay(),
+                    Carbon::parse($filters['endAt'])->endOfDay(),
+                ]);
+            })
+            ->when(isset($filters['startAt']) && !isset($filters['endAt']), function ($query) use ($filters) {
+                return $query->where('invoices.created_at', '>=', Carbon::parse($filters['startAt'])->startOfDay());
+            })
+            ->when(!isset($filters['startAt']) && isset($filters['endAt']), function ($query) use ($filters) {
+                return $query->where('invoices.created_at', '<=', Carbon::parse($filters['endAt'])->endOfDay());
+            })
             ->get();
 
         // Format the data

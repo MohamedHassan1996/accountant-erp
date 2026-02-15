@@ -32,6 +32,7 @@ class ClientService{
             'note' => $clientData['note'],
             'phone' => $clientData['phone']??"",
             'email' => $clientData['email']??"",
+            'email_f24' => $clientData['emailF24']??"",
             'hours_per_month' => $clientData['hoursPerMonth']??0,
             'price' => $clientData['price']??0,
             'monthly_price' => $clientData['monthlyPrice']??0,
@@ -44,7 +45,9 @@ class ClientService{
             'addable_to_bulk_invoice'=>AddableToBulk::from($clientData['addableToBulkInvoice'])->value,
             'allowed_days_to_pay'=>$clientData['allowedDaysToPay']??0,
             'is_company'=>$clientData['isCompany']??0,
-            'total_tax'=>$clientData['totalTax']??0,
+            'total_tax' => isset($clientData['totalTax'])
+                ? (float) str_replace(',', '.', $clientData['totalTax'])
+                : 0,
             'total_tax_description'=>$clientData['totalTaxDescription']??"",
         ]);
 
@@ -70,6 +73,7 @@ class ClientService{
             'note' => $clientData['note'],
             'phone' => $clientData['phone']??"",
             'email' => $clientData['email']??"",
+            'email_f24' => $clientData['emailF24']??"",
             'hours_per_month' => $clientData['hoursPerMonth']??0,
             'price' => $clientData['price']??0,
             'monthly_price' => $clientData['monthlyPrice']??0,
@@ -82,7 +86,9 @@ class ClientService{
             'addable_to_bulk_invoice'=>AddableToBulk::from($clientData['addableToBulkInvoice'])->value,
             'allowed_days_to_pay'=>$clientData['allowedDaysToPay']??0,
             'is_company'=>$clientData['isCompany']??0,
-            'total_tax'=>$clientData['totalTax']??0,
+            'total_tax' => isset($clientData['totalTax'])
+                ? (float) str_replace(',', '.', $clientData['totalTax'])
+                : 0,
             'total_tax_description'=>$clientData['totalTaxDescription']??"",
         ]);
 

@@ -19,8 +19,8 @@ class AdminTaskController extends Controller
 
     public function __construct(TaskService $taskService)
     {
-        $this->middleware('auth:api');
-        $this->middleware('permission:all_admin_tasks', ['only' => ['index']]);
+        //$this->middleware('auth:api');
+        //$this->middleware('permission:all_admin_tasks', ['only' => ['index']]);
         // $this->middleware('permission:create_task', ['only' => ['create']]);
         // $this->middleware('permission:edit_task', ['only' => ['edit']]);
         // $this->middleware('permission:update_task', ['only' => ['update']]);

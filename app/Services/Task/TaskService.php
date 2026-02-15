@@ -148,24 +148,62 @@ class TaskService{
         )
         ->whereIn('ttl.task_id', $taskIds)
         ->get();
+        
 
     // Compute Total Time
-    $sumTotalTime = 0;
-    foreach ($latestLogs as $log) {
-        $createdAt = Carbon::parse($log->created_at);
-        $elapsedTime = Carbon::now()->diffInSeconds($createdAt);
+    // $sumTotalTime = 0;
+    // foreach ($latestLogs as $index => $log) {
+    //     $createdAt = Carbon::parse($log->created_at);
+    //     $elapsedTime = Carbon::now()->diffInSeconds($createdAt);
 
-        if ($log->status == 0) { // Task is active
-            $sumTotalTime += ($log->total_time === '00:00:00')
-                ? $elapsedTime
-                : $elapsedTime + Carbon::parse($log->total_time)->diffInSeconds('00:00:00');
-        } else {
-            $sumTotalTime += Carbon::parse($log->total_time)->diffInSeconds('00:00:00');
-        }
+
+    //     if ($log->status == 0) { // Task is active
+    //     if($index == 7){
+    //                   dd($elapsedTime);
+    //                 }
+    //         $sumTotalTime += ($log->total_time === '00:00:00')
+    //             ? $elapsedTime
+    //             : $elapsedTime + Carbon::parse($log->total_time)->diffInSeconds('00:00:00');
+                
+                
+    //     } else {
+    
+    //         $sumTotalTime += Carbon::parse($log->total_time)->diffInSeconds('00:00:00');
+    //     }
+        
+        
+        
+                   
+
+    // }
+    
+$sumTotalTime = 0;
+
+foreach ($latestLogs as $log) {
+    // 1. Calculate elapsed time for active tasks
+    $createdAt = Carbon::parse($log->created_at);
+    $elapsedTime = Carbon::now()->diffInSeconds($createdAt);
+
+    // 2. Parse the stored duration using your helper (not Carbon)
+    $storedSeconds = ($log->total_time === '00:00:00' || empty($log->total_time))
+        ? 0
+        : $this->timeToSeconds($log->total_time);
+
+    // 3. Sum them up
+    if ($log->status == 0) { // active task
+        $sumTotalTime += $elapsedTime + $storedSeconds;
+    } else {
+        $sumTotalTime += $storedSeconds;
     }
+}
 
-    // Convert to "H:i:s" format with total hours continuing beyond 24
-    $formattedTotalTime = sprintf('%d:%02d:%02d', floor($sumTotalTime / 3600), ($sumTotalTime % 3600) / 60, $sumTotalTime % 60);
+// Format the result
+$formattedTotalTime = sprintf(
+    '%02d:%02d:%02d', 
+    floor($sumTotalTime / 3600), 
+    ($sumTotalTime / 60) % 60, 
+    $sumTotalTime % 60
+);
 
     return [
         'tasks' => $tasks,
@@ -227,7 +265,7 @@ class TaskService{
         $task->title = $taskData['title']??"";
         $task->description = $taskData['description']??"";
         $task->client_id = $taskData['clientId'];
-        $task->user_id = $taskData['userId'];
+        //$task->user_id = $taskData['userId'];
         $task->service_category_id = $taskData['serviceCategoryId'];
         $task->invoice_id = $taskData['invoiceId']??null;
         $task->connection_type_id = $taskData['connectionTypeId']??null;
@@ -258,5 +296,12 @@ class TaskService{
             'status' => TaskStatus::from($status)->value
         ]);
     }
+    
+    private function timeToSeconds(string $time): int
+    {
+        [$h, $m, $s] = array_map('intval', explode(':', $time));
+        return ($h * 3600) + ($m * 60) + $s;
+    }
+
 
 }
