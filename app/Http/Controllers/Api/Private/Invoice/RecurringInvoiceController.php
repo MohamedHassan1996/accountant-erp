@@ -49,10 +49,22 @@ class RecurringInvoiceController extends Controller
             })
             ->toArray();
 
-        foreach ($createTaskRequest->payInstallments as $payInstallmentData) {
+        foreach ($createTaskRequest->payInstallments as $index => $payInstallmentData) {
 
-            // Always start from month 1 (January) of the current year
-            $startDate = Carbon::now()->startOfYear()->day(1);
+            // Calculate start date based on installment index
+            // Start from January (month 1) and add months based on payment frequency
+            $clientEndDataAdd = ParameterValue::where(
+                'id',
+                $payInstallmentData['paymentTypeId']
+            )->first();
+
+            $clientEndDataAddMonth = ceil($clientEndDataAdd->description / 30);
+
+            // Calculate which month this installment should start
+            // First installment starts in January, then add months based on frequency
+            $monthsToAdd = $index * $clientEndDataAddMonth;
+
+            $startDate = Carbon::now()->startOfYear()->addMonths($monthsToAdd)->day(1);
 
             // Adjust start date if it falls on weekend or holiday
             $startDate = $this->adjustForWeekendsAndHolidays($startDate, $holidays);
