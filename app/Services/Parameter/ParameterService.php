@@ -32,6 +32,9 @@ class ParameterService{
             'parameter_value' => $parameterData['parameterValue'],
             'description' => $parameterData['description'],
             'is_default' => $parameterData['isDefault']??0,
+            'code' => $parameterData['code']??null,
+            'description2' => $parameterData['descriptionTwo']??null,
+            'description3' => $parameterData['descriptionThree']??null,
         ]);
 
         if(isset($parameterData['isDefault']) && $parameterData['isDefault'] == 1){
@@ -61,10 +64,16 @@ class ParameterService{
         $paramteterValue->fill([
             'parameter_value' => $parameterData['parameterValue'],
             'description' => $parameterData['description'],
+            'code' => $parameterData['code']??null,
+            'description2' => $parameterData['descriptionTwo']??null,
+            'description3' => $parameterData['descriptionThree']??null,
         ]);
 
         $paramteterValue->parameter_value = $parameterData['parameterValue'];
         $paramteterValue->description = $parameterData['description'];
+        $paramteterValue->code = $parameterData['code']??null;
+        $paramteterValue->description2 = $parameterData['descriptionTwo']??null;
+        $paramteterValue->description3 = $parameterData['descriptionThree']??null;
 
         if (isset($parameterData['isDefault'])) {
             $paramteterValue->is_default = $parameterData['isDefault'];

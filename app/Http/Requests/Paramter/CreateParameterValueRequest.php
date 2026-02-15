@@ -28,6 +28,9 @@ class CreateParameterValueRequest extends FormRequest
             'parameterValue'=> 'required',
             'description' => 'nullable',
             'isDefault' => 'nullable',
+            'code' => 'nullable',
+            'descriptionTwo' => 'nullable',
+            'descriptionThree' => 'nullable',
         ];
 
     }

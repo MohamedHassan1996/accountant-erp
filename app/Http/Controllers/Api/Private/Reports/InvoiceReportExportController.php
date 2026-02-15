@@ -85,12 +85,18 @@ class InvoiceReportExportController extends Controller
                 $description = $invoiceItem->description;
             }
 
+            // Get service code from Task's ServiceCategory
+            $serviceCode = '..'; // Default value
+            if ($invoiceItem->invoiceable_type == Task::class && $invoiceItemData && $invoiceItemData->serviceCategory) {
+                $serviceCode = $invoiceItemData->serviceCategory->code ?? '..';
+            }
 
             $invoiceItemsData[] = [
                 'description' => $description,
                 'price' => $invoiceItem->price,
                 'priceAfterDiscount' => $invoiceItem->price_after_discount,
-                'additionalTaxPercentage' => 22
+                'additionalTaxPercentage' => 22,
+                'serviceCode' => $serviceCode
             ];
 
             //$totalTax += $invoiceItem->price_after_discount * 0.22;
@@ -102,7 +108,8 @@ class InvoiceReportExportController extends Controller
                     'description' => $invoiceItemData->serviceCategory->extra_price_description,
                     'price' => $invoiceItem->price == 0 ? $invoiceItemData->serviceCategory->extra_price : $invoiceItem->price,
                     'priceAfterDiscount' => $invoiceItem->price_after_discount == 0 ? $invoiceItemData->serviceCategory->extra_price : $invoiceItem->price,
-                    'additionalTaxPercentage' => 0
+                    'additionalTaxPercentage' => 0,
+                    'serviceCode' => $invoiceItemData->serviceCategory->code ?? '..'
                 ];
 
                 $invoiceTotal += $invoiceItemData->serviceCategory->extra_price;
@@ -110,7 +117,7 @@ class InvoiceReportExportController extends Controller
         }
 
         $client = Client::find($invoice->client_id);
-        
+
                 $clientAddressData = ClientAddress::where('client_id', $client->id)->first();
 
         if ($client->total_tax > 0) {
@@ -118,7 +125,8 @@ class InvoiceReportExportController extends Controller
                 'description' => $client->total_tax_description ?? '',
                 'price' => $invoiceTotal * ($client->total_tax / 100),
                 'priceAfterDiscount' => $invoiceTotal * ($client->total_tax / 100),
-                'additionalTaxPercentage' => 22
+                'additionalTaxPercentage' => 22,
+                'serviceCode' => '..'
             ];
 
             //$totalTax += ($invoiceTotal * ($client->total_tax / 100) * 0.22);
@@ -132,7 +140,7 @@ class InvoiceReportExportController extends Controller
         $clientBankAccount = ClientBankAccount::where('client_id', $client->id)->where('is_main', 1)->first();
 
         $clientBankAccountFormatted = [];
-        
+
         if($clientBankAccount != null){
             $clientBankAccountFormatted = [
                 'iban' => $clientBankAccount->iban??"",
@@ -178,7 +186,7 @@ class InvoiceReportExportController extends Controller
         ];
 
     }*/
-    
+
         private function getInvoiceData(Request $request){
         $invoice = Invoice::findOrFail($request->invoiceIds[0]);
 
@@ -220,12 +228,18 @@ class InvoiceReportExportController extends Controller
                 $description = $invoiceItem->description;
             }
 
+            // Get service code from Task's ServiceCategory
+            $serviceCode = '..'; // Default value
+            if ($invoiceItem->invoiceable_type == Task::class && $invoiceItemData && $invoiceItemData->serviceCategory) {
+                $serviceCode = $invoiceItemData->serviceCategory->code ?? '..';
+            }
 
             $invoiceItemsData[] = [
                 'description' => $description,
                 'price' => $invoiceItem->price,
                 'priceAfterDiscount' => $invoiceItem->price_after_discount,
-                'additionalTaxPercentage' => 22
+                'additionalTaxPercentage' => 22,
+                'serviceCode' => $serviceCode
             ];
 
             //$totalTax += $invoiceItem->price_after_discount * 0.22;
@@ -237,7 +251,8 @@ class InvoiceReportExportController extends Controller
                     'description' => $invoiceItemData->serviceCategory->extra_price_description,
                     'price' => $invoiceItem->price == 0 ? $invoiceItemData->serviceCategory->extra_price : $invoiceItem->price,
                     'priceAfterDiscount' => $invoiceItem->price_after_discount == 0 ? $invoiceItemData->serviceCategory->extra_price : $invoiceItem->price,
-                    'additionalTaxPercentage' => 0
+                    'additionalTaxPercentage' => 0,
+                    'serviceCode' => $invoiceItemData->serviceCategory->code ?? '..'
                 ];
 
                 $invoiceTotal += $invoiceItemData->serviceCategory->extra_price;
@@ -245,37 +260,38 @@ class InvoiceReportExportController extends Controller
         }
 
         $client = Client::find($invoice->client_id);
-        
+
 
         if ($client->total_tax > 0) {
             $invoiceItemsData[] = [
                 'description' => $client->total_tax_description ?? '',
                 'price' => $invoiceTotal * ($client->total_tax / 100),
                 'priceAfterDiscount' => $invoiceTotal * ($client->total_tax / 100),
-                'additionalTaxPercentage' => 22
+                'additionalTaxPercentage' => 22,
+                'serviceCode' => '..'
             ];
 
             //$totalTax += ($invoiceTotal * ($client->total_tax / 100) * 0.22);
-            
-            $invoiceTotal += $invoiceTotal * ($client->total_tax / 100);
-            
 
-            
+            $invoiceTotal += $invoiceTotal * ($client->total_tax / 100);
+
+
+
             $invoiceTotalToCalcTax += $invoiceTotalToCalcTax * ($client->total_tax / 100);
-            
+
 
 
 
         }
-        
-        
+
+
 
         $clientAddressFormatted = ClientAddress::where('client_id', $client->id)->first()?->address ?? "";
-        
+
         $clientBankAccount = ClientBankAccount::where('client_id', $client->id)->where('is_main', 1)->first();
 
         $clientBankAccountFormatted = [];
-        
+
         if($clientBankAccount != null){
             $clientBankAccountFormatted = [
                 'iban' => $clientBankAccount->iban??"",
@@ -284,15 +300,15 @@ class InvoiceReportExportController extends Controller
                 'bankName' => $clientBankAccount->banca
             ];
         }
-        
+
         $clientAddressData = ClientAddress::where('client_id', $client->id)->first();
-        
+
 
         if ($invoice->discount_amount > 0) {
             $discountValue = $invoice->discount_type == 0
                 ? $invoiceTotal * ($invoice->discount_amount / 100)
                 : $invoice->discount_amount;
-                
+
             $invoiceItemsData[] = [
                 'description' => "sconto",
                 'price' => $discountValue,
@@ -311,16 +327,16 @@ class InvoiceReportExportController extends Controller
         $paymentMethod = ParameterValue::find($invoice->payment_type_id ?? null);
 
         $invoiceTotalToCalcTax = $invoiceTotalToCalcTax * 0.22;
-        
+
         $bankAccount = null;
-        
+
         if($invoice->bank_account_id){
             $bankAccount = ParameterValue::where('id',$invoice->bank_account_id)->first();
         }else{
             $bankAccount = ParameterValue::where('parameter_order', 7)->where('is_default', 1)->first();
         }
-            
-            
+
+
 
         return [
             'invoice' => $invoice,
@@ -548,7 +564,12 @@ public function generateInvoiceXml(array $data)
     $doc->addChild('TipoDocumento', 'TD01');
     $doc->addChild('Divisa', 'EUR');
     $doc->addChild('Data', $parseDate($data['invoiceStartAt']));
-    $doc->addChild('Numero', $safe($data['invoice']['number']));
+
+    // Extract the second part of invoiceNewNumber (e.g., '1/57' -> '57')
+    $invoiceNumberParts = explode('/', $invoiceNewNumber ?? '');
+    $invoiceNumero = $invoiceNumberParts[1] ?? $data['invoice']['number'];
+    $doc->addChild('Numero', $safe($invoiceNumero));
+
     $doc->addChild('ImportoTotaleDocumento', number_format((float)$data['invoiceTotalWithTax'], 2, '.', ''));
 
     // Causale من أول بند
@@ -568,7 +589,7 @@ public function generateInvoiceXml(array $data)
         $det->addChild('NumeroLinea', (string)$line);
         $codArt = $det->addChild('CodiceArticolo');
         $codArt->addChild('CodiceTipo', 'PRESTAZIONE');
-        $codArt->addChild('CodiceValore', str_pad((string)$line, 8, '0', STR_PAD_LEFT));
+        $codArt->addChild('CodiceValore', $item['serviceCode'] ?? '..');
         $det->addChild('Descrizione', $safe($item['description'] ?? 'Senza descrizione'));
         $det->addChild('Quantita', '1.00');
         $det->addChild('UnitaMisura', 'NR');
@@ -611,11 +632,11 @@ public function generateInvoiceXml(array $data)
     $dom->loadXML($xml->asXML());
 
     $root = $dom->documentElement;
-    
+
     // إنشاء عنصر جديد يحمل التاج p: والفراغ المسمي الصحيح
     $ns = 'http://ivaservizi.agenziaentrate.gov.it/docs/xsd/fatture/v1.2';
     $newRoot = $dom->createElementNS($ns, 'p:FatturaElettronica');
-    
+
     // نقل الخصائص والـ Namespaces الأخرى
     $newRoot->setAttribute('versione', $root->getAttribute('versione'));
     $newRoot->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ds', 'http://www.w3.org/2000/09/xmldsig#');
@@ -631,10 +652,12 @@ public function generateInvoiceXml(array $data)
 
     /* ================= SAVE & RETURN ================= */
     $clientIva = $data['client']['iva'] ?? '00000000000';
-    $fileName = $clientIva . '_1-2026.xml';
+    $invoiceNumberPart = str_replace('/', '', $invoiceNewNumber ?? ''); // Remove slash from invoice number
+    $invoiceNumberPart = str_pad($invoiceNumberPart, 5, '0', STR_PAD_LEFT); // Add padding to make it 5 digits
+    $fileName = '00987920196' . '_' . $invoiceNumberPart . '.xml';
     $path = 'exportedInvoices/' . $fileName;
 
-    \Storage::disk('local')->put($path, $xmlContent);
+    Storage::disk('local')->put($path, $xmlContent);
     Invoice::where('id', $data['invoice']['id'])->update(['invoice_xml_number' => $invoiceNewNumber]);
 
     return response()->json([

@@ -26,6 +26,7 @@ class UpdateClientBankAccountRequest extends FormRequest
     {
         return [
             'clientBankAccountId' => ['required'],
+            'bankId' => ['nullable', 'exists:parameter_values,id'],
             'iban' => ['nullable'],
             'abi' => ['nullable'],
             'cab' => ['nullable'],

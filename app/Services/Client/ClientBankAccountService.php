@@ -27,6 +27,7 @@ class ClientBankAccountService{
     public function createClientBankAccount(array $clientBankAccountData){
 
         $clientBankAccount = ClientBankAccount::create([
+            'bank_id' => $clientBankAccountData['bankId']??null,
             'iban' => $clientBankAccountData['iban']??'',
             'abi' => $clientBankAccountData['abi'],
             'cab' => $clientBankAccountData['cab'],
@@ -55,6 +56,7 @@ class ClientBankAccountService{
         $clientBankAccount = ClientBankAccount::find($clientBankAccountData['clientBankAccountId']);
 
         $clientBankAccount->fill([
+            'bank_id' => $clientBankAccountData['bankId']??null,
             'iban' => $clientBankAccountData['iban']??'',
             'abi' => $clientBankAccountData['abi'],
             'cab' => $clientBankAccountData['cab'],

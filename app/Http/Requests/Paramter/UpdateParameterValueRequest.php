@@ -27,7 +27,10 @@ class UpdateParameterValueRequest extends FormRequest
             'parameterValueId'=> 'required',
             'parameterValue'=> 'required',
             'description' => 'nullable',
-            'isDefault' => 'nullable'
+            'isDefault' => 'nullable',
+            'code' => 'nullable',
+            'descriptionTwo' => 'nullable',
+            'descriptionThree' => 'nullable',
         ];
     }
 

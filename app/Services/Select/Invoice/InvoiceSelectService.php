@@ -9,13 +9,22 @@ class InvoiceSelectService
 {
     public function getAllInvoices(?int $clientId = null)
     {
-        return Invoice::select([
-                'id as value',
-                DB::raw("CONCAT(number, ' - ', DATE_FORMAT(created_at, '%d/%m/%Y')) as label")
-            ])
-            ->when($clientId !== null, function ($query) use ($clientId) {
-                $query->where('client_id', $clientId);
+        return DB::table('invoices')
+            ->leftJoin('invoice_details', function($join) {
+                $join->on('invoices.id', '=', 'invoice_details.invoice_id')
+                     ->where('invoice_details.invoiceable_type', '=', 'App\\Models\\Client\\ClientPayInstallment')
+                     ->whereNull('invoice_details.deleted_at');
             })
+            ->leftJoin('client_pay_installments', 'invoice_details.invoiceable_id', '=', 'client_pay_installments.id')
+            ->select([
+                'invoices.id as value',
+                DB::raw("CONCAT(invoices.number, ' - ', DATE_FORMAT(COALESCE(client_pay_installments.start_at, invoices.created_at), '%d/%m/%Y')) as label")
+            ])
+            ->whereNull('invoices.deleted_at')
+            ->when($clientId !== null, function ($query) use ($clientId) {
+                $query->where('invoices.client_id', $clientId);
+            })
+            ->groupBy('invoices.id', 'invoices.number', 'client_pay_installments.start_at', 'invoices.created_at')
             ->get();
     }
 

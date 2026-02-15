@@ -31,13 +31,28 @@ class ClientPayInstallmentEndDateController extends Controller
 
         $startAt = Carbon::parse($request->startAt);
 
-        $allowedDaysToPay = $client->allowed_days_to_pay ?? 0; // Fetch from the client table
+        // Get holidays from parameter_values where parameter_order = 11
+        $holidays = ParameterValue::where('parameter_order', 11)
+            ->pluck('parameter_value')
+            ->map(function($date) {
+                return Carbon::parse($date)->format('Y-m-d');
+            })
+            ->toArray();
+
+        // Adjust start date if it falls on weekend or holiday
+        $startAt = $this->adjustForWeekendsAndHolidays($startAt, $holidays);
+
+        $allowedDaysToPay = $client->allowed_days_to_pay ?? 0;
 
         $installmentEndDataAdd = ParameterValue::where('id', $request->paymentTypeId)->first();
 
         $installmentEndDataAddMonth = ceil($installmentEndDataAdd->description / 30);
 
-        $endDate = $startAt->copy()->addMonths($installmentEndDataAddMonth)->subDays(1);
+        // Calculate end date as last day of the month after adding months
+        $endDate = $startAt->copy()
+            ->addMonths($installmentEndDataAddMonth)
+            ->subMonth() // Go back one month
+            ->endOfMonth(); // Get last day of that month
 
         $isSpecialMonthEnd = in_array($endDate->format('m-d'), ['08-31', '12-31']);
 
@@ -48,9 +63,43 @@ class ClientPayInstallmentEndDateController extends Controller
         }
 
         return response()->json([
+            'startAt' => $startAt->format('Y-m-d'),
             'endAt' => $endDate->format('Y-m-d'),
         ]);
 
+    }
+
+    /**
+     * Adjust date if it falls on weekend (Saturday/Sunday) or holiday
+     * Move to next Monday or next working day
+     */
+    private function adjustForWeekendsAndHolidays(Carbon $date, array $holidays): Carbon
+    {
+        $adjustedDate = $date->copy();
+
+        // Keep adjusting until we find a working day
+        while (true) {
+            $dayOfWeek = $adjustedDate->dayOfWeek;
+            $dateString = $adjustedDate->format('Y-m-d');
+
+            // Check if Saturday (6) or Sunday (0)
+            if ($dayOfWeek == Carbon::SATURDAY || $dayOfWeek == Carbon::SUNDAY) {
+                // Move to next Monday
+                $adjustedDate->next(Carbon::MONDAY);
+                continue;
+            }
+
+            // Check if it's a holiday
+            if (in_array($dateString, $holidays)) {
+                $adjustedDate->addDay();
+                continue;
+            }
+
+            // It's a working day
+            break;
+        }
+
+        return $adjustedDate;
     }
 
 

@@ -19,6 +19,7 @@ class ServiceCategoryResource extends JsonResource
         return [
             'serviceCategoryId' => $this->id,
             'name' => $this->name,
+            'code' => $this->code??"",
             'description' => $this->description??'',
             'addToInvoice' => $this->add_to_invoice,
             'serviceTypeId'=>$this->service_type_id??"",

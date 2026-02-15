@@ -49,6 +49,8 @@ class ClientService{
                 ? (float) str_replace(',', '.', $clientData['totalTax'])
                 : 0,
             'total_tax_description'=>$clientData['totalTaxDescription']??"",
+            'sdi' =>$clientData['sdi']??"",
+            'proforma' =>$clientData['proforma']??false
         ]);
 
         return $client;
@@ -90,6 +92,8 @@ class ClientService{
                 ? (float) str_replace(',', '.', $clientData['totalTax'])
                 : 0,
             'total_tax_description'=>$clientData['totalTaxDescription']??"",
+            'sdi' =>$clientData['sdi']??"",
+            'proforma' =>$clientData['proforma']??false
         ]);
 
         $client->save();

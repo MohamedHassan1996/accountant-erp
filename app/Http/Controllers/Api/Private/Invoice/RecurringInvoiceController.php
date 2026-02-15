@@ -25,106 +25,6 @@ class RecurringInvoiceController extends Controller
         $this->taskService = $taskService;
     }
 
-    /*public function create(Request $createTaskRequest)
-    {
-        try {
-            DB::beginTransaction();
-
-
-            $client = Client::find($createTaskRequest->clientId);
-
-            if(count($client->payInstallments) > 0){
-                $client->has_recurring_invoice = true;
-                $client->save();
-            }
-
-            $bankAccount = ParameterValue::where('parameter_id', 7)->where('is_default', 1)->first();
-
-            foreach ($createTaskRequest->payInstallments as  $payInstallmentData) {
-                // $endDate = Carbon::parse($payInstallmentData['endAt']);
-
-                // if ($endDate->format('d-m') === '31-08' || $endDate->format('d-m') === '31-12') {
-                //     $endDate->addDays(10);
-                // }
-
-                $clientEndDataAdd = ParameterValue::where('id', $payInstallmentData['paymentTypeId'])->first();
-
-                $clientEndDataAddMonth = ceil($clientEndDataAdd->description / 30);
-
-
-                $allowedDaysToPay = $client->allowed_days_to_pay ?? 0; // Fetch from the client table
-
-                $startDate = Carbon::parse($payInstallmentData['startAt']);
-                $endDate = $startDate->copy()->addMonths($clientEndDataAddMonth)->subDays(1);
-
-
-                $isSpecialMonthEnd = in_array($endDate->format('m-d'), ['08-31', '12-31']);
-
-                if ($isSpecialMonthEnd) {
-                    $endDate->addDays(10);
-                } else {
-                    $endDate->addDays($allowedDaysToPay);
-                }
-
-                $invoice = Invoice::create([
-                    'client_id' => $createTaskRequest->clientId,
-                    'end_at' => $endDate,
-                    'payment_type_id' => $createTaskRequest->paymentTypeId,
-                    'discount_type' => null,
-                    'discount_amount' => 0,
-                    'bank_account_id' => $bankAccount?->id??null,
-                ]);
-
-
-                $payInstallment = ClientPayInstallment::find($payInstallmentData['payInstallmentId']);
-
-                $payInstallmentDescription = ParameterValue::where('id', $payInstallment->parameter_value_id)->first();
-
-                $invoiceDetail = new InvoiceDetail([
-                    'invoice_id' => $invoice->id, // Invoice ID
-                    'price' => $payInstallmentData['amount'],
-                    'price_after_discount' => $payInstallmentData['amount'],
-                    'description' => $payInstallmentDescription?->description??''
-                ]);
-
-                $payInstallment->invoiceDetails()->save($invoiceDetail);
-
-
-                foreach ($payInstallmentData['payInstallmentSubData'] as $key => $payInstallmentSubData) {
-                    $payInstallmentSubDataDb = ClientPayInstallmentSubData::find($payInstallmentSubData['payInstallmentSubDataId']);
-
-
-                    $payInstallmentSubDataDbtDescription = ParameterValue::where('id', $payInstallmentSubDataDb->parameter_value_id)->first();
-
-                    $invoiceDetail = new InvoiceDetail([
-                        'invoice_id' => $invoice->id, // Invoice ID
-                        'price' => $payInstallmentSubData['price'],
-                        'price_after_discount' => $payInstallmentSubData['price'],
-                        'description' => $payInstallmentSubDataDbtDescription?->description??''
-                    ]);
-
-                    $payInstallmentSubDataDb->invoiceDetails()->save($invoiceDetail);
-                }
-
-            }
-
-
-
-
-            DB::commit();
-
-            return response()->json([
-                'message' => __('messages.success.created')
-            ], 200);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            throw $e;
-        }
-
-
-    }*/
-    
     public function create(Request $createTaskRequest)
 {
     try {
@@ -141,15 +41,24 @@ class RecurringInvoiceController extends Controller
             ->where('is_default', 1)
             ->first();
 
-        foreach ($createTaskRequest->payInstallments as $payInstallmentData) {
+        // Get holidays from parameter_values where parameter_order = 11
+        $holidays = ParameterValue::where('parameter_order', 11)
+            ->pluck('parameter_value')
+            ->map(function($date) {
+                return Carbon::parse($date)->format('Y-m-d');
+            })
+            ->toArray();
 
-            $allowedDaysToPay = $client->allowed_days_to_pay ?? 0;
+        foreach ($createTaskRequest->payInstallments as $payInstallmentData) {
 
             $startDate = Carbon::parse($payInstallmentData['startAt']);
 
+            // Adjust start date if it falls on weekend or holiday
+            $startDate = $this->adjustForWeekendsAndHolidays($startDate, $holidays);
+
             /**
              * ✅ 1. استخدم endAt من الريكوست لو موجود
-             * 🔁 2. وإلا احسبه بالمنطق الحالي
+             * 🔁 2. وإلا احسبه بالمنطق الجديد
              */
             if (!empty($payInstallmentData['endAt'])) {
 
@@ -164,9 +73,13 @@ class RecurringInvoiceController extends Controller
 
                 $clientEndDataAddMonth = ceil($clientEndDataAdd->description / 30);
 
+                // Calculate end date as last day of the month after adding months
                 $endDate = $startDate->copy()
                     ->addMonths($clientEndDataAddMonth)
-                    ->subDays(1);
+                    ->subMonth() // Go back one month
+                    ->endOfMonth(); // Get last day of that month
+
+                $allowedDaysToPay = $client->allowed_days_to_pay ?? 0;
 
                 $isSpecialMonthEnd = in_array(
                     $endDate->format('m-d'),
@@ -240,5 +153,38 @@ class RecurringInvoiceController extends Controller
         throw $e;
     }
 }
+
+    /**
+     * Adjust date if it falls on weekend (Saturday/Sunday) or holiday
+     * Move to next Monday or next working day
+     */
+    private function adjustForWeekendsAndHolidays(Carbon $date, array $holidays): Carbon
+    {
+        $adjustedDate = $date->copy();
+
+        // Keep adjusting until we find a working day
+        while (true) {
+            $dayOfWeek = $adjustedDate->dayOfWeek;
+            $dateString = $adjustedDate->format('Y-m-d');
+
+            // Check if Saturday (6) or Sunday (0)
+            if ($dayOfWeek == Carbon::SATURDAY || $dayOfWeek == Carbon::SUNDAY) {
+                // Move to next Monday
+                $adjustedDate->next(Carbon::MONDAY);
+                continue;
+            }
+
+            // Check if it's a holiday
+            if (in_array($dateString, $holidays)) {
+                $adjustedDate->addDay();
+                continue;
+            }
+
+            // It's a working day
+            break;
+        }
+
+        return $adjustedDate;
+    }
 
 }

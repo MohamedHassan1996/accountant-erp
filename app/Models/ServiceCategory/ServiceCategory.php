@@ -14,6 +14,7 @@ class ServiceCategory extends Model
     use HasFactory, CreatedUpdatedBy, SoftDeletes;
     protected $fillable = [
         'name',
+        'code',
         'description',
         'price',
         'add_to_invoice',

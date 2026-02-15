@@ -17,6 +17,7 @@ class AllClientBankAccountResource extends JsonResource
 
         return [
             'clientBankAccountId' => $this->id,
+            'bankId' => $this->bank_id,
             'iban' => $this->iban??"",
             'abi'=> $this->abi??"",
             'cab' => $this->cab??"",

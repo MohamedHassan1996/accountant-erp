@@ -426,6 +426,10 @@ class InvoiceController extends Controller
         $allInvoices = DB::table('invoice_details')
             ->leftJoin('invoices', 'invoices.id', '=', 'invoice_details.invoice_id')
             ->leftJoin('clients', 'invoices.client_id', '=', 'clients.id')
+            ->leftJoin('client_pay_installments', function($join) {
+                $join->on('invoice_details.invoiceable_id', '=', 'client_pay_installments.id')
+                     ->where('invoice_details.invoiceable_type', '=', 'App\\Models\\Client\\ClientPayInstallment');
+            })
             ->whereNull('invoices.deleted_at')
             //->whereNull('invoice_details.deleted_at')
             ->when($filters['unassigned'] == 0, function ($query) {
@@ -448,6 +452,7 @@ class InvoiceController extends Controller
                 'invoice_details.invoiceable_type as invoiceableType',
                 'invoice_details.extra_price as invoiceDetailExtraPrice',
                 'invoice_details.description as invoiceDetailDescription',
+                'client_pay_installments.start_at as installmentStartAt',
                 /*'tasks.id as taskId',
                 'tasks.status as taskStatus',
                 'tasks.title as taskTitle',
@@ -468,16 +473,32 @@ class InvoiceController extends Controller
                 return $query->where('clients.id', $filters['clientId']);
             })
             ->when(isset($filters['startAt']) && isset($filters['endAt']), function ($query) use ($filters) {
-                return $query->whereBetween('invoices.created_at', [
+                return $query->where(function($q) use ($filters) {
+                    $q->whereBetween(DB::raw('COALESCE(client_pay_installments.start_at, invoices.created_at)'), [
+                        Carbon::parse($filters['startAt'])->startOfDay(),
+                        Carbon::parse($filters['endAt'])->endOfDay(),
+                    ]);
+                })->whereBetween('invoices.end_at', [
                     Carbon::parse($filters['startAt'])->startOfDay(),
                     Carbon::parse($filters['endAt'])->endOfDay(),
                 ]);
             })
             ->when(isset($filters['startAt']) && !isset($filters['endAt']), function ($query) use ($filters) {
-                return $query->where('invoices.created_at', '>=', Carbon::parse($filters['startAt'])->startOfDay());
+                return $query->where(function($q) use ($filters) {
+                    $q->where(DB::raw('COALESCE(client_pay_installments.start_at, invoices.created_at)'), '>=', Carbon::parse($filters['startAt'])->startOfDay());
+                })->where('invoices.end_at', '>=', Carbon::parse($filters['startAt'])->startOfDay());
             })
             ->when(!isset($filters['startAt']) && isset($filters['endAt']), function ($query) use ($filters) {
-                return $query->where('invoices.created_at', '<=', Carbon::parse($filters['endAt'])->endOfDay());
+                return $query->where(function($q) use ($filters) {
+                    $q->where(DB::raw('COALESCE(client_pay_installments.start_at, invoices.created_at)'), '<=', Carbon::parse($filters['endAt'])->endOfDay());
+                })->where('invoices.end_at', '<=', Carbon::parse($filters['endAt'])->endOfDay());
+            })
+            ->when(isset($filters['hasXmlNumber']), function ($query) use ($filters) {
+                if ($filters['hasXmlNumber'] == 1) {
+                    return $query->whereNotNull('invoices.invoice_xml_number');
+                } elseif ($filters['hasXmlNumber'] == 0) {
+                    return $query->whereNull('invoices.invoice_xml_number');
+                }
             })
             ->get();
 
@@ -489,11 +510,7 @@ class InvoiceController extends Controller
 
             $invoiceClientPayInstallment = InvoiceDetail::where('invoice_id', $invoice->invoiceId)->where('invoiceable_type', ClientPayInstallment::class)->first();
 
-            $invoiceDate = $invoice->invoiceCreatedAt;
-
-            if ($invoiceClientPayInstallment) {
-                $invoiceDate = ClientPayInstallment::find($invoiceClientPayInstallment->invoiceable_id)->start_at;
-            }
+            $invoiceDate = $invoice->installmentStartAt ?? $invoice->invoiceCreatedAt;
 
             if (!in_array($key, array_column($formattedData, 'key'))) {
                 $formattedData[] = [

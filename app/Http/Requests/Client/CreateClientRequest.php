@@ -52,7 +52,9 @@ class CreateClientRequest extends FormRequest
             'totalTax' => ['nullable'],
             'totalTaxDescription' => ['nullable'],
             'payInstallments' => ['nullable'],
-            'emailF24' => ['nullable']
+            'emailF24' => ['nullable'],
+            'sdi' => ['nullable'],
+            'proforma' => ['nullable', 'boolean']
         ];
     }
 

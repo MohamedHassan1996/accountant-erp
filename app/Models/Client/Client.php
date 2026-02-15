@@ -38,7 +38,9 @@ class Client extends Model
         'is_company',
         'total_tax',
         'total_tax_description',
-        'email_f24'
+        'email_f24',
+        'sdi',
+        'proforma'
     ];
     protected $casts = [
         'addable_to_bulk_invoice' => AddableToBulk::class
