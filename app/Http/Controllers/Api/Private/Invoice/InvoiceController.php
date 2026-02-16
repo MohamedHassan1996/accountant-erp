@@ -764,4 +764,57 @@ class InvoiceController extends Controller
             throw $e;
         }
     }
+
+    public function generateXmlNumber(Request $request)
+    {
+        try {
+            $invoiceId = $request->invoiceId;
+            $invoice = Invoice::findOrFail($invoiceId);
+
+            $invoiceNewNumber = null;
+
+            DB::transaction(function () use (&$invoiceNewNumber, $invoice) {
+                // Get the parameter value from parameter_order = 13
+                $parameterValue = \App\Models\Parameter\ParameterValue::where('parameter_order', 13)->first();
+                $parameterNumber = $parameterValue?->parameter_value ?? '1/57';
+
+                // Get the latest invoice xml number from database
+                $latestInvoice = Invoice::lockForUpdate()
+                    ->whereNotNull('invoice_xml_number')
+                    ->latest('id')
+                    ->first();
+
+                $lastDbNumber = $latestInvoice?->invoice_xml_number ?? '1/0';
+
+                // Compare the numbers (second part after /)
+                $parameterParts = explode('/', $parameterNumber);
+                $dbParts = explode('/', $lastDbNumber);
+
+                $parameterNum = (int) ($parameterParts[1] ?? 0);
+                $dbNum = (int) ($dbParts[1] ?? 0);
+
+                // Use parameter value if it's higher, otherwise increment db value
+                if ($parameterNum > $dbNum) {
+                    $invoiceNewNumber = $parameterNumber;
+                } else {
+                    $dbParts[1] = $dbNum + 1;
+                    $invoiceNewNumber = implode('/', $dbParts);
+                }
+
+                // Save the generated number to the invoice
+                $invoice->invoice_xml_number = $invoiceNewNumber;
+                $invoice->save();
+            });
+
+            return response()->json([
+                'message' => __('messages.success.updated'),
+                'invoiceXmlNumber' => $invoiceNewNumber
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

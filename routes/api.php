@@ -175,6 +175,7 @@ Route::prefix('v1/invoices')->group(function(){
     Route::get('edit', [InvoiceController::class, 'edit']);
     Route::put('update', [InvoiceController::class, 'update']);
     Route::post('add-tasks', [InvoiceController::class, 'addTasksToInvoice']);
+    Route::post('generate-xml-number', [InvoiceController::class, 'generateXmlNumber']);
 });
 
 Route::prefix('v1/invoice-details')->group(function(){
