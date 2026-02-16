@@ -30,10 +30,22 @@ class SelectController extends Controller
         foreach ($request->clientIds as $clientId) {
             $invoicesData[] = [
                 'label' => 'invoices-' . $clientId,
-                'options' => Invoice::select([
-                    'id as value',
-                    DB::raw("CONCAT(number, ' - ', DATE_FORMAT(created_at, '%d/%m/%Y')) as label")
-                ])->where('client_id', $clientId)->get()->toArray()
+                'options' => DB::table('invoices')
+                    ->leftJoin('invoice_details', function($join) {
+                        $join->on('invoices.id', '=', 'invoice_details.invoice_id')
+                             ->where('invoice_details.invoiceable_type', '=', 'App\\Models\\Client\\ClientPayInstallment')
+                             ->whereNull('invoice_details.deleted_at');
+                    })
+                    ->leftJoin('client_pay_installments', 'invoice_details.invoiceable_id', '=', 'client_pay_installments.id')
+                    ->select([
+                        'invoices.id as value',
+                        DB::raw("CONCAT(invoices.number, ' - ', DATE_FORMAT(COALESCE(MAX(client_pay_installments.start_at), MIN(invoices.created_at)), '%d/%m/%Y')) as label")
+                    ])
+                    ->where('invoices.client_id', $clientId)
+                    ->whereNull('invoices.deleted_at')
+                    ->groupBy('invoices.id', 'invoices.number')
+                    ->get()
+                    ->toArray()
             ];
         }
 
