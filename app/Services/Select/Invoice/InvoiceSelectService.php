@@ -18,13 +18,13 @@ class InvoiceSelectService
             ->leftJoin('client_pay_installments', 'invoice_details.invoiceable_id', '=', 'client_pay_installments.id')
             ->select([
                 'invoices.id as value',
-                DB::raw("CONCAT(invoices.number, ' - ', DATE_FORMAT(COALESCE(client_pay_installments.start_at, invoices.created_at), '%d/%m/%Y')) as label")
+                DB::raw("CONCAT(invoices.number, ' - ', DATE_FORMAT(COALESCE(MIN(client_pay_installments.start_at), invoices.created_at), '%d/%m/%Y')) as label")
             ])
             ->whereNull('invoices.deleted_at')
             ->when($clientId !== null, function ($query) use ($clientId) {
                 $query->where('invoices.client_id', $clientId);
             })
-            ->groupBy('invoices.id', 'invoices.number', 'client_pay_installments.start_at', 'invoices.created_at')
+            ->groupBy('invoices.id', 'invoices.number', 'invoices.created_at')
             ->get();
     }
 
