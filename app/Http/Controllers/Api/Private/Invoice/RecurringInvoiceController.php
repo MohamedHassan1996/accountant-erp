@@ -119,6 +119,10 @@ class RecurringInvoiceController extends Controller
                 $payInstallmentData['payInstallmentId']
             );
 
+            // Save the calculated start_at date to the installment
+            $payInstallment->start_at = $startDate;
+            $payInstallment->save();
+
             $payInstallmentDescription = ParameterValue::where(
                 'id',
                 $payInstallment->parameter_value_id
