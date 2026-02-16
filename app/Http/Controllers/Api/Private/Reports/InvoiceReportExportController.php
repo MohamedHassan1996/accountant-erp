@@ -669,8 +669,12 @@ public function generateInvoiceXml(array $data)
 
     /* ================= SAVE & RETURN ================= */
     $clientIva = $data['client']['iva'] ?? '00000000000';
-    $invoiceNumberPart = str_replace('/', '', $invoiceNewNumber ?? ''); // Remove slash from invoice number
+
+    // Extract the second part after slash (e.g., '60' from '1/60')
+    $invoiceNumberParts = explode('/', $invoiceNewNumber ?? '');
+    $invoiceNumberPart = end($invoiceNumberParts); // Get the last part after slash
     $invoiceNumberPart = str_pad($invoiceNumberPart, 5, '0', STR_PAD_LEFT); // Add padding to make it 5 digits
+
     $fileName = '00987920196' . '_' . $invoiceNumberPart . '.xml';
     $path = 'exportedInvoices/' . $fileName;
 
