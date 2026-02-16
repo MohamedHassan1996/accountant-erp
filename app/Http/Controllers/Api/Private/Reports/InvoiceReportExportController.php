@@ -481,14 +481,31 @@ public function generateInvoiceXml(array $data)
     }
 
     DB::transaction(function () use (&$invoiceNewNumber) {
+        // Get the parameter value from parameter_order = 13
+        $parameterValue = ParameterValue::where('parameter_order', 13)->first();
+        $parameterNumber = $parameterValue?->parameter_value ?? '1/57';
+
+        // Get the latest invoice xml number from database
         $latestInvoice = Invoice::lockForUpdate()
             ->whereNotNull('invoice_xml_number')
             ->latest('id')
             ->first();
-        $lastNumber = $latestInvoice?->invoice_xml_number ?? '1/57';
-        $parts = explode('/', $lastNumber);
-        $parts[1] = (int) $parts[1] + 1;
-        $invoiceNewNumber = implode('/', $parts);
+        $lastDbNumber = $latestInvoice?->invoice_xml_number ?? '1/0';
+
+        // Compare the numbers (second part after /)
+        $parameterParts = explode('/', $parameterNumber);
+        $dbParts = explode('/', $lastDbNumber);
+
+        $parameterNum = (int) ($parameterParts[1] ?? 0);
+        $dbNum = (int) ($dbParts[1] ?? 0);
+
+        // Use parameter value if it's higher, otherwise increment db value
+        if ($parameterNum > $dbNum) {
+            $invoiceNewNumber = $parameterNumber;
+        } else {
+            $dbParts[1] = $dbNum + 1;
+            $invoiceNewNumber = implode('/', $dbParts);
+        }
     });
 
     $trasm->addChild('ProgressivoInvio', $invoiceNewNumber);

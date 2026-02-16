@@ -438,6 +438,7 @@ class InvoiceController extends Controller
             ->select([
                 'invoices.id as invoiceId',
                 'invoices.created_at as invoiceCreatedAt',
+                'invoices.invoice_xml_number as invoiceXmlNumber',
                 'clients.id as clientId',
                 'clients.total_tax as clientTotalTax',
                 'clients.ragione_sociale as clientName',
@@ -517,6 +518,7 @@ class InvoiceController extends Controller
                     'key' => $key,
                     'invoiceId' => $invoice->invoiceId??"",
                     'invoiceNumber' => $invoice->invoiceNumber ?? "",
+                    'invoiceXmlNumber' => $invoice->invoiceXmlNumber ?? "",
                     'clientId' => $invoice->clientId ?? "",
                     'clientName' => $invoice->clientName ?? "",
                     'clientAddableToBulkInvoice' => $invoice->clientAddableToBulkInvoice ?? "",
@@ -644,5 +646,100 @@ class InvoiceController extends Controller
         }
 
 
+    }
+
+    /**
+     * Add tasks to existing invoice
+     *
+     * Request format:
+     * {
+     *   "invoiceId": 341,
+     *   "taskIds": [1, 2, 3]
+     * }
+     */
+    public function addTasksToInvoice(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            $invoice = Invoice::find($request->invoiceId);
+
+            if (!$invoice) {
+                return response()->json([
+                    'message' => 'Invoice not found'
+                ], 404);
+            }
+
+            $taskIds = $request->taskIds ?? [];
+
+            foreach ($taskIds as $taskId) {
+                $task = Task::find($taskId);
+
+                if (!$task) {
+                    continue;
+                }
+
+                // Get client discount if exists
+                $clientDiscount = ClientServiceDiscount::where('client_id', $invoice->client_id)
+                    ->whereRaw("FIND_IN_SET(?, service_category_ids)", [$task->service_category_id])
+                    ->where('is_active', ClientServiceDiscountStatus::ACTIVE->value)
+                    ->first();
+
+                $servicePrice = $task->serviceCategory->price ?? 0;
+                $priceAfterDiscount = $servicePrice;
+
+                // Apply discount or tax if exists
+                if (!empty($clientDiscount)) {
+                    $discountValue = $clientDiscount->discount;
+                    $isPercentage = $clientDiscount->type === ClientServiceDiscountType::PERCENTAGE->value;
+
+                    if ($clientDiscount->category === ServiceDiscountCategory::TAX->value) {
+                        // Apply tax: increase price
+                        $priceAfterDiscount = $isPercentage
+                            ? $servicePrice * (1 + $discountValue / 100)
+                            : $servicePrice + $discountValue;
+                    } else {
+                        // Apply discount: decrease price
+                        $priceAfterDiscount = $isPercentage
+                            ? $servicePrice * (1 - $discountValue / 100)
+                            : max(0, $servicePrice - $discountValue);
+                    }
+                }
+
+                $extraPrice = 0;
+                $serviceCategory = ServiceCategory::find($task->service_category_id);
+
+                if ($serviceCategory && $serviceCategory->extra_is_pricable == 1) {
+                    $extraPrice = $serviceCategory->extra_price ?? 0;
+                }
+
+                // Update task with invoice_id and prices
+                $task->update([
+                    "price" => $servicePrice,
+                    "price_after_discount" => $priceAfterDiscount,
+                    "invoice_id" => $invoice->id,
+                ]);
+
+                // Create invoice detail
+                $invoiceDetail = new InvoiceDetail([
+                    'invoice_id' => $invoice->id,
+                    'price' => $servicePrice,
+                    'price_after_discount' => $priceAfterDiscount,
+                    'extra_price' => $extraPrice
+                ]);
+
+                $task->invoiceDetails()->save($invoiceDetail);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => __('messages.success.created')
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 }
