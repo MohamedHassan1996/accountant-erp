@@ -685,7 +685,7 @@ class InvoiceController extends Controller
         try {
             DB::beginTransaction();
 
-            $invoice = Invoice::find($request->invoiceId);
+            $invoice = DB::table('invoices')->where($request->invoiceId)->first();
 
             if (!$invoice) {
                 return response()->json([
