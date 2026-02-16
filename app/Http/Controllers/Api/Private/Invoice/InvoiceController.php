@@ -202,7 +202,7 @@ class InvoiceController extends Controller
                 'taskNumber' => $invoice->taskNumber,
                 'serviceCategoryName' => $invoice->serviceCategoryName,
                 'description' => $invoice->serviceCategoryName,
-                'serviceCode' => $invoice->serviceCategoryCode ?? '',
+                'serviceCategoryCode' => $invoice->serviceCategoryCode ?? '',
                 'taskStatus' => $invoice->taskStatus,
                 'price' =>$invoice->taskPrice ?? $servicePrice,
                 'priceAfterDiscount' =>$invoice->taskPriceAfterDiscount??$servicePriceAfterDiscount,
