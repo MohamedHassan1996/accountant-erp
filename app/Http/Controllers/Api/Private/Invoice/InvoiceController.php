@@ -60,10 +60,10 @@ class InvoiceController extends Controller
             ->when(isset($filters['unassigned']), function ($query) use ($filters) {
                 return $query->where('tasks.invoice_id', $filters['unassigned'] == 1 ? '=' : '!=', null);
             })
-            ->when(isset($filters['proforma']), function ($query) use ($filters) {
-                if ($filters['proforma'] == 1) {
+            ->when(isset($filters['hasProforma']), function ($query) use ($filters) {
+                if ($filters['hasProforma'] == 1) {
                     return $query->where('clients.proforma', 1);
-                } elseif ($filters['proforma'] == 0) {
+                } elseif ($filters['hasProforma'] == 0) {
                     return $query->where(function($q) {
                         $q->where('clients.proforma', 0)
                           ->orWhereNull('clients.proforma');
@@ -513,10 +513,10 @@ class InvoiceController extends Controller
                     return $query->whereNull('invoices.invoice_xml_number');
                 }
             })
-            ->when(isset($filters['proforma']), function ($query) use ($filters) {
-                if ($filters['proforma'] == 1) {
+            ->when(isset($filters['hasProforma']), function ($query) use ($filters) {
+                if ($filters['hasProforma'] == 1) {
                     return $query->where('clients.proforma', 1);
-                } elseif ($filters['proforma'] == 0) {
+                } elseif ($filters['hasProforma'] == 0) {
                     return $query->where(function($q) {
                         $q->where('clients.proforma', 0)
                           ->orWhereNull('clients.proforma');
