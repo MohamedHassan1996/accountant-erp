@@ -17,6 +17,7 @@ class AllInvoiceResource extends JsonResource
         return [
             'invoiceId' => $this->resource['invoiceId'],
             'invoiceNumber' => $this->resource['invoiceNumber'],
+            'invoiceXmlNumber' => $this->resource['invoiceXmlNumber'] ?? "",
             'invoiceDate' => $this->resource['invoiceDate']??"",
             'clientId' => $this->resource['clientId'],
             'clientName' => $this->resource['clientName'],

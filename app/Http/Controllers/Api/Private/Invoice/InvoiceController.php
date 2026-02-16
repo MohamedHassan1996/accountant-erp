@@ -60,6 +60,16 @@ class InvoiceController extends Controller
             ->when(isset($filters['unassigned']), function ($query) use ($filters) {
                 return $query->where('tasks.invoice_id', $filters['unassigned'] == 1 ? '=' : '!=', null);
             })
+            ->when(isset($filters['proforma']), function ($query) use ($filters) {
+                if ($filters['proforma'] == 1) {
+                    return $query->where('clients.proforma', 1);
+                } elseif ($filters['proforma'] == 0) {
+                    return $query->where(function($q) {
+                        $q->where('clients.proforma', 0)
+                          ->orWhereNull('clients.proforma');
+                    });
+                }
+            })
             ->where('tasks.status', TaskStatus::DONE->value)
             ->whereNull('invoices.deleted_at')
             ->whereNull('tasks.deleted_at')
@@ -86,6 +96,7 @@ class InvoiceController extends Controller
                 'tasks.invoice_id as invoiceId',
                 'service_categories.id as serviceCategoryId',
                 'service_categories.name as serviceCategoryName',
+                'service_categories.code as serviceCategoryCode',
                 'service_categories.price as serviceCategoryPrice',
                 'service_categories.add_to_invoice as serviceCategoryAddToInvoice',
                 'service_categories.extra_is_pricable as extraIsPricable',
@@ -191,6 +202,7 @@ class InvoiceController extends Controller
                 'taskNumber' => $invoice->taskNumber,
                 'serviceCategoryName' => $invoice->serviceCategoryName,
                 'description' => $invoice->serviceCategoryName,
+                'serviceCode' => $invoice->serviceCategoryCode ?? '',
                 'taskStatus' => $invoice->taskStatus,
                 'price' =>$invoice->taskPrice ?? $servicePrice,
                 'priceAfterDiscount' =>$invoice->taskPriceAfterDiscount??$servicePriceAfterDiscount,
@@ -499,6 +511,16 @@ class InvoiceController extends Controller
                     return $query->whereNotNull('invoices.invoice_xml_number');
                 } elseif ($filters['hasXmlNumber'] == 0) {
                     return $query->whereNull('invoices.invoice_xml_number');
+                }
+            })
+            ->when(isset($filters['proforma']), function ($query) use ($filters) {
+                if ($filters['proforma'] == 1) {
+                    return $query->where('clients.proforma', 1);
+                } elseif ($filters['proforma'] == 0) {
+                    return $query->where(function($q) {
+                        $q->where('clients.proforma', 0)
+                          ->orWhereNull('clients.proforma');
+                    });
                 }
             })
             ->get();
