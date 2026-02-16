@@ -127,11 +127,16 @@ class InvoiceController extends Controller
 
 
             if (!in_array($key, array_column($formattedData, 'key'))) {
+                $invoiceDate = $invoice->invoiceCreatedAt ?? "";
+                if ($invoiceDate) {
+                    $invoiceDate = Carbon::parse($invoiceDate)->format('Y-m-d');
+                }
+
                 $formattedData[] = [
                     'key' => $key,
                     'invoiceId' => $invoice->invoiceId??"",
                     'invoiceNumber' => $invoice->invoiceNumber ?? "",
-                    'invoiceDate' => $invoice->invoiceCreatedAt ?? "",
+                    'invoiceDate' => $invoiceDate,
                     'clientId' => $invoice->clientId ?? "",
                     'clientName' => $invoice->clientName ?? "",
                     'clientAddableToBulkInvoice' => $invoice->clientAddableToBulkInvoice ?? "",
@@ -525,6 +530,11 @@ class InvoiceController extends Controller
             $invoiceClientPayInstallment = InvoiceDetail::where('invoice_id', $invoice->invoiceId)->where('invoiceable_type', ClientPayInstallment::class)->first();
 
             $invoiceDate = $invoice->installmentStartAt ?? $invoice->invoiceCreatedAt;
+
+            // Format date to Y-m-d only (remove time)
+            if ($invoiceDate) {
+                $invoiceDate = Carbon::parse($invoiceDate)->format('Y-m-d');
+            }
 
             if (!in_array($key, array_column($formattedData, 'key'))) {
                 $formattedData[] = [
