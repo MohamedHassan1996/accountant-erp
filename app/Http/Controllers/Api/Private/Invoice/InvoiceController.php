@@ -486,25 +486,16 @@ class InvoiceController extends Controller
                 return $query->where('clients.id', $filters['clientId']);
             })
             ->when(isset($filters['startAt']) && isset($filters['endAt']), function ($query) use ($filters) {
-                return $query->where(function($q) use ($filters) {
-                    $q->whereBetween(DB::raw('COALESCE(client_pay_installments.start_at, invoices.created_at)'), [
-                        Carbon::parse($filters['startAt'])->startOfDay(),
-                        Carbon::parse($filters['endAt'])->endOfDay(),
-                    ]);
-                })->whereBetween('invoices.end_at', [
+                return $query->whereBetween(DB::raw('COALESCE(client_pay_installments.start_at, invoices.created_at)'), [
                     Carbon::parse($filters['startAt'])->startOfDay(),
                     Carbon::parse($filters['endAt'])->endOfDay(),
                 ]);
             })
             ->when(isset($filters['startAt']) && !isset($filters['endAt']), function ($query) use ($filters) {
-                return $query->where(function($q) use ($filters) {
-                    $q->where(DB::raw('COALESCE(client_pay_installments.start_at, invoices.created_at)'), '>=', Carbon::parse($filters['startAt'])->startOfDay());
-                })->where('invoices.end_at', '>=', Carbon::parse($filters['startAt'])->startOfDay());
+                return $query->where(DB::raw('COALESCE(client_pay_installments.start_at, invoices.created_at)'), '>=', Carbon::parse($filters['startAt'])->startOfDay());
             })
             ->when(!isset($filters['startAt']) && isset($filters['endAt']), function ($query) use ($filters) {
-                return $query->where(function($q) use ($filters) {
-                    $q->where(DB::raw('COALESCE(client_pay_installments.start_at, invoices.created_at)'), '<=', Carbon::parse($filters['endAt'])->endOfDay());
-                })->where('invoices.end_at', '<=', Carbon::parse($filters['endAt'])->endOfDay());
+                return $query->where(DB::raw('COALESCE(client_pay_installments.start_at, invoices.created_at)'), '<=', Carbon::parse($filters['endAt'])->endOfDay());
             })
             ->when(isset($filters['hasXmlNumber']), function ($query) use ($filters) {
                 if ($filters['hasXmlNumber'] == 1) {
