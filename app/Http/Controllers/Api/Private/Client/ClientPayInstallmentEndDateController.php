@@ -32,9 +32,18 @@ class ClientPayInstallmentEndDateController extends Controller
         $startAt = Carbon::parse($request->startAt);
 
         // Get holidays from parameter_values where parameter_order = 11
+        // Holidays are stored as d/m format (e.g., "1/3" for March 1st)
         $holidays = ParameterValue::where('parameter_order', 11)
             ->pluck('parameter_value')
             ->map(function($date) {
+                // Convert d/m format to Y-m-d format with current year
+                $parts = explode('/', $date);
+                if (count($parts) == 2) {
+                    $day = str_pad($parts[0], 2, '0', STR_PAD_LEFT);
+                    $month = str_pad($parts[1], 2, '0', STR_PAD_LEFT);
+                    $year = Carbon::now()->year;
+                    return "{$year}-{$month}-{$day}";
+                }
                 return Carbon::parse($date)->format('Y-m-d');
             })
             ->toArray();
