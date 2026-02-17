@@ -157,11 +157,18 @@ class ClientPayInstallmentDividerController extends Controller
 
     $installmentsData = [];
 
+    // Calculate months between installments
+    $monthsBetweenInstallments = 12 / $installmentNumbers;
+
+    // Calculate first installment month (counting backwards from December)
+    // For 2 installments: 12 - (1 * 6) = 6 (June)
+    // For 3 installments: 12 - (2 * 4) = 4 (April)
+    $firstInstallmentMonth = 12 - (($installmentNumbers - 1) * $monthsBetweenInstallments);
+
     for ($i = 0; $i < $installmentNumbers; $i++) {
 
         // Calculate which month this installment should start
-        // First installment starts in January, then add months based on frequency
-        $monthsToAdd = $i * $clientEndDataAddMonth;
+        $monthsToAdd = $firstInstallmentMonth - 1 + ($i * $monthsBetweenInstallments);
 
         $startDate = \Carbon\Carbon::now()->startOfYear()->addMonths($monthsToAdd)->day(1);
 
