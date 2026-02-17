@@ -168,11 +168,8 @@ class ClientPayInstallmentDividerController extends Controller
         // Adjust start date if it falls on weekend or holiday
         $startDate = $this->adjustForWeekendsAndHolidays($startDate, $holidays);
 
-        // Calculate end date as last day of the month after adding months
-        // Example: start 01/06 + 1 month = 01/07, then endOfMonth = 31/07
-        $endDate = $startDate->copy()
-            ->addMonths($clientEndDataAddMonth)
-            ->endOfMonth(); // Get last day of that month
+        // Calculate end date as last day of the same month as start date
+        $endDate = $startDate->copy()->endOfMonth();
 
         // معالجة شهور خاصة
         $isSpecialMonthEnd = in_array($endDate->format('m-d'), ['08-31', '12-31']);
