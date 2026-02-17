@@ -104,6 +104,9 @@ class RecurringInvoiceController extends Controller
                 } else {
                     $endDate->addDays($allowedDaysToPay);
                 }
+
+                // Adjust end date if it falls on weekend or holiday
+                $endDate = $this->adjustForWeekendsAndHolidays($endDate, $holidays);
             }
 
             $invoice = Invoice::create([
