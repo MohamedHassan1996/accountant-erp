@@ -43,8 +43,13 @@ class ClientPaymentPeriodController extends Controller
 
             $numberOfMonthsToAdd = ceil((int) $clientsPaymentPeriod->description / 30);
 
-            // Calculate end date as last day of the same month as start date
-            $paymentDate = Carbon::parse($startAt)->copy()->endOfMonth();
+            // Calculate end date: add months then go back one month and get last day
+            // Example: 30 days (1 month): start 01/01 + 1 month - 1 month = 01/01, endOfMonth = 31/01
+            // Example: 60 days (2 months): start 01/01 + 2 months - 1 month = 01/02, endOfMonth = 28/02
+            $paymentDate = Carbon::parse($startAt)->copy()
+                ->addMonths($numberOfMonthsToAdd)
+                ->subMonth()
+                ->endOfMonth();
 
             $isSpecialMonthEnd = in_array($paymentDate->format('m-d'), ['08-31', '12-31']);
 
