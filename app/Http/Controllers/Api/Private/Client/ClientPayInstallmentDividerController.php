@@ -104,7 +104,7 @@ class ClientPayInstallmentDividerController extends Controller
     //     ]);
 
     // }
-    
+
     public function index(Request $request)
 {
     // عدد الأقساط
@@ -138,28 +138,41 @@ class ClientPayInstallmentDividerController extends Controller
         $installmentAmount = $request->price / $installmentNumbers;
     }
 
-    // عدد الشهور بين الأقساط
-    $monthsBetweenInstallments = intval(12 / $installmentNumbers);
-
-    // بداية السنة الحالية
-    $yearStart = now()->startOfYear();
-
-    // الشهر الذي يبدأ منه القسط الأول
-    $firstInstallmentMonth = 12 - (($installmentNumbers - 1) * $monthsBetweenInstallments);
+    // Get holidays from parameter_values where parameter_order = 11
+    // Holidays are stored as d/m format (e.g., "1/3" for March 1st)
+    $holidays = ParameterValue::where('parameter_order', 11)
+        ->pluck('parameter_value')
+        ->map(function($date) {
+            // Convert d/m format to Y-m-d format with current year
+            $parts = explode('/', $date);
+            if (count($parts) == 2) {
+                $day = str_pad($parts[0], 2, '0', STR_PAD_LEFT);
+                $month = str_pad($parts[1], 2, '0', STR_PAD_LEFT);
+                $year = \Carbon\Carbon::now()->year;
+                return "{$year}-{$month}-{$day}";
+            }
+            return \Carbon\Carbon::parse($date)->format('Y-m-d');
+        })
+        ->toArray();
 
     $installmentsData = [];
 
     for ($i = 0; $i < $installmentNumbers; $i++) {
 
-        // بداية القسط
-        $startDate = $yearStart->copy()
-            ->addMonths($firstInstallmentMonth - 1)
-            ->addMonths($i * $monthsBetweenInstallments);
+        // Calculate which month this installment should start
+        // First installment starts in January, then add months based on frequency
+        $monthsToAdd = $i * $clientEndDataAddMonth;
 
-        // نهاية القسط
+        $startDate = \Carbon\Carbon::now()->startOfYear()->addMonths($monthsToAdd)->day(1);
+
+        // Adjust start date if it falls on weekend or holiday
+        $startDate = $this->adjustForWeekendsAndHolidays($startDate, $holidays);
+
+        // Calculate end date as last day of the month after adding months
+        // Example: start 01/06 + 1 month = 01/07, then endOfMonth = 31/07
         $endDate = $startDate->copy()
             ->addMonths($clientEndDataAddMonth)
-            ->subDays(1);
+            ->endOfMonth(); // Get last day of that month
 
         // معالجة شهور خاصة
         $isSpecialMonthEnd = in_array($endDate->format('m-d'), ['08-31', '12-31']);
@@ -185,6 +198,39 @@ class ClientPayInstallmentDividerController extends Controller
         ]
     ]);
 }
+
+    /**
+     * Adjust date if it falls on weekend (Saturday/Sunday) or holiday
+     * Move to next Monday or next working day
+     */
+    private function adjustForWeekendsAndHolidays(\Carbon\Carbon $date, array $holidays): \Carbon\Carbon
+    {
+        $adjustedDate = $date->copy();
+
+        // Keep adjusting until we find a working day
+        while (true) {
+            $dayOfWeek = $adjustedDate->dayOfWeek;
+            $dateString = $adjustedDate->format('Y-m-d');
+
+            // Check if Saturday (6) or Sunday (0)
+            if ($dayOfWeek == \Carbon\Carbon::SATURDAY || $dayOfWeek == \Carbon\Carbon::SUNDAY) {
+                // Move to next Monday
+                $adjustedDate->next(\Carbon\Carbon::MONDAY);
+                continue;
+            }
+
+            // Check if it's a holiday
+            if (in_array($dateString, $holidays)) {
+                $adjustedDate->addDay();
+                continue;
+            }
+
+            // It's a working day
+            break;
+        }
+
+        return $adjustedDate;
+    }
 
 
 
