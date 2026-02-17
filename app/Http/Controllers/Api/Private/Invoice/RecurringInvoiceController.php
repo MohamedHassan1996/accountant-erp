@@ -87,9 +87,9 @@ class RecurringInvoiceController extends Controller
                 $clientEndDataAddMonth = ceil($clientEndDataAdd->description / 30);
 
                 // Calculate end date as last day of the month after adding months
+                // Example: start 01/06 + 1 month = 01/07, then endOfMonth = 31/07
                 $endDate = $startDate->copy()
                     ->addMonths($clientEndDataAddMonth)
-                    ->subMonth() // Go back one month
                     ->endOfMonth(); // Get last day of that month
 
                 $allowedDaysToPay = $client->allowed_days_to_pay ?? 0;
