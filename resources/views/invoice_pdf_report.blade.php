@@ -63,13 +63,12 @@
 
     <!-- Header -->
     <div class="header flex-between">
-        {{-- <div>
-            <img src="https://via.placeholder.com/150x60?text=Elmo+Logo" alt="Elmo Tech" class="logo">
-        </div> --}}
-        <div style="text-align: right;">
-            <h2 style="margin-bottom: 5px;">{{ $invoice->number }}</h2>
-            <div>del {{ $invoiceStartAt }}</div>
+        <div>
+            <h2 style="margin-bottom: 5px;">Fattura Proforma Del {{ $invoiceStartAt }}</h2>
         </div>
+        {{-- <div style="text-align: right;">
+            <h2 style="margin-bottom: 5px;">{{ $invoice->number }}</h2>
+        </div> --}}
     </div>
 
     <!-- Addresses -->
@@ -159,7 +158,7 @@
             </tr>
         </table>
     </div>
-    
+
 
     <!-- Payment Info -->
     <table style="margin-top: 30px; font-size: 13px;">
@@ -182,6 +181,55 @@
             </td>
         </tr>
     </table>
+
+    <!-- Company Bank Account Info -->
+    @if(isset($bankAccount) && !empty($bankAccount['iban']))
+    <div style="margin-top: 30px; padding: 15px; background-color: #f9f9f9; border-radius: 8px;">
+        <div style="font-weight: bold; margin-bottom: 10px; color: #333;">COORDINATE BANCARIE ELABORAZIONI SRL</div>
+        <table style="font-size: 13px;">
+            <tr>
+                <td style="width: 25%;">
+                    <div style="font-weight: 600; color: #7f8fa6;">BANCA</div>
+                    <div>{{ $bankAccount['bankName'] ?? '' }}</div>
+                </td>
+                <td style="width: 25%;">
+                    <div style="font-weight: 600; color: #7f8fa6;">IBAN</div>
+                    <div>{{ $bankAccount['iban'] ?? '' }}</div>
+                </td>
+                <td style="width: 25%;">
+                    <div style="font-weight: 600; color: #7f8fa6;">ABI</div>
+                    <div>{{ $bankAccount['abi'] ?? '' }}</div>
+                </td>
+                <td style="width: 25%;">
+                    <div style="font-weight: 600; color: #7f8fa6;">CAB</div>
+                    <div>{{ $bankAccount['cab'] ?? '' }}</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    @endif
+
+    <!-- Payment Method Details -->
+    @if($paymentMethod === 'MP05')
+    <div style="margin-top: 30px; padding: 15px; background-color: #f0f8ff; border-radius: 8px;">
+        <div style="font-weight: bold; margin-bottom: 10px; color: #333;">DETTAGLI PAGAMENTO</div>
+        <div style="font-size: 13px; color: #555;">
+            <strong>Istituto Finanziario:</strong> BANCO BPM SPA<br>
+            <strong>ABI:</strong> 05034<br>
+            <strong>CAB:</strong> 56760<br>
+            <strong>IBAN:</strong> IT00X0503456760000000000000
+        </div>
+    </div>
+    @elseif($paymentMethod === 'MP12')
+    <div style="margin-top: 30px; padding: 15px; background-color: #f0f8ff; border-radius: 8px;">
+        <div style="font-weight: bold; margin-bottom: 10px; color: #333;">DETTAGLI PAGAMENTO</div>
+        <div style="font-size: 13px; color: #555;">
+            <strong>Istituto Finanziario:</strong> {{ $clientBankAccount['bankName'] ?? '' }}<br>
+            <strong>ABI:</strong> {{ $clientBankAccount['abi'] ?? '' }}<br>
+            <strong>CAB:</strong> {{ $clientBankAccount['cab'] ?? '' }}
+        </div>
+    </div>
+    @endif
 
     <!-- Footer -->
     {{-- <div class="note" style="margin-top: 40px;">

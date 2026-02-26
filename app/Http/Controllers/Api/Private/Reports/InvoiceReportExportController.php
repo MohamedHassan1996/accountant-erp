@@ -679,7 +679,16 @@ public function generateInvoiceXml(array $data)
     $path = 'exportedInvoices/' . $fileName;
 
     Storage::disk('local')->put($path, $xmlContent);
-    //Invoice::where('id', $data['invoice']['id'])->update(['invoice_xml_number' => $invoiceNewNumber]);
+
+    // Update invoice with XML number
+    Invoice::where('id', $data['invoice']['id'])->update(['invoice_xml_number' => $invoiceNewNumber]);
+
+    // Update parameter value with new number for next invoice
+    $parameterValue = ParameterValue::where('parameter_order', 13)->first();
+    if ($parameterValue) {
+        $parameterValue->parameter_value = $invoiceNewNumber;
+        $parameterValue->save();
+    }
 
     return response()->json([
         'data' => [
