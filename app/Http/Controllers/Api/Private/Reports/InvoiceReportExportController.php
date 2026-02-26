@@ -350,6 +350,7 @@ class InvoiceReportExportController extends Controller
             'clientAddress' => $clientAddressFormatted,
             'clientBankAccount' => $clientBankAccountFormatted,
             'paymentMethod' => $paymentMethod->code ?? "",
+            'paymentMethodName' => $paymentMethod->parameter_value ?? "",
             'bankAccount' => [
                 'iban' => $bankAccount->parameter_value??'',
                 'abi' => $bankAccount->description2??'',

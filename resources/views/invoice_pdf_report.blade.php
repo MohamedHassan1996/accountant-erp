@@ -165,7 +165,7 @@
         <tr>
             <td>
                 <div style="font-weight: 600; color: #7f8fa6;">MODALITÀ DI PAGAMENTO</div>
-                <div>{{ $paymentMethod }}</div>
+                <div>{{ $paymentMethodName }}</div>
             </td>
             <td>
                 <div style="font-weight: 600; color: #7f8fa6;">IBAN</div>
@@ -181,33 +181,6 @@
             </td>
         </tr>
     </table>
-
-    <!-- Company Bank Account Info -->
-    @if(isset($bankAccount) && !empty($bankAccount['iban']))
-    <div style="margin-top: 30px; padding: 15px; background-color: #f9f9f9; border-radius: 8px;">
-        <div style="font-weight: bold; margin-bottom: 10px; color: #333;">COORDINATE BANCARIE ELABORAZIONI SRL</div>
-        <table style="font-size: 13px;">
-            <tr>
-                <td style="width: 25%;">
-                    <div style="font-weight: 600; color: #7f8fa6;">BANCA</div>
-                    <div>{{ $bankAccount['bankName'] ?? '' }}</div>
-                </td>
-                <td style="width: 25%;">
-                    <div style="font-weight: 600; color: #7f8fa6;">IBAN</div>
-                    <div>{{ $bankAccount['iban'] ?? '' }}</div>
-                </td>
-                <td style="width: 25%;">
-                    <div style="font-weight: 600; color: #7f8fa6;">ABI</div>
-                    <div>{{ $bankAccount['abi'] ?? '' }}</div>
-                </td>
-                <td style="width: 25%;">
-                    <div style="font-weight: 600; color: #7f8fa6;">CAB</div>
-                    <div>{{ $bankAccount['cab'] ?? '' }}</div>
-                </td>
-            </tr>
-        </table>
-    </div>
-    @endif
 
     <!-- Payment Method Details -->
     @if($paymentMethod === 'MP05')

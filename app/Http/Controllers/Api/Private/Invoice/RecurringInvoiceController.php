@@ -54,8 +54,10 @@ class RecurringInvoiceController extends Controller
                     $year = Carbon::now()->year;
                     return "{$year}-{$month}-{$day}";
                 }
-                return Carbon::parse($date)->format('Y-m-d');
+                // Skip invalid date formats
+                return null;
             })
+            ->filter() // Remove null values
             ->toArray();
 
         foreach ($createTaskRequest->payInstallments as $index => $payInstallmentData) {
