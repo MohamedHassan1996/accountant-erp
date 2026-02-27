@@ -184,22 +184,22 @@
 
     <!-- Payment Method Details -->
     @if($paymentMethod === 'MP05')
-    <div style="margin-top: 30px; padding: 15px; background-color: #f0f8ff; border-radius: 8px;">
+    <div style="margin-top: 30px; padding: 15px; background-color: #ffffff; border: 1px solid #e1e1e1; border-radius: 8px;">
         <div style="font-weight: bold; margin-bottom: 10px; color: #333;">DETTAGLI PAGAMENTO</div>
-        <div style="font-size: 13px; color: #555;">
-            <strong>Istituto Finanziario:</strong> BANCO BPM SPA<br>
-            <strong>ABI:</strong> 05034<br>
-            <strong>CAB:</strong> 56760<br>
-            <strong>IBAN:</strong> IT00X0503456760000000000000
+        <div style="font-size: 13px; color: #333;">
+            <strong style="color: #7f8fa6;">Istituto Finanziario:</strong> BANCO BPM SPA<br>
+            <strong style="color: #7f8fa6;">ABI:</strong> 05034<br>
+            <strong style="color: #7f8fa6;">CAB:</strong> 56760<br>
+            <strong style="color: #7f8fa6;">IBAN:</strong> IT00X0503456760000000000000
         </div>
     </div>
     @elseif($paymentMethod === 'MP12')
-    <div style="margin-top: 30px; padding: 15px; background-color: #f0f8ff; border-radius: 8px;">
+    <div style="margin-top: 30px; padding: 15px; background-color: #ffffff; border: 1px solid #e1e1e1; border-radius: 8px;">
         <div style="font-weight: bold; margin-bottom: 10px; color: #333;">DETTAGLI PAGAMENTO</div>
-        <div style="font-size: 13px; color: #555;">
-            <strong>Istituto Finanziario:</strong> {{ $clientBankAccount['bankName'] ?? '' }}<br>
-            <strong>ABI:</strong> {{ $clientBankAccount['abi'] ?? '' }}<br>
-            <strong>CAB:</strong> {{ $clientBankAccount['cab'] ?? '' }}
+        <div style="font-size: 13px; color: #333;">
+            <strong style="color: #7f8fa6;">Istituto Finanziario:</strong> {{ $clientBankAccount['bankName'] ?? '' }}<br>
+            <strong style="color: #7f8fa6;">ABI:</strong> {{ $clientBankAccount['abi'] ?? '' }}<br>
+            <strong style="color: #7f8fa6;">CAB:</strong> {{ $clientBankAccount['cab'] ?? '' }}
         </div>
     </div>
     @endif
