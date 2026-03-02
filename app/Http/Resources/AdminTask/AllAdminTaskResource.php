@@ -57,10 +57,10 @@ class AllAdminTaskResource extends JsonResource
                 $formattedEndTime = Carbon::parse($endTime[1]->created_at)->format('d/m/Y H:i:s');
             }
         }
-        
-        
+
+
         $client = DB::table('clients')->where('id', $this->client_id)->first();
-        
+
         return [
             'taskId' => $this->id,
             'title' => $this->title,

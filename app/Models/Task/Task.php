@@ -64,7 +64,7 @@ class Task extends Model
 
     public function serviceCategory()
     {
-        return $this->belongsTo(ServiceCategory::class);
+        return $this->belongsTo(ServiceCategory::class)->withTrashed();
     }
 
     public function timeLogs()
@@ -93,7 +93,7 @@ class Task extends Model
 
     //     return Carbon::parse($totalTime)->format('H:i:s');
     // }
-    
+
     public function getTotalHoursAttribute()
 {
     $latestTimeLog = $this->timeLogs()
@@ -156,7 +156,7 @@ $total = Client::withTrashed()
     ->where('id', $this->client_id)
     ->first();
 
-        
+
         return $total->getClientDiscount($this->service_category_id);
     }
 
