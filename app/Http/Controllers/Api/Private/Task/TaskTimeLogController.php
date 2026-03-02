@@ -68,44 +68,45 @@ class TaskTimeLogController extends Controller
             foreach ($latestPlayedTasks as $latestTask) {
                 // Get the latest time log's created_at timestamp
                 $latestTimeLog = $latestTask->latestTimeLog;
-                
+
                 if (!$latestTimeLog) {
-    continue;
-}
-                
+                    continue;
+                }
+
                 if($latestTimeLog->status != TaskTimeLogStatus::START){
                    continue;
                 }
 
 
                 if ($latestTimeLog) {
-                
-                    // مدة الجلسة الحالية بالثواني
+
+                    // Current session duration in seconds
                     $currentSeconds = Carbon::now()->diffInSeconds($latestTimeLog->created_at);
-                
-                    // الوقت القديم
+
+                    // Previous stored time
                     $previousTime = $latestTimeLog->total_time;
-                
-                    // لو مفيش وقت قديم
+
+                    // If no previous time exists
                     if (empty($previousTime) || $previousTime === '00:00:00' || $previousTime == 0) {
-                
+
                         $totalSeconds = $currentSeconds;
-                
+
                     } else {
-                
-                        // تحويل الوقت القديم لثواني
-                        $previousSeconds = Carbon::createFromFormat(
-                            'H:i:s',
-                            $previousTime
-                        )->diffInSeconds(Carbon::today());
-                
-                        // الجمع
+
+                        // Convert previous time to seconds manually to support hours > 24
+                        $timeParts = explode(':', $previousTime);
+                        $previousSeconds = ($timeParts[0] * 3600) + ($timeParts[1] * 60) + $timeParts[2];
+
+                        // Add them together
                         $totalSeconds = $previousSeconds + $currentSeconds;
                     }
-                
-                    // الشكل النهائي
-                    $totalTime = gmdate('H:i:s', $totalSeconds);
-                
+
+                    // Final format - support more than 24 hours
+                    $hours = floor($totalSeconds / 3600);
+                    $minutes = floor(($totalSeconds / 60) % 60);
+                    $seconds = $totalSeconds % 60;
+                    $totalTime = sprintf('%02d:%02d:%02d', $hours, $minutes, $seconds);
+
                 } else {
                     $totalTime = '00:00:00';
                 }
@@ -152,60 +153,5 @@ class TaskTimeLogController extends Controller
 
 
     }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    // public function update(Request $request)
-    // {
-
-    //     try {
-    //         DB::beginTransaction();
-    //         $taskTimeLog = TaskTimeLog::find($request->taskTimeLogId);
-
-    //         if($taskTimeLog->status != TaskTimeLogStatus::STOP) {
-    //             return response()->json([
-    //                 'message' => "you can't change this task time log",
-    //             ]);
-    //         }
-
-    //         $taskTimeLog->update([
-    //             'total_time' => $request->totalTime,
-    //             'comment' => $request->comment
-    //         ]);
-
-    //         DB::commit();
-    //         return response()->json([
-    //              'message' => __('messages.success.updated')
-    //         ], 200);
-    //     } catch (\Exception $e) {
-    //         DB::rollBack();
-    //         throw $e;
-    //     }
-
-
-    // }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    /*public function delete(Request $request)
-    {
-
-        try {
-            DB::beginTransaction();
-            $this->taskTimeLogService->deleteTaskTimeLog($request->taskTimeLogId);
-            DB::commit();
-            return response()->json([
-                'message' => __('messages.success.deleted')
-            ], 200);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            throw $e;
-        }
-
-
-    }*/
 
 }
