@@ -87,7 +87,7 @@ class InvoiceReportExportController extends Controller
 
             // Get service code from Task's ServiceCategory or ParameterValue
             $serviceCode = '..'; // Default value
-            
+
             if ($invoiceItem->invoiceable_type == Task::class && $invoiceItemData && $invoiceItemData->serviceCategory) {
                 $serviceCode = $invoiceItemData->serviceCategory->code ?? '..';
             } elseif ($invoiceItem->invoiceable_type == ClientPayInstallment::class && $invoiceItemData && $invoiceItemData->parameterValue) {
@@ -110,14 +110,14 @@ class InvoiceReportExportController extends Controller
 
             if ($invoiceItem->invoiceable_type == Task::class && $invoiceItemData->serviceCategory->extra_is_pricable) {
                 $invoiceItemsData[] = [
-                  ce_description,
+                    'description' => $invoiceItemData->serviceCategory->extra_price_description,
                     'price' => $invoiceItem->price == 0 ? $invoiceItemData->serviceCategory->extra_price : $invoiceItem->price,
                     'priceAfterDiscount' => $invoiceItem->price_after_discount == 0 ? $invoiceItemData->serviceCategory->extra_price : $invoiceItem->price,
                     'additionalTaxPercentage' => 0,
                     'serviceCode' => $invoiceItemData->serviceCategory->code ?? '..'
                 ];
 
-Category->extra_price;
+                $invoiceTotal += $invoiceItemData->serviceCategory->extra_price;
             }
         }
 
@@ -133,7 +133,7 @@ Category->extra_price;
                 'serviceCode' => '..'
             ];
 
-totalTax += ($invoiceTotal * ($client->total_tax / 100) * 0.22);
+            //$totalTax += ($invoiceTotal * ($client->total_tax / 100) * 0.22);
 
             $invoiceTotal += $invoiceTotal * ($client->total_tax / 100);
 
@@ -186,7 +186,7 @@ totalTax += ($invoiceTotal * ($client->total_tax / 100) * 0.22);
 
 
 
-d($invoice->payment_type_id ?? null);
+        $paymentMethod = ParameterValue::find($invoice->payment_type_id ?? null);
 
         $invoiceTotalToCalcTax = $invoiceTotalToCalcTax * 0.22;
 
@@ -202,7 +202,7 @@ d($invoice->payment_type_id ?? null);
 
         return [
             'invoice' => $invoice,
-            'clientAddressData' => ),
+            'clientAddressData' => $clientAddressData->toArray(),
             'invoiceStartAt' => $invoiceStartAt,
             'invoiceItems' => $invoiceItemsData,
             'invoiceTotalTax' => $invoiceTotalToCalcTax,
@@ -261,14 +261,14 @@ d($invoice->payment_type_id ?? null);
         // Fill rows
         $row = 2;
 
-$data['invoiceItems'] as $entry) {
+        foreach ($data['invoiceItems'] as $entry) {
             $sheet
                 ->setCellValue('A' . $row, $data['client']->ragione_sociale ?? '')
                 ->setCellValue('B' . $row, $entry['description'] ?? '')
                 ->setCellValue('C' . $row, $entry['priceAfterDiscount'] ?? 0)
                 ->setCellValue('D' . $row, $entry['quantita'] ?? 1)
                 ->setCellValue('E' . $row, ($entry['priceAfterDiscount'] ?? 0) * ($entry['quantita'] ?? 1))
-                ->setCellValue('F' . ::parse($data['invoice']->created_at)->format('d/m/Y'));
+                ->setCellValue('F' . $row, Carbon::parse($data['invoice']->created_at)->format('d/m/Y'));
             $row++;
         }
 
@@ -283,7 +283,7 @@ $data['invoiceItems'] as $entry) {
         $sheet->setAutoFilter('A1:F1');
 
         // Write to memory and store
-') . '.xlsx';
+        $fileName = 'user_' . now()->format('Y_m_d_H_i_s') . '.xlsx';
         $filePath = 'exportedInvoices/' . $fileName;
 
         ob_start();
@@ -302,7 +302,7 @@ $data['invoiceItems'] as $entry) {
 
 public function generateInvoiceXml(array $data)
 {
-tmlspecialchars(trim((string)$v), ENT_XML1 | ENT_QUOTES, 'UTF-8');
+    $safe = fn($v) => htmlspecialchars(trim((string)$v), ENT_XML1 | ENT_QUOTES, 'UTF-8');
 
     $parseDate = function ($value) {
         try {
@@ -337,7 +337,7 @@ tmlspecialchars(trim((string)$v), ENT_XML1 | ENT_QUOTES, 'UTF-8');
         $idTras->addChild('IdPaese', 'SM');
         $idTras->addChild('IdCodice', '03473');
         $trasm->addChild('CodiceDestinatario', $safe($data['client']['sdi']));
-se {
+    } else {
         $idTras->addChild('IdPaese', 'IT');
         $idTras->addChild('IdCodice', '00987920196');
         $trasm->addChild('CodiceDestinatario', $safe($data['client']['sdi'] ?? '0000000'));
@@ -475,7 +475,7 @@ se {
         $det->addChild('UnitaMisura', 'NR');
         $det->addChild('PrezzoUnitario', number_format((float)$item['priceAfterDiscount'], 2, '.', ''));
         $det->addChild('PrezzoTotale', number_format((float)$item['priceAfterDiscount'], 2, '.', ''));
-        $det);
+        $det->addChild('AliquotaIVA', number_format((float)($item['additionalTaxPercentage'] ?? 22), 2, '.', ''));
         $line++;
     }
 
@@ -506,7 +506,7 @@ se {
     }
 
     /* ================= 2. تحويل الهيكل لإضافة p: Namespaces ================= */
-    $dom ws-1252');
+    $dom = new \DOMDocument('1.0', 'windows-1252');
     $dom->preserveWhiteSpace = false;
     $dom->formatOutput = true;
     $dom->loadXML($xml->asXML());
