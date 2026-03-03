@@ -35,6 +35,7 @@ class RecurringInvoiceController extends Controller
         if (count($client->payInstallments) > 0) {
             $client->has_recurring_invoice = true;
             $client->save();
+
         }
 
         $bankAccount = ParameterValue::where('parameter_id', 7)
