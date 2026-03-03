@@ -18,6 +18,7 @@ class AllPayInstallmentSubDataResource extends JsonResource
             'payInstallmentSubDataId' => $this->id,
             'price' => $this->price,
             'parameterValueName' => $this->parameterValue?->description??'',
+            'parameterValueId' => $this->parameter_value_id??'',
         ];
     }
 }
