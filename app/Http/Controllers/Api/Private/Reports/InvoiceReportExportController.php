@@ -91,9 +91,9 @@ class InvoiceReportExportController extends Controller
             if ($invoiceItem->invoiceable_type == Task::class && $invoiceItemData && $invoiceItemData->serviceCategory) {
                 $serviceCode = $invoiceItemData->serviceCategory->code ?? '..';
             } elseif ($invoiceItem->invoiceable_type == ClientPayInstallment::class && $invoiceItemData && $invoiceItemData->parameterValue) {
-                $serviceCode = $invoiceItemData->parameterValue->code ?? '..';
+                $serviceCode = $invoiceItemData->parameterValue->code ?? '11';
             } elseif ($invoiceItem->invoiceable_type == ClientPayInstallmentSubData::class && $invoiceItemData && $invoiceItemData->parameterValue) {
-                $serviceCode = $invoiceItemData->parameterValue->code ?? '..';
+                $serviceCode = $invoiceItemData->parameterValue->code ?? '12';
             }
 
             $invoiceItemsData[] = [
