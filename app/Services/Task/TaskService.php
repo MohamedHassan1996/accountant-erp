@@ -89,12 +89,17 @@ class TaskService{
                 if ($latestLog->total_time == '00:00:00') {
                     $sumTotalTime += $elapsedTime;
                 } else {
-                    $sumTotalTime += $elapsedTime + Carbon::parse($latestLog->total_time)->diffInSeconds(Carbon::parse('00:00:00'));
+                    // Convert time to seconds manually to support hours > 24
+                    $timeParts = explode(':', $latestLog->total_time);
+                    $timeSeconds = ($timeParts[0] * 3600) + ($timeParts[1] * 60) + $timeParts[2];
+                    $sumTotalTime += $elapsedTime + $timeSeconds;
                 }
             } else {
 
-
-                $sumTotalTime += Carbon::parse($latestLog->total_time)->diffInSeconds(Carbon::parse('00:00:00'));
+                // Convert time to seconds manually to support hours > 24
+                $timeParts = explode(':', $latestLog->total_time);
+                $timeSeconds = ($timeParts[0] * 3600) + ($timeParts[1] * 60) + $timeParts[2];
+                $sumTotalTime += $timeSeconds;
 
             }
         }
@@ -148,7 +153,7 @@ class TaskService{
         )
         ->whereIn('ttl.task_id', $taskIds)
         ->get();
-        
+
 
     // Compute Total Time
     // $sumTotalTime = 0;
@@ -164,27 +169,29 @@ class TaskService{
     //         $sumTotalTime += ($log->total_time === '00:00:00')
     //             ? $elapsedTime
     //             : $elapsedTime + Carbon::parse($log->total_time)->diffInSeconds('00:00:00');
-                
-                
+
+
     //     } else {
-    
+
     //         $sumTotalTime += Carbon::parse($log->total_time)->diffInSeconds('00:00:00');
     //     }
-        
-        
-        
-                   
+
+
+
+
 
     // }
-    
+
 $sumTotalTime = 0;
 
 foreach ($latestLogs as $log) {
-    // 1. Calculate elapsed time for active tasks
-    $createdAt = Carbon::parse($log->created_at);
-    $elapsedTime = Carbon::now()->diffInSeconds($createdAt);
+    // 1. Calculate elapsed time for active tasks - use created_at as timestamp, not time string
+    $elapsedTime = 0;
+    if ($log->status == 0) { // Only calculate elapsed time for active tasks
+        $elapsedTime = Carbon::now()->diffInSeconds(Carbon::parse($log->created_at));
+    }
 
-    // 2. Parse the stored duration using your helper (not Carbon)
+    // 2. Parse the stored duration using helper method (not Carbon)
     $storedSeconds = ($log->total_time === '00:00:00' || empty($log->total_time))
         ? 0
         : $this->timeToSeconds($log->total_time);
@@ -199,9 +206,9 @@ foreach ($latestLogs as $log) {
 
 // Format the result
 $formattedTotalTime = sprintf(
-    '%02d:%02d:%02d', 
-    floor($sumTotalTime / 3600), 
-    ($sumTotalTime / 60) % 60, 
+    '%02d:%02d:%02d',
+    floor($sumTotalTime / 3600),
+    ($sumTotalTime / 60) % 60,
     $sumTotalTime % 60
 );
 
@@ -296,7 +303,7 @@ $formattedTotalTime = sprintf(
             'status' => TaskStatus::from($status)->value
         ]);
     }
-    
+
     private function timeToSeconds(string $time): int
     {
         [$h, $m, $s] = array_map('intval', explode(':', $time));

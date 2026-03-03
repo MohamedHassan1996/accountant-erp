@@ -57,15 +57,26 @@ class ExportTaskService{
     // Compute Total Time
     $sumTotalTime = 0;
     foreach ($latestLogs as $log) {
-        $createdAt = Carbon::parse($log->created_at);
-        $elapsedTime = Carbon::now()->diffInSeconds($createdAt);
+        // Only calculate elapsed time for active tasks
+        $elapsedTime = 0;
+        if ($log->status == 0) { // Task is active
+            $elapsedTime = Carbon::now()->diffInSeconds(Carbon::parse($log->created_at));
+        }
 
         if ($log->status == 0) { // Task is active
-            $sumTotalTime += ($log->total_time === '00:00:00')
-                ? $elapsedTime
-                : $elapsedTime + Carbon::parse($log->total_time)->diffInSeconds('00:00:00');
+            if ($log->total_time === '00:00:00') {
+                $sumTotalTime += $elapsedTime;
+            } else {
+                // Convert time to seconds manually to support hours > 24
+                $timeParts = explode(':', $log->total_time);
+                $timeSeconds = ($timeParts[0] * 3600) + ($timeParts[1] * 60) + $timeParts[2];
+                $sumTotalTime += $elapsedTime + $timeSeconds;
+            }
         } else {
-            $sumTotalTime += Carbon::parse($log->total_time)->diffInSeconds('00:00:00');
+            // Convert time to seconds manually to support hours > 24
+            $timeParts = explode(':', $log->total_time);
+            $timeSeconds = ($timeParts[0] * 3600) + ($timeParts[1] * 60) + $timeParts[2];
+            $sumTotalTime += $timeSeconds;
         }
     }
 
