@@ -139,7 +139,7 @@ class InvoiceReportExportController extends Controller
                 'price' => $invoiceTotal * ($client->total_tax / 100),
                 'priceAfterDiscount' => $invoiceTotal * ($client->total_tax / 100),
                 'additionalTaxPercentage' => 22,
-                'serviceCode' => '..'
+                'serviceCode' => '00000001'
             ];
 
             //$totalTax += ($invoiceTotal * ($client->total_tax / 100) * 0.22);
@@ -333,8 +333,8 @@ public function generateInvoiceXml(array $data)
 
     $usePassepartout = !empty($data['client']['sdi_code']) && $data['client']['sdi_code'] !== '0000000';
 
-    /* ================= 1. بناء الهيكل الأساسي بدون Namespaces مؤقتاً ================= */
-    // نبدأ بـ Root مؤقت بدون Namespace لتجنب مشكلة توريث الـ prefix p: أو ظهور xmlns=""
+    /* ================= 1. Build basic structure without Namespaces temporarily ================= */
+    // Start with temporary Root without Namespace to avoid prefix p: inheritance issues or xmlns="" appearance
     $xml = new \SimpleXMLElement(
         '<?xml version="1.0" encoding="windows-1252"?>' .
         '<?xml-stylesheet type="text/xsl" href="fatturaordinaria_v1.2.xsl"?>' .
@@ -458,7 +458,7 @@ public function generateInvoiceXml(array $data)
 
     $doc->addChild('ImportoTotaleDocumento', number_format((float)$data['invoiceTotalWithTax'], 2, '.', ''));
 
-    // Causale من أول بند
+    // Causale from first item
     foreach ($data['invoiceItems'] as $item) {
         if ((float)($item['priceAfterDiscount'] ?? 0) > 0 && !empty($item['description'])) {
             $doc->addChild('Causale', $safe($item['description']));
@@ -509,7 +509,7 @@ public function generateInvoiceXml(array $data)
         $detPag->addChild('CAB', $data['clientBankAccount']['cab'] ?? '');
     }
 
-    /* ================= 2. تحويل الهيكل لإضافة p: Namespaces ================= */
+    /* ================= 2. Convert structure to add p: Namespaces ================= */
     $dom = new \DOMDocument('1.0', 'windows-1252');
     $dom->preserveWhiteSpace = false;
     $dom->formatOutput = true;
@@ -517,16 +517,16 @@ public function generateInvoiceXml(array $data)
 
     $root = $dom->documentElement;
 
-    // إنشاء عنصر جديد يحمل التاج p: والفراغ المسمي الصحيح
+    // Create new element with p: tag and correct namespace
     $ns = 'http://ivaservizi.agenziaentrate.gov.it/docs/xsd/fatture/v1.2';
     $newRoot = $dom->createElementNS($ns, 'p:FatturaElettronica');
 
-    // نقل الخصائص والـ Namespaces الأخرى
+    // Transfer attributes and other Namespaces
     $newRoot->setAttribute('versione', $root->getAttribute('versione'));
     $newRoot->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ds', 'http://www.w3.org/2000/09/xmldsig#');
     $newRoot->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
 
-    // نقل كافة العناصر الأبناء من الجذر القديم للجديد
+    // Transfer all child elements from old root to new one
     while ($root->hasChildNodes()) {
         $newRoot->appendChild($root->firstChild);
     }
