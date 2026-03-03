@@ -316,7 +316,26 @@ class InvoiceReportExportController extends Controller
 
 public function generateInvoiceXml(array $data)
 {
-    $safe = fn($v) => htmlspecialchars(trim((string)$v), ENT_XML1 | ENT_QUOTES, 'UTF-8');
+    // Function to sanitize text by removing accents and special characters
+    $removeAccents = function($string) {
+        $accents = [
+            'à' => 'a', 'á' => 'a', 'â' => 'a', 'ã' => 'a', 'ä' => 'a', 'å' => 'a',
+            'è' => 'e', 'é' => 'e', 'ê' => 'e', 'ë' => 'e',
+            'ì' => 'i', 'í' => 'i', 'î' => 'i', 'ï' => 'i',
+            'ò' => 'o', 'ó' => 'o', 'ô' => 'o', 'õ' => 'o', 'ö' => 'o',
+            'ù' => 'u', 'ú' => 'u', 'û' => 'u', 'ü' => 'u',
+            'ç' => 'c', 'ñ' => 'n',
+            'À' => 'A', 'Á' => 'A', 'Â' => 'A', 'Ã' => 'A', 'Ä' => 'A', 'Å' => 'A',
+            'È' => 'E', 'É' => 'E', 'Ê' => 'E', 'Ë' => 'E',
+            'Ì' => 'I', 'Í' => 'I', 'Î' => 'I', 'Ï' => 'I',
+            'Ò' => 'O', 'Ó' => 'O', 'Ô' => 'O', 'Õ' => 'O', 'Ö' => 'O',
+            'Ù' => 'U', 'Ú' => 'U', 'Û' => 'U', 'Ü' => 'U',
+            'Ç' => 'C', 'Ñ' => 'N'
+        ];
+        return strtr($string, $accents);
+    };
+
+    $safe = fn($v) => htmlspecialchars($removeAccents(trim((string)$v)), ENT_XML1 | ENT_QUOTES, 'UTF-8');
 
     $parseDate = function ($value) {
         try {
@@ -501,10 +520,10 @@ public function generateInvoiceXml(array $data)
     $detPag->addChild('ImportoPagamento', number_format((float)$data['invoiceTotalWithTax'], 2, '.', ''));
 
     if ($modalita === 'MP05') {
-        $detPag->addChild('IstitutoFinanziario', $data['bankAccount']['bankName'] ?? '');
+        $detPag->addChild('IstitutoFinanziario', $safe($data['bankAccount']['bankName'] ?? ''));
         $detPag->addChild('IBAN', $data['bankAccount']['iban'] ?? '');
     } elseif ($modalita === 'MP12') {
-        $detPag->addChild('IstitutoFinanziario', $data['clientBankAccount']['bankName'] ?? '');
+        $detPag->addChild('IstitutoFinanziario', $safe($data['clientBankAccount']['bankName'] ?? ''));
         $detPag->addChild('ABI', $data['clientBankAccount']['abi'] ?? '');
         $detPag->addChild('CAB', $data['clientBankAccount']['cab'] ?? '');
     }
