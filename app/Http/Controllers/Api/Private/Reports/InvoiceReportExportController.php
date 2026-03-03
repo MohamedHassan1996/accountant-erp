@@ -359,29 +359,21 @@ public function generateInvoiceXml(array $data)
 
     DB::transaction(function () use (&$invoiceNewNumber) {
         // Get the parameter value from parameter_order = 13
-        $parameterValue = ParameterValue::where('parameter_order', 13)->first();
-        $parameterNumber = $parameterValue?->parameter_value ?? '1/57';
+        $parameterValue = ParameterValue::where('parameter_order', 13)->lockForUpdate()->first();
+        $parameterNumber = $parameterValue?->parameter_value ?? '1/60';
 
-        // Get the latest invoice xml number from database
-        $latestInvoice = Invoice::lockForUpdate()
-            ->whereNotNull('invoice_xml_number')
-            ->latest('id')
-            ->first();
-        $lastDbNumber = $latestInvoice?->invoice_xml_number ?? '1/0';
-
-        // Compare the numbers (second part after /)
+        // Always increment from parameter value
         $parameterParts = explode('/', $parameterNumber);
-        $dbParts = explode('/', $lastDbNumber);
+        $currentNum = (int) ($parameterParts[1] ?? 60);
 
-        $parameterNum = (int) ($parameterParts[1] ?? 0);
-        $dbNum = (int) ($dbParts[1] ?? 0);
+        // Generate next invoice number
+        $parameterParts[1] = $currentNum + 1;
+        $invoiceNewNumber = implode('/', $parameterParts);
 
-        // Use parameter value if it's higher, otherwise increment db value
-        if ($parameterNum > $dbNum) {
-            $invoiceNewNumber = $parameterNumber;
-        } else {
-            $dbParts[1] = $dbNum + 1;
-            $invoiceNewNumber = implode('/', $dbParts);
+        // Update parameter value with new number
+        if ($parameterValue) {
+            $parameterValue->parameter_value = $invoiceNewNumber;
+            $parameterValue->save();
         }
     });
 
@@ -555,13 +547,6 @@ public function generateInvoiceXml(array $data)
 
     // Update invoice with XML number
     Invoice::where('id', $data['invoice']['id'])->update(['invoice_xml_number' => $invoiceNewNumber]);
-
-    // Update parameter value with new number for next invoice
-    $parameterValue = ParameterValue::where('parameter_order', 13)->first();
-    if ($parameterValue) {
-        $parameterValue->parameter_value = $invoiceNewNumber;
-        $parameterValue->save();
-    }
 
     return response()->json([
         'data' => [
