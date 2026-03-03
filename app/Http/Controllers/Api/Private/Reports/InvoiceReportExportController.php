@@ -44,149 +44,6 @@ class InvoiceReportExportController extends Controller
         }
     }
 
-    /*private function getInvoiceData(Request $request){
-        $invoice = Invoice::findOrFail($request->invoiceIds[0]);
-
-        $invoiceItems = DB::table('invoice_details')
-            ->where('invoice_details.invoice_id', $invoice->id)
-            ->select([
-                'invoice_details.price',
-                'invoice_details.price_after_discount',
-                'invoice_details.invoiceable_id',
-                'invoice_details.invoiceable_type',
-                'invoice_details.description'
-            ])->get();
-
-        $invoiceItemsData = [];
-        //$totalTax = 0;
-        $invoiceTotalToCalcTax = 0;
-        $invoiceTotal = 0;
-
-        $invoiceStartAt = Carbon::parse($invoice->created_at)->format('d/m/Y');
-
-        foreach ($invoiceItems as $invoiceItem) {
-            $invoiceItemData = match ($invoiceItem->invoiceable_type) {
-                Task::class => Task::with('serviceCategory')->find($invoiceItem->invoiceable_id),
-                ClientPayInstallment::class => ClientPayInstallment::with('parameterValue')->find($invoiceItem->invoiceable_id),
-                ClientPayInstallmentSubData::class => ClientPayInstallmentSubData::with('parameterValue')->find($invoiceItem->invoiceable_id),
-                default => null
-            };
-
-
-            $description = $invoiceItem->invoiceable_type == Task::class
-                ? $invoiceItemData->serviceCategory->name
-                : $invoiceItemData->parameterValue?->description ?? $invoiceItem->description;
-
-            $invoiceStartAt = $invoiceItem->invoiceable_type == ClientPayInstallment::class
-                ? Carbon::parse(ClientPayInstallment::find($invoiceItem->invoiceable_id)->start_at)->format('d/m/Y')
-                : $invoiceStartAt;
-
-            if($invoiceItem->description != null){
-                $description = $invoiceItem->description;
-            }
-
-            // Get service code from Task's ServiceCategory
-            $serviceCode = '..'; // Default value
-            if ($invoiceItem->invoiceable_type == Task::class && $invoiceItemData && $invoiceItemData->serviceCategory) {
-                $serviceCode = $invoiceItemData->serviceCategory->code ?? '..';
-            }
-
-            $invoiceItemsData[] = [
-                'description' => $description,
-                'price' => $invoiceItem->price,
-                'priceAfterDiscount' => $invoiceItem->price_after_discount,
-                'additionalTaxPercentage' => 22,
-                'serviceCode' => $serviceCode
-            ];
-
-            //$totalTax += $invoiceItem->price_after_discount * 0.22;
-            $invoiceTotal += $invoiceItem->price_after_discount;
-            $invoiceTotalToCalcTax += $invoiceItem->price_after_discount;
-
-            if ($invoiceItem->invoiceable_type == Task::class && $invoiceItemData->serviceCategory->extra_is_pricable) {
-                $invoiceItemsData[] = [
-                    'description' => $invoiceItemData->serviceCategory->extra_price_description,
-                    'price' => $invoiceItem->price == 0 ? $invoiceItemData->serviceCategory->extra_price : $invoiceItem->price,
-                    'priceAfterDiscount' => $invoiceItem->price_after_discount == 0 ? $invoiceItemData->serviceCategory->extra_price : $invoiceItem->price,
-                    'additionalTaxPercentage' => 0,
-                    'serviceCode' => $invoiceItemData->serviceCategory->code ?? '..'
-                ];
-
-                $invoiceTotal += $invoiceItemData->serviceCategory->extra_price;
-            }
-        }
-
-        $client = Client::find($invoice->client_id);
-
-                $clientAddressData = ClientAddress::where('client_id', $client->id)->first();
-
-        if ($client->total_tax > 0) {
-            $invoiceItemsData[] = [
-                'description' => $client->total_tax_description ?? '',
-                'price' => $invoiceTotal * ($client->total_tax / 100),
-                'priceAfterDiscount' => $invoiceTotal * ($client->total_tax / 100),
-                'additionalTaxPercentage' => 22,
-                'serviceCode' => '..'
-            ];
-
-            //$totalTax += ($invoiceTotal * ($client->total_tax / 100) * 0.22);
-
-            $invoiceTotal += $invoiceTotal * ($client->total_tax / 100);
-            $invoiceTotalToCalcTax += $invoiceTotal * ($client->total_tax / 100);
-
-        }
-
-        $clientAddressFormatted = ClientAddress::where('client_id', $client->id)->first()?->address ?? "";
-        $clientBankAccount = ClientBankAccount::where('client_id', $client->id)->where('is_main', 1)->first();
-
-        $clientBankAccountFormatted = [];
-
-        if($clientBankAccount != null){
-            $clientBankAccountFormatted = [
-                'iban' => $clientBankAccount->iban??"",
-                'abi' => $clientBankAccount->abi??"",
-                'cab' => $clientBankAccount->cab??""
-            ];
-        }
-
-        if ($invoice->discount_amount > 0) {
-            $discountValue = $invoice->discount_type == 0
-                ? $invoiceTotal * ($invoice->discount_amount / 100)
-                : $invoice->discount_amount;
-
-            $invoiceItemsData[] = [
-                'description' => "sconto",
-                'price' => $discountValue,
-                'priceAfterDiscount' => $discountValue,
-                'additionalTaxPercentage' => 0
-            ];
-
-            $invoiceTotal -= $discountValue;
-
-            $invoiceTotalToCalcTax -= $discountValue;
-
-        }
-
-        $paymentMethod = ParameterValue::find($invoice->payment_type_id ?? null);
-
-        $invoiceTotalToCalcTax = $invoiceTotalToCalcTax * 0.22;
-
-        return [
-            'invoice' => $invoice,
-            'clientAddressData' => $clientAddressData->toArray(),
-            'invoiceStartAt' => $invoiceStartAt,
-            'invoiceItems' => $invoiceItemsData,
-            'invoiceTotalTax' => $invoiceTotalToCalcTax,
-            'invoiceTotal' => $invoiceTotal,
-            'invoiceTotalWithTax' => $invoiceTotal + $invoiceTotalToCalcTax,
-            'client' => $client,
-            'clientAddress' => $clientAddressFormatted,
-            'clientBankAccount' => $clientBankAccountFormatted,
-            'paymentMethod' => $paymentMethod->parameter_value ?? "",
-        ];
-
-    }*/
-
         private function getInvoiceData(Request $request){
         $invoice = Invoice::findOrFail($request->invoiceIds[0]);
 
@@ -228,10 +85,15 @@ class InvoiceReportExportController extends Controller
                 $description = $invoiceItem->description;
             }
 
-            // Get service code from Task's ServiceCategory
+            // Get service code from Task's ServiceCategory or ParameterValue
             $serviceCode = '..'; // Default value
+            
             if ($invoiceItem->invoiceable_type == Task::class && $invoiceItemData && $invoiceItemData->serviceCategory) {
                 $serviceCode = $invoiceItemData->serviceCategory->code ?? '..';
+            } elseif ($invoiceItem->invoiceable_type == ClientPayInstallment::class && $invoiceItemData && $invoiceItemData->parameterValue) {
+                $serviceCode = $invde ?? '..';
+            } elseif ($invoiceItem->invoiceable_type == ClientPayInstallmentSubData::class && $invoiceItemData && $invoiceItemData->parameterValue) {
+                $serviceCode = $invoiceItemData->parameterValue->code ?? '..';
             }
 
             $invoiceItemsData[] = [
@@ -248,14 +110,14 @@ class InvoiceReportExportController extends Controller
 
             if ($invoiceItem->invoiceable_type == Task::class && $invoiceItemData->serviceCategory->extra_is_pricable) {
                 $invoiceItemsData[] = [
-                    'description' => $invoiceItemData->serviceCategory->extra_price_description,
+                  ce_description,
                     'price' => $invoiceItem->price == 0 ? $invoiceItemData->serviceCategory->extra_price : $invoiceItem->price,
                     'priceAfterDiscount' => $invoiceItem->price_after_discount == 0 ? $invoiceItemData->serviceCategory->extra_price : $invoiceItem->price,
                     'additionalTaxPercentage' => 0,
                     'serviceCode' => $invoiceItemData->serviceCategory->code ?? '..'
                 ];
 
-                $invoiceTotal += $invoiceItemData->serviceCategory->extra_price;
+Category->extra_price;
             }
         }
 
@@ -271,7 +133,7 @@ class InvoiceReportExportController extends Controller
                 'serviceCode' => '..'
             ];
 
-            //$totalTax += ($invoiceTotal * ($client->total_tax / 100) * 0.22);
+totalTax += ($invoiceTotal * ($client->total_tax / 100) * 0.22);
 
             $invoiceTotal += $invoiceTotal * ($client->total_tax / 100);
 
@@ -306,7 +168,7 @@ class InvoiceReportExportController extends Controller
 
         if ($invoice->discount_amount > 0) {
             $discountValue = $invoice->discount_type == 0
-                ? $invoiceTotal * ($invoice->discount_amount / 100)
+               ? $invoiceTotal * ($invoice->discount_amount / 100)
                 : $invoice->discount_amount;
 
             $invoiceItemsData[] = [
@@ -324,7 +186,7 @@ class InvoiceReportExportController extends Controller
 
 
 
-        $paymentMethod = ParameterValue::find($invoice->payment_type_id ?? null);
+d($invoice->payment_type_id ?? null);
 
         $invoiceTotalToCalcTax = $invoiceTotalToCalcTax * 0.22;
 
@@ -340,7 +202,7 @@ class InvoiceReportExportController extends Controller
 
         return [
             'invoice' => $invoice,
-            'clientAddressData' => $clientAddressData->toArray(),
+            'clientAddressData' => ),
             'invoiceStartAt' => $invoiceStartAt,
             'invoiceItems' => $invoiceItemsData,
             'invoiceTotalTax' => $invoiceTotalToCalcTax,
@@ -382,7 +244,7 @@ class InvoiceReportExportController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
 
         // Define headers
-        $headers = ['Cliente', 'Descrizione', 'Prezzo unitario', 'Quantità', 'Prezzo Totale', 'Data prestazione'];
+        $headers = ['Cliente', 'Descrizione', 'Prezzo unitario', 'Quantitestazione'];
 
         // Fill headers
         $col = 'A';
@@ -399,14 +261,14 @@ class InvoiceReportExportController extends Controller
         // Fill rows
         $row = 2;
 
-        foreach ($data['invoiceItems'] as $entry) {
+$data['invoiceItems'] as $entry) {
             $sheet
                 ->setCellValue('A' . $row, $data['client']->ragione_sociale ?? '')
                 ->setCellValue('B' . $row, $entry['description'] ?? '')
                 ->setCellValue('C' . $row, $entry['priceAfterDiscount'] ?? 0)
                 ->setCellValue('D' . $row, $entry['quantita'] ?? 1)
                 ->setCellValue('E' . $row, ($entry['priceAfterDiscount'] ?? 0) * ($entry['quantita'] ?? 1))
-                ->setCellValue('F' . $row, Carbon::parse($data['invoice']->created_at)->format('d/m/Y'));
+                ->setCellValue('F' . ::parse($data['invoice']->created_at)->format('d/m/Y'));
             $row++;
         }
 
@@ -421,7 +283,7 @@ class InvoiceReportExportController extends Controller
         $sheet->setAutoFilter('A1:F1');
 
         // Write to memory and store
-        $fileName = 'user_' . now()->format('Y_m_d_H_i_s') . '.xlsx';
+') . '.xlsx';
         $filePath = 'exportedInvoices/' . $fileName;
 
         ob_start();
@@ -440,7 +302,7 @@ class InvoiceReportExportController extends Controller
 
 public function generateInvoiceXml(array $data)
 {
-    $safe = fn($v) => htmlspecialchars(trim((string)$v), ENT_XML1 | ENT_QUOTES, 'UTF-8');
+tmlspecialchars(trim((string)$v), ENT_XML1 | ENT_QUOTES, 'UTF-8');
 
     $parseDate = function ($value) {
         try {
@@ -475,7 +337,7 @@ public function generateInvoiceXml(array $data)
         $idTras->addChild('IdPaese', 'SM');
         $idTras->addChild('IdCodice', '03473');
         $trasm->addChild('CodiceDestinatario', $safe($data['client']['sdi']));
-    } else {
+se {
         $idTras->addChild('IdPaese', 'IT');
         $idTras->addChild('IdCodice', '00987920196');
         $trasm->addChild('CodiceDestinatario', $safe($data['client']['sdi'] ?? '0000000'));
@@ -607,13 +469,13 @@ public function generateInvoiceXml(array $data)
         $det->addChild('NumeroLinea', (string)$line);
         $codArt = $det->addChild('CodiceArticolo');
         $codArt->addChild('CodiceTipo', 'PRESTAZIONE');
-        $codArt->addChild('CodiceValore', $item['serviceCode'] ?? '..');
+        $codArt->addChild('CodiceValore', $item['see'] ?? '..');
         $det->addChild('Descrizione', $safe($item['description'] ?? 'Senza descrizione'));
         $det->addChild('Quantita', '1.00');
         $det->addChild('UnitaMisura', 'NR');
         $det->addChild('PrezzoUnitario', number_format((float)$item['priceAfterDiscount'], 2, '.', ''));
         $det->addChild('PrezzoTotale', number_format((float)$item['priceAfterDiscount'], 2, '.', ''));
-        $det->addChild('AliquotaIVA', number_format((float)($item['additionalTaxPercentage'] ?? 22), 2, '.', ''));
+        $det);
         $line++;
     }
 
@@ -644,7 +506,7 @@ public function generateInvoiceXml(array $data)
     }
 
     /* ================= 2. تحويل الهيكل لإضافة p: Namespaces ================= */
-    $dom = new \DOMDocument('1.0', 'windows-1252');
+    $dom ws-1252');
     $dom->preserveWhiteSpace = false;
     $dom->formatOutput = true;
     $dom->loadXML($xml->asXML());
@@ -669,9 +531,7 @@ public function generateInvoiceXml(array $data)
     $xmlContent = $dom->saveXML();
 
     /* ================= SAVE & RETURN ================= */
-    $clientIva = $data['client']['iva'] ?? '00000000000';
-
-    // Extract the second part after slash (e.g., '60' from '1/60')
+    // Extract the second part after, '60' from '1/60')
     $invoiceNumberParts = explode('/', $invoiceNewNumber ?? '');
     $invoiceNumberPart = end($invoiceNumberParts); // Get the last part after slash
     $invoiceNumberPart = str_pad($invoiceNumberPart, 5, '0', STR_PAD_LEFT); // Add padding to make it 5 digits
