@@ -40,7 +40,16 @@ class InvoiceReportExportController extends Controller
         } elseif($request->type == 'csv'){
             return $this->generateInvoiceExcel($this->getInvoiceData($request));
         }elseif($request->type == 'xml'){
-            return $this->generateInvoiceXml($this->getInvoiceData($request));
+            $data = $this->getInvoiceData($request);
+
+            // Check if client has IBAN for XML export
+            if(empty($data['clientBankAccount']['iban'])) {
+                return response()->json([
+                    'message' => 'Questo cliente non ha un IBAN associato'
+                ], 401);
+            }
+
+            return $this->generateInvoiceXml($data);
         }
     }
 
@@ -150,7 +159,12 @@ class InvoiceReportExportController extends Controller
 
         $clientAddressFormatted = ClientAddress::where('client_id', $client->id)->first()?->address ?? "";
 
+        // First try to get main bank account, if not found get any bank account
         $clientBankAccount = ClientBankAccount::where('client_id', $client->id)->where('is_main', 1)->first();
+
+        if($clientBankAccount == null){
+            $clientBankAccount = ClientBankAccount::where('client_id', $client->id)->first();
+        }
 
         $clientBankAccountFormatted = [];
 
@@ -495,10 +509,8 @@ public function generateInvoiceXml(array $data)
     $detPag->addChild('ImportoPagamento', number_format((float)$data['invoiceTotalWithTax'], 2, '.', ''));
 
     if ($modalita === 'MP05') {
-        $detPag->addChild('IstitutoFinanziario', 'BANCO BPM SPA');
-        $detPag->addChild('ABI', '05034');
-        $detPag->addChild('CAB', '56760');
-        $detPag->addChild('IBAN', 'IT00X0503456760000000000000');
+        $detPag->addChild('IstitutoFinanziario', $data['bankAccount']['bankName'] ?? '');
+        $detPag->addChild('IBAN', $data['bankAccount']['iban'] ?? '');
     } elseif ($modalita === 'MP12') {
         $detPag->addChild('IstitutoFinanziario', $data['clientBankAccount']['bankName'] ?? '');
         $detPag->addChild('ABI', $data['clientBankAccount']['abi'] ?? '');
