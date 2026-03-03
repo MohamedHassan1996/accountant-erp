@@ -469,7 +469,7 @@ public function generateInvoiceXml(array $data)
         $det->addChild('NumeroLinea', (string)$line);
         $codArt = $det->addChild('CodiceArticolo');
         $codArt->addChild('CodiceTipo', 'PRESTAZIONE');
-        $codArt->addChild('CodiceValore', $item['see'] ?? '..');
+        $codArt->addChild('CodiceValore', $item['serviceCode'] ?? '..');
         $det->addChild('Descrizione', $safe($item['description'] ?? 'Senza descrizione'));
         $det->addChild('Quantita', '1.00');
         $det->addChild('UnitaMisura', 'NR');
