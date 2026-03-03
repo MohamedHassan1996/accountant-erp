@@ -42,10 +42,10 @@ class InvoiceReportExportController extends Controller
         }elseif($request->type == 'xml'){
             $data = $this->getInvoiceData($request);
 
-            // Check if client has IBAN for XML export
-            if(empty($data['clientBankAccount']['iban'])) {
+            // Check if client has CAB, ABI and bankName for XML export
+            if(empty($data['clientBankAccount']['cab']) || empty($data['clientBankAccount']['abi']) || empty($data['clientBankAccount']['bankName'])) {
                 return response()->json([
-                    'message' => 'Questo cliente non ha un IBAN associato'
+                    'message' => 'Questo cliente non ha CAB, ABI e nome banca associati'
                 ], 401);
             }
 
