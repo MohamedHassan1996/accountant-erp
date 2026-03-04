@@ -125,7 +125,8 @@ class InvoiceReportExportController extends Controller
                     'price' => $invoiceItemData->serviceCategory->extra_price,
                     'priceAfterDiscount' =>  $invoiceItemData->serviceCategory->extra_price,
                     'additionalTaxPercentage' => 0,
-                    'serviceCode' => $invoiceItemData->serviceCategory->extra_code ?? '..'
+                    'serviceCode' => $invoiceItemData->serviceCategory->extra_code ?? '..',
+                    'test' => 'test'
                 ];
 
                 $invoiceTotal += $invoiceItemData->serviceCategory->extra_price;
