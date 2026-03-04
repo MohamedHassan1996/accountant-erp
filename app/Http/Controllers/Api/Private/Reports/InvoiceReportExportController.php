@@ -120,10 +120,12 @@ class InvoiceReportExportController extends Controller
             if ($invoiceItem->invoiceable_type == Task::class && $invoiceItemData->serviceCategory->extra_is_pricable) {
                 $invoiceItemsData[] = [
                     'description' => $invoiceItemData->serviceCategory->extra_price_description,
-                    'price' => $invoiceItem->price == 0 ? $invoiceItemData->serviceCategory->extra_price : $invoiceItem->price,
-                    'priceAfterDiscount' => $invoiceItem->price_after_discount == 0 ? $invoiceItemData->serviceCategory->extra_price : $invoiceItem->price,
+                    //'price' => $invoiceItem->price == 0 ? $invoiceItemData->serviceCategory->extra_price : $invoiceItem->price,
+                    //'priceAfterDiscount' => $invoiceItem->price_after_discount == 0 ? $invoiceItemData->serviceCategory->extra_price : $invoiceItem->price,
+                    'price' => $invoiceItemData->serviceCategory->extra_price,
+                    'priceAfterDiscount' =>$invoiceItemData->serviceCategory->extra_price,
                     'additionalTaxPercentage' => 0,
-                    'serviceCode' => $invoiceItemData->serviceCategory->code ?? '..'
+                    'serviceCode' => $invoiceItemData->serviceCategory->extra_code ?? '..'
                 ];
 
                 $invoiceTotal += $invoiceItemData->serviceCategory->extra_price;
