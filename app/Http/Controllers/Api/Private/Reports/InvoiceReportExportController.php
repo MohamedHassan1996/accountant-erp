@@ -377,9 +377,9 @@ public function generateInvoiceXml(array $data)
     }
 
     // Check if invoice already has XML number, if not generate new one
-    if (!empty($data['invoice']['invoice_xml_number'])) {
+    if (!empty($data['invoice']->invoice_xml_number)) {
         // Use existing XML number
-        $invoiceNewNumber = $data['invoice']['invoice_xml_number'];
+        $invoiceNewNumber = $data['invoice']->invoice_xml_number;
     } else {
         // Generate new XML number
         DB::transaction(function () use (&$invoiceNewNumber) {
@@ -572,7 +572,7 @@ public function generateInvoiceXml(array $data)
     Storage::disk('local')->put($path, $xmlContent);
 
     // Update invoice with XML number only if it's new
-    if (empty($data['invoice']['invoice_xml_number'])) {
+    if (empty($data['invoice']->invoice_xml_number)) {
         Invoice::where('id', $data['invoice']['id'])->update(['invoice_xml_number' => $invoiceNewNumber]);
     }
 
