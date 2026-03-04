@@ -376,25 +376,32 @@ public function generateInvoiceXml(array $data)
         $trasm->addChild('CodiceDestinatario', $safe($data['client']['sdi'] ?? '0000000'));
     }
 
-    DB::transaction(function () use (&$invoiceNewNumber) {
-        // Get the parameter value from parameter_order = 13
-        $parameterValue = ParameterValue::where('parameter_order', 13)->lockForUpdate()->first();
-        $parameterNumber = $parameterValue?->parameter_value ?? '1/60';
+    // Check if invoice already has XML number, if not generate new one
+    if (!empty($data['invoice']['invoice_xml_number'])) {
+        // Use existing XML number
+        $invoiceNewNumber = $data['invoice']['invoice_xml_number'];
+    } else {
+        // Generate new XML number
+        DB::transaction(function () use (&$invoiceNewNumber) {
+            // Get the parameter value from parameter_order = 13
+            $parameterValue = ParameterValue::where('parameter_order', 13)->lockForUpdate()->first();
+            $parameterNumber = $parameterValue?->parameter_value ?? '1/60';
 
-        // Always increment from parameter value
-        $parameterParts = explode('/', $parameterNumber);
-        $currentNum = (int) ($parameterParts[1] ?? 60);
+            // Always increment from parameter value
+            $parameterParts = explode('/', $parameterNumber);
+            $currentNum = (int) ($parameterParts[1] ?? 60);
 
-        // Generate next invoice number
-        $parameterParts[1] = $currentNum + 1;
-        $invoiceNewNumber = implode('/', $parameterParts);
+            // Generate next invoice number
+            $parameterParts[1] = $currentNum + 1;
+            $invoiceNewNumber = implode('/', $parameterParts);
 
-        // Update parameter value with new number
-        if ($parameterValue) {
-            $parameterValue->parameter_value = $invoiceNewNumber;
-            $parameterValue->save();
-        }
-    });
+            // Update parameter value with new number
+            if ($parameterValue) {
+                $parameterValue->parameter_value = $invoiceNewNumber;
+                $parameterValue->save();
+            }
+        });
+    }
 
     $trasm->addChild('ProgressivoInvio', $invoiceNewNumber);
     $trasm->addChild('FormatoTrasmissione', 'FPR12');
@@ -564,8 +571,10 @@ public function generateInvoiceXml(array $data)
 
     Storage::disk('local')->put($path, $xmlContent);
 
-    // Update invoice with XML number
-    Invoice::where('id', $data['invoice']['id'])->update(['invoice_xml_number' => $invoiceNewNumber]);
+    // Update invoice with XML number only if it's new
+    if (empty($data['invoice']['invoice_xml_number'])) {
+        Invoice::where('id', $data['invoice']['id'])->update(['invoice_xml_number' => $invoiceNewNumber]);
+    }
 
     return response()->json([
         'data' => [
