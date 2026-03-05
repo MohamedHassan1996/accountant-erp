@@ -355,7 +355,7 @@ public function deleteClient(string $clientId)
 **File**: `app/Http/Controllers/Api/Private/Client/ClientAddressController.php`
 
 **Endpoints**:
-- `GET /api/v1/client-addresses?client_id={id}` - List addresses
+- `GET /api/v1/client-addresses?clientId={id}` - List addresses
 - `POST /api/v1/client-addresses/create` - Create address
 - `GET /api/v1/client-addresses/edit?id={id}` - Get address
 - `PUT /api/v1/client-addresses/update` - Update address
@@ -379,7 +379,7 @@ public function deleteClient(string $clientId)
 **File**: `app/Http/Controllers/Api/Private/Client/ClientBankAccountController.php`
 
 **Endpoints**:
-- `GET /api/v1/client-bank-accounts?client_id={id}` - List bank accounts
+- `GET /api/v1/client-bank-accounts?clientId={id}` - List bank accounts
 - `POST /api/v1/client-bank-accounts/create` - Create bank account
 - `GET /api/v1/client-bank-accounts/edit?id={id}` - Get bank account
 - `PUT /api/v1/client-bank-accounts/update` - Update bank account
@@ -415,7 +415,7 @@ When retrieving bank account for invoicing:
 **File**: `app/Http/Controllers/Api/Private/Client/ClientContactController.php`
 
 **Endpoints**:
-- `GET /api/v1/client-contacts?client_id={id}` - List contacts
+- `GET /api/v1/client-contacts?clientId={id}` - List contacts
 - `POST /api/v1/client-contacts/create` - Create contact
 - `GET /api/v1/client-contacts/edit?id={id}` - Get contact
 - `PUT /api/v1/client-contacts/update` - Update contact
@@ -439,7 +439,7 @@ When retrieving bank account for invoicing:
 **File**: `app/Http/Controllers/Api/Private/Client/ClientServiceCategoryDiscountController.php`
 
 **Endpoints**:
-- `GET /api/v1/client-service-discounts?client_id={id}` - List discounts
+- `GET /api/v1/client-service-discounts?clientId={id}` - List discounts
 - `POST /api/v1/client-service-discounts/create` - Create discount
 - `GET /api/v1/client-service-discounts/edit?id={id}` - Get discount
 - `PUT /api/v1/client-service-discounts/update` - Update discount
@@ -489,7 +489,7 @@ When retrieving bank account for invoicing:
 **File**: `app/Http/Controllers/Api/Private/Client/ClientPayInstallmentController.php`
 
 **Endpoints**:
-- `GET /api/v1/client-pay-installments?client_id={id}` - List installments
+- `GET /api/v1/client-pay-installments?clientId={id}` - List installments
 - `POST /api/v1/client-pay-installments/create` - Create installment plan
 - `GET /api/v1/client-pay-installments/edit?id={id}` - Get installment
 - `PUT /api/v1/client-pay-installments/update` - Update installment
@@ -502,7 +502,7 @@ When retrieving bank account for invoicing:
 **File**: `app/Http/Controllers/Api/Private/Client/ClientPayInstallmentSubDataController.php`
 
 **Endpoints**:
-- `GET /api/v1/client-pay-installment-sub-data?installment_id={id}` - List sub-installments
+- `GET /api/v1/client-pay-installment-sub-data?installmentId={id}` - List sub-installments
 - `POST /api/v1/client-pay-installment-sub-data/create` - Create sub-installment
 - `GET /api/v1/client-pay-installment-sub-data/edit?id={id}` - Get sub-installment
 - `PUT /api/v1/client-pay-installment-sub-data/update` - Update sub-installment
@@ -825,7 +825,7 @@ Authorization: Bearer {token}
 
 **List Client Discounts**
 ```http
-GET /api/v1/client-service-discounts?client_id=1
+GET /api/v1/client-service-discounts?clientId=1
 Authorization: Bearer {token}
 ```
 
