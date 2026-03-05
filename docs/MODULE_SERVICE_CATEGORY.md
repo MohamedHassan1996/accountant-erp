@@ -273,7 +273,7 @@ These are added to invoices separately from the service price.
 
 ### Service Category Management
 
-#### GET /api/private/service-categories
+#### GET /api/v1/service-categories
 Get all service categories with filtering.
 
 **Headers:**
@@ -326,7 +326,7 @@ pageSize        - Items per page (default: 10)
 }
 ```
 
-#### POST /api/private/service-categories/create
+#### POST /api/v1/service-categories/create
 Create new service category.
 
 **Headers:**
@@ -358,7 +358,7 @@ Content-Type: application/json
 }
 ```
 
-#### GET /api/private/service-categories/edit
+#### GET /api/v1/service-categories/edit
 Get service category details for editing.
 
 **Headers:**
@@ -388,7 +388,7 @@ serviceCategoryId - Service category ID (required)
 }
 ```
 
-#### POST /api/private/service-categories/update
+#### PUT /api/v1/service-categories/update
 Update service category.
 
 **Headers:**
@@ -421,7 +421,7 @@ Content-Type: application/json
 }
 ```
 
-#### POST /api/private/service-categories/delete
+#### DELETE /api/v1/service-categories/delete
 Delete service category (soft delete).
 
 **Headers:**
@@ -491,7 +491,7 @@ async function fetchServiceCategories(searchTerm = '', pageSize = 10) {
   if (searchTerm) params.append('filter[search]', searchTerm);
   params.append('pageSize', pageSize);
   
-  const response = await fetch(`/api/private/service-categories?${params}`, {
+  const response = await fetch(`/api/v1/service-categories?${params}`, {
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -511,7 +511,7 @@ console.log(`Found ${categories.data.length} service categories`);
 
 ```javascript
 async function createServiceCategory(categoryData) {
-  const response = await fetch('/api/private/service-categories/create', {
+  const response = await fetch('/api/v1/service-categories/create', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -556,8 +556,8 @@ console.log('Service category created successfully');
 
 ```javascript
 async function updateServiceCategory(categoryData) {
-  const response = await fetch('/api/private/service-categories/update', {
-    method: 'POST',
+  const response = await fetch('/api/v1/service-categories/update', {
+    method: 'PUT',
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -601,8 +601,8 @@ await updateServiceCategory({
 
 ```javascript
 async function deleteServiceCategory(serviceCategoryId) {
-  const response = await fetch('/api/private/service-categories/delete', {
-    method: 'POST',
+  const response = await fetch('/api/v1/service-categories/delete', {
+    method: 'DELETE',
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -681,7 +681,7 @@ if (selected) {
 async function calculateTaskPrice(serviceCategoryId, clientId) {
   // Get service category
   const categoryResponse = await fetch(
-    `/api/private/service-categories/edit?serviceCategoryId=${serviceCategoryId}`,
+    `/api/v1/service-categories/edit?serviceCategoryId=${serviceCategoryId}`,
     {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -798,7 +798,7 @@ The following permissions control access to service category features:
 #### Create Service Category
 
 ```bash
-curl -X POST https://accountant-api.testingelmo.com/api/private/service-categories/create \
+curl -X POST https://accountant-api.testingelmo.com/api/v1/service-categories/create \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -818,14 +818,14 @@ curl -X POST https://accountant-api.testingelmo.com/api/private/service-categori
 #### Get All Service Categories
 
 ```bash
-curl -X GET "https://accountant-api.testingelmo.com/api/private/service-categories?filter[search]=Web&pageSize=20" \
+curl -X GET "https://accountant-api.testingelmo.com/api/v1/service-categories?filter[search]=Web&pageSize=20" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 #### Update Service Category
 
 ```bash
-curl -X POST https://accountant-api.testingelmo.com/api/private/service-categories/update \
+curl -X PUT https://accountant-api.testingelmo.com/api/v1/service-categories/update \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -846,7 +846,7 @@ curl -X POST https://accountant-api.testingelmo.com/api/private/service-categori
 #### Delete Service Category
 
 ```bash
-curl -X POST https://accountant-api.testingelmo.com/api/private/service-categories/delete \
+curl -X DELETE https://accountant-api.testingelmo.com/api/v1/service-categories/delete \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

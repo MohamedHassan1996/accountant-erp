@@ -354,10 +354,10 @@ file: [Excel file]
 ### Export Endpoints
 
 See [Reporting Module](MODULE_REPORTING.md) for export endpoint documentation:
-- POST /api/private/invoice-report-export/xml
-- POST /api/private/invoice-report-export/pdf
-- GET /api/private/admin-tasks/export
-- GET /api/private/client-payment-export
+- GET /api/v1/export-invoice-report?invoiceId={id}&type=xml
+- GET /api/v1/export-invoice-report?invoiceId={id}&type=pdf
+- GET /api/v1/admin-ticket-export
+- GET /api/v1/export-client-payment
 
 ## Usage Examples
 

@@ -340,7 +340,7 @@ User::where('id', $userId)->update(['status' => UserStatus::ACTIVE]);
 
 ### User Management
 
-#### GET /api/private/users
+#### GET /api/v1/users
 Get all users with filtering.
 
 **Headers:**
@@ -385,7 +385,7 @@ pageSize        - Items per page (default: 10)
 }
 ```
 
-#### POST /api/private/users/create
+#### POST /api/v1/users/create
 Create new user.
 
 **Headers:**
@@ -416,7 +416,7 @@ avatar: [file]
 }
 ```
 
-#### GET /api/private/users/edit
+#### GET /api/v1/users/edit
 Get user details for editing.
 
 **Headers:**
@@ -447,7 +447,7 @@ userId - User ID (required)
 }
 ```
 
-#### POST /api/private/users/update
+#### PUT /api/v1/users/update
 Update user.
 
 **Headers:**
@@ -479,7 +479,7 @@ avatar: [file] (optional)
 }
 ```
 
-#### POST /api/private/users/delete
+#### DELETE /api/v1/users/delete
 Delete user.
 
 **Headers:**
@@ -502,7 +502,7 @@ Content-Type: application/json
 }
 ```
 
-#### POST /api/private/users/change-status
+#### PUT /api/v1/users/change-status
 Change user status (activate/deactivate).
 
 **Headers:**
@@ -576,7 +576,7 @@ async function fetchUsers(filters = {}, pageSize = 10) {
   if (filters.role) params.append('filter[role]', filters.role);
   params.append('pageSize', pageSize);
   
-  const response = await fetch(`/api/private/users?${params}`, {
+  const response = await fetch(`/api/v1/users?${params}`, {
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -613,7 +613,7 @@ async function createUser(userData, avatarFile) {
     formData.append('avatar', avatarFile);
   }
   
-  const response = await fetch('/api/private/users/create', {
+  const response = await fetch('/api/v1/users/create', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`
@@ -666,8 +666,8 @@ async function updateUser(userData, avatarFile = null) {
     formData.append('avatar', avatarFile);
   }
   
-  const response = await fetch('/api/private/users/update', {
-    method: 'POST',
+  const response = await fetch('/api/v1/users/update', {
+    method: 'PUT',
     headers: {
       'Authorization': `Bearer ${token}`
     },
@@ -697,8 +697,8 @@ await updateUser({
 
 ```javascript
 async function changeUserStatus(userId, status) {
-  const response = await fetch('/api/private/users/change-status', {
-    method: 'POST',
+  const response = await fetch('/api/v1/users/change-status', {
+    method: 'PUT',
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -725,8 +725,8 @@ await changeUserStatus(1, 1);
 
 ```javascript
 async function deleteUser(userId) {
-  const response = await fetch('/api/private/users/delete', {
-    method: 'POST',
+  const response = await fetch('/api/v1/users/delete', {
+    method: 'DELETE',
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -867,7 +867,7 @@ The following permissions control access to user management features:
 #### Create User
 
 ```bash
-curl -X POST https://accountant-api.testingelmo.com/api/private/users/create \
+curl -X POST https://accountant-api.testingelmo.com/api/v1/users/create \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -F "firstName=John" \
   -F "lastName=Doe" \
@@ -885,14 +885,14 @@ curl -X POST https://accountant-api.testingelmo.com/api/private/users/create \
 #### Get All Users
 
 ```bash
-curl -X GET "https://accountant-api.testingelmo.com/api/private/users?filter[status]=1&filter[role]=2&pageSize=20" \
+curl -X GET "https://accountant-api.testingelmo.com/api/v1/users?filter[status]=1&filter[role]=2&pageSize=20" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 #### Update User
 
 ```bash
-curl -X POST https://accountant-api.testingelmo.com/api/private/users/update \
+curl -X PUT https://accountant-api.testingelmo.com/api/v1/users/update \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -F "userId=1" \
   -F "firstName=John" \
@@ -909,7 +909,7 @@ curl -X POST https://accountant-api.testingelmo.com/api/private/users/update \
 #### Change User Status
 
 ```bash
-curl -X POST https://accountant-api.testingelmo.com/api/private/users/change-status \
+curl -X PUT https://accountant-api.testingelmo.com/api/v1/users/change-status \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -921,7 +921,7 @@ curl -X POST https://accountant-api.testingelmo.com/api/private/users/change-sta
 #### Delete User
 
 ```bash
-curl -X POST https://accountant-api.testingelmo.com/api/private/users/delete \
+curl -X DELETE https://accountant-api.testingelmo.com/api/v1/users/delete \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

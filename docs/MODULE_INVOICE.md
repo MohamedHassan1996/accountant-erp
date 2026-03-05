@@ -392,7 +392,7 @@ This ensures compatibility with Italian invoice processing software that rejects
 
 ### Invoice Management
 
-#### GET /api/private/invoices
+#### GET /api/v1/invoices
 Get all invoices with filtering.
 
 **Headers:**
@@ -457,7 +457,7 @@ pageSize              - Items per page (default: 10)
 }
 ```
 
-#### POST /api/private/invoices/create
+#### POST /api/v1/invoices/create
 Create invoices from completed tasks.
 
 **Headers:**
@@ -499,7 +499,7 @@ Content-Type: application/json
 }
 ```
 
-#### GET /api/private/invoices/edit
+#### GET /api/v1/invoices/edit
 Get invoice details for editing.
 
 **Headers:**
@@ -546,7 +546,7 @@ invoiceId - Invoice ID (required)
 
 ### Invoice Details
 
-#### POST /api/private/invoice-details/create
+#### POST /api/v1/invoice-details/create
 Create new invoice detail manually.
 
 **Headers:**
@@ -572,7 +572,7 @@ Content-Type: application/json
 }
 ```
 
-#### GET /api/private/invoice-details/edit
+#### GET /api/v1/invoice-details/edit
 Get invoice detail for editing.
 
 **Headers:**
@@ -601,7 +601,7 @@ invoiceDetailId - Invoice detail ID (required)
 }
 ```
 
-#### POST /api/private/invoice-details/update
+#### PUT /api/v1/invoice-details/update
 Update invoice detail.
 
 **Headers:**
@@ -627,7 +627,7 @@ Content-Type: application/json
 }
 ```
 
-#### POST /api/private/invoice-details/delete
+#### DELETE /api/v1/invoice-details/delete
 Delete invoice detail.
 
 **Headers:**
@@ -652,7 +652,7 @@ Content-Type: application/json
 
 ### Payment Management
 
-#### POST /api/private/pay-invoice/update
+#### PUT /api/v1/invoices/pay-invoice
 Mark invoice as paid.
 
 **Headers:**
@@ -678,49 +678,27 @@ Content-Type: application/json
 
 ### Export
 
-#### POST /api/private/invoice-report-export/xml
-Export invoice to XML format.
+#### GET /api/v1/export-invoice-report
+Export invoice to XML or PDF format.
 
 **Headers:**
 ```
 Authorization: Bearer {token}
-Content-Type: application/json
 ```
 
-**Request Body:**
-```json
-{
-  "invoiceId": 123
-}
+**Query Parameters:**
+```
+invoiceId - Invoice ID (required)
+type      - Export format: "xml" or "pdf" (required)
 ```
 
 **Response:**
-- XML file download
-- Filename: `invoice_{invoiceXmlNumber}.xml`
+- XML or PDF file download
+- Filename: `invoice_{invoiceXmlNumber}.xml` or `invoice_{invoiceNumber}.pdf`
 
 **Validation:**
-- Invoice must have bank account with CAB, ABI, and bank name
+- Invoice must have bank account with CAB, ABI, and bank name (for XML)
 - Error if missing: "Questo cliente non ha CAB, ABI e nome banca associati"
-
-#### POST /api/private/invoice-report-export/pdf
-Export invoice to PDF format.
-
-**Headers:**
-```
-Authorization: Bearer {token}
-Content-Type: application/json
-```
-
-**Request Body:**
-```json
-{
-  "invoiceId": 123
-}
-```
-
-**Response:**
-- PDF file download
-- Filename: `invoice_{invoiceNumber}.pdf`
 
 ## Usage Examples
 
@@ -737,7 +715,7 @@ async function fetchUnassignedTasks(clientId = null, startDate = null, endDate =
   if (startDate) params.append('filter[startAt]', startDate);
   if (endDate) params.append('filter[endAt]', endDate);
   
-  const response = await fetch(`/api/private/invoices?${params}`, {
+  const response = await fetch(`/api/v1/invoices?${params}`, {
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -757,7 +735,7 @@ console.log(`Found ${unassignedTasks.data.length} groups of tasks to invoice`);
 
 ```javascript
 async function createInvoices(invoicesData) {
-  const response = await fetch('/api/private/invoices/create', {
+  const response = await fetch('/api/v1/invoices/create', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -802,7 +780,7 @@ async function fetchAssignedInvoices(filters = {}) {
   if (filters.hasXmlNumber !== undefined) params.append('filter[hasXmlNumber]', filters.hasXmlNumber);
   if (filters.hasProforma !== undefined) params.append('filter[hasProforma]', filters.hasProforma);
   
-  const response = await fetch(`/api/private/invoices?${params}`, {
+  const response = await fetch(`/api/v1/invoices?${params}`, {
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -826,7 +804,7 @@ const invoices = await fetchAssignedInvoices({
 
 ```javascript
 async function addInvoiceDetail(invoiceId, price, priceAfterDiscount, description) {
-  const response = await fetch('/api/private/invoice-details/create', {
+  const response = await fetch('/api/v1/invoice-details/create', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -877,8 +855,8 @@ console.log('Invoice marked as paid');
 
 ```javascript
 async function exportInvoiceXml(invoiceId) {
-  const response = await fetch('/api/private/invoice-report-export/xml', {
-    method: 'POST',
+  const response = await fetch(`/api/v1/export-invoice-report?invoiceId=${invoiceId}&type=xml`, {
+    method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -919,8 +897,8 @@ try {
 
 ```javascript
 async function exportInvoicePdf(invoiceId) {
-  const response = await fetch('/api/private/invoice-report-export/pdf', {
-    method: 'POST',
+  const response = await fetch(`/api/v1/export-invoice-report?invoiceId=${invoiceId}&type=pdf`, {
+    method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -1024,7 +1002,7 @@ The following permissions control access to invoice management features:
 #### Create Invoice
 
 ```bash
-curl -X POST https://accountant-api.testingelmo.com/api/private/invoices/create \
+curl -X POST https://accountant-api.testingelmo.com/api/v1/invoices/create \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -1045,14 +1023,14 @@ curl -X POST https://accountant-api.testingelmo.com/api/private/invoices/create 
 #### Get Unassigned Tasks
 
 ```bash
-curl -X GET "https://accountant-api.testingelmo.com/api/private/invoices?filter[unassigned]=1&filter[clientId]=5" \
+curl -X GET "https://accountant-api.testingelmo.com/api/v1/invoices?filter[unassigned]=1&filter[clientId]=5" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 #### Get Assigned Invoices
 
 ```bash
-curl -X GET "https://accountant-api.testingelmo.com/api/private/invoices?filter[unassigned]=0&filter[startAt]=2026-03-01&filter[endAt]=2026-03-31" \
+curl -X GET "https://accountant-api.testingelmo.com/api/v1/invoices?filter[unassigned]=0&filter[startAt]=2026-03-01&filter[endAt]=2026-03-31" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 

@@ -165,7 +165,7 @@ Provides invoice dropdown data.
 
 ### Get Multiple Selects
 
-#### GET /api/private/selects
+#### GET /api/v1/selects
 Fetch multiple dropdown datasets in one request.
 
 **Headers:**
@@ -183,12 +183,12 @@ allSelects - Comma-separated list of select types
 
 Simple selects:
 ```
-GET /api/private/selects?allSelects=users,clients,roles
+GET /api/v1/selects?allSelects=users,clients,roles
 ```
 
 With parameters:
 ```
-GET /api/private/selects?allSelects=parameters=1,parameters=2,invoices=123
+GET /api/v1/selects?allSelects=parameters=1,parameters=2,invoices=123
 ```
 
 **Response:**
@@ -220,7 +220,7 @@ GET /api/private/selects?allSelects=parameters=1,parameters=2,invoices=123
 
 ### Get Invoices for Multiple Clients
 
-#### POST /api/private/selects/invoices
+#### GET /api/v1/selects/invoices
 Fetch invoices for multiple clients.
 
 **Headers:**
@@ -263,7 +263,7 @@ Content-Type: application/json
 
 ```javascript
 async function fetchDropdowns(selectTypes) {
-  const response = await fetch(`/api/private/selects?allSelects=${selectTypes.join(',')}`, {
+  const response = await fetch(`/api/v1/selects?allSelects=${selectTypes.join(',')}`, {
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -287,7 +287,7 @@ console.log(usersDropdown.options);
 ```javascript
 async function fetchParameters(parameterIds) {
   const selects = parameterIds.map(id => `parameters=${id}`);
-  const response = await fetch(`/api/private/selects?allSelects=${selects.join(',')}`, {
+  const response = await fetch(`/api/v1/selects?allSelects=${selects.join(',')}`, {
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -310,7 +310,7 @@ console.log(paymentTypes.options);
 
 ```javascript
 async function fetchInvoicesByClient(clientId) {
-  const response = await fetch(`/api/private/selects?allSelects=invoices=${clientId}`, {
+  const response = await fetch(`/api/v1/selects?allSelects=invoices=${clientId}`, {
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -330,8 +330,8 @@ console.log(invoices);
 
 ```javascript
 async function fetchInvoicesForClients(clientIds) {
-  const response = await fetch('/api/private/selects/invoices', {
-    method: 'POST',
+  const response = await fetch('/api/v1/selects/invoices', {
+    method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -592,28 +592,28 @@ CONCAT(id, '##', is_default) as value
 #### Get Multiple Selects
 
 ```bash
-curl -X GET "https://accountant-api.testingelmo.com/api/private/selects?allSelects=users,clients,roles" \
+curl -X GET "https://accountant-api.testingelmo.com/api/v1/selects?allSelects=users,clients,roles" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 #### Get Parameters
 
 ```bash
-curl -X GET "https://accountant-api.testingelmo.com/api/private/selects?allSelects=parameters=1,parameters=2" \
+curl -X GET "https://accountant-api.testingelmo.com/api/v1/selects?allSelects=parameters=1,parameters=2" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 #### Get Invoices by Client
 
 ```bash
-curl -X GET "https://accountant-api.testingelmo.com/api/private/selects?allSelects=invoices=123" \
+curl -X GET "https://accountant-api.testingelmo.com/api/v1/selects?allSelects=invoices=123" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 #### Get Invoices for Multiple Clients
 
 ```bash
-curl -X POST https://accountant-api.testingelmo.com/api/private/selects/invoices \
+curl -X GET https://accountant-api.testingelmo.com/api/v1/selects/invoices \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

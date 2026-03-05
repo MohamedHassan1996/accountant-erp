@@ -520,7 +520,7 @@ Time log entries for tasks.
 
 ### Task Management
 
-#### GET /api/private/tasks
+#### GET /api/v1/tasks
 Get all tasks with filtering.
 
 **Headers:**
@@ -563,7 +563,7 @@ filter[endDate]          - Filter by end date (YYYY-MM-DD)
 }
 ```
 
-#### POST /api/private/tasks/create
+#### POST /api/v1/tasks/create
 Create new task.
 
 **Headers:**
@@ -605,7 +605,7 @@ Content-Type: application/json
 }
 ```
 
-#### GET /api/private/tasks/edit
+#### GET /api/v1/tasks/edit
 Get task details for editing.
 
 **Headers:**
@@ -634,7 +634,7 @@ taskId - Task ID (required)
 }
 ```
 
-#### POST /api/private/tasks/update
+#### PUT /api/v1/tasks/update
 Update task details.
 
 **Headers:**
@@ -666,7 +666,7 @@ Content-Type: application/json
 }
 ```
 
-#### POST /api/private/tasks/delete
+#### DELETE /api/v1/tasks/delete
 Delete task (soft delete).
 
 **Headers:**
@@ -689,7 +689,7 @@ Content-Type: application/json
 }
 ```
 
-#### POST /api/private/tasks/change-status
+#### PUT /api/v1/tasks/change-status
 Change task status.
 
 **Headers:**
@@ -716,7 +716,7 @@ Content-Type: application/json
 
 ### Active Tasks
 
-#### GET /api/private/active-tasks
+#### GET /api/v1/user-active-tasks
 Get active tasks for logged-in user.
 
 **Headers:**
@@ -756,7 +756,7 @@ Authorization: Bearer {token}
 - 1: Running
 - 2: Paused
 
-#### POST /api/private/active-tasks/update
+#### PUT /api/v1/user-active-tasks/update
 Stop timer and optionally complete task.
 
 **Headers:**
@@ -783,7 +783,7 @@ Content-Type: application/json
 
 ### Admin Tasks
 
-#### GET /api/private/admin-tasks
+#### GET /api/v1/admin-tasks
 Get all tasks (admin view).
 
 **Response:**
@@ -810,7 +810,7 @@ Get all tasks (admin view).
 }
 ```
 
-#### GET /api/private/admin-tasks/export
+#### GET /api/v1/admin-ticket-export
 Export tasks to Excel.
 
 **Response:**
@@ -822,7 +822,7 @@ Export tasks to Excel.
 
 ### Time Logs
 
-#### GET /api/private/task-time-logs
+#### GET /api/v1/task-time-logs
 Get all time logs for a task.
 
 **Headers:**
@@ -861,7 +861,7 @@ taskId - Task ID (required)
 ]
 ```
 
-#### POST /api/private/task-time-logs/create
+#### POST /api/v1/task-time-logs/create
 Create new time log (start/pause/stop timer).
 
 **Headers:**
@@ -895,7 +895,7 @@ Content-Type: application/json
 
 **Important:** When creating a START log, all other running tasks for the same user are automatically paused.
 
-#### GET /api/private/task-time-logs/edit
+#### GET /api/v1/task-time-logs/edit
 Get time log details.
 
 **Headers:**
@@ -922,7 +922,7 @@ taskTimeLogId - Time log ID (required)
 }
 ```
 
-#### POST /api/private/change-task-time-log/update
+#### PUT /api/v1/task-time-logs/change-time
 Update completed time log.
 
 **Headers:**
@@ -1193,7 +1193,7 @@ async function fetchTasks(filters = {}) {
   if (filters.startDate) params.append('filter[startDate]', filters.startDate);
   if (filters.endDate) params.append('filter[endDate]', filters.endDate);
   
-  const response = await fetch(`/api/private/tasks?${params}`, {
+  const response = await fetch(`/api/v1/tasks?${params}`, {
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -1220,7 +1220,7 @@ console.log(`Total hours: ${tasks.meta.totalHours}`);
 
 ```javascript
 async function createTask(taskData) {
-  const response = await fetch('/api/private/tasks/create', {
+  const response = await fetch('/api/v1/tasks/create', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -1262,7 +1262,7 @@ console.log(`Task created: ${newTask.data.number}`);
 
 ```javascript
 async function startTask(taskId, userId, currentTime = '00:00:00') {
-  const response = await fetch('/api/private/task-time-logs/create', {
+  const response = await fetch('/api/v1/task-time-logs/create', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -1291,7 +1291,7 @@ console.log(`Timer started. Time log ID: ${timeLog.data.taskTimeLogId}`);
 
 ```javascript
 async function pauseTask(taskId, userId, currentTime) {
-  const response = await fetch('/api/private/task-time-logs/create', {
+  const response = await fetch('/api/v1/task-time-logs/create', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -1321,7 +1321,7 @@ console.log('Timer paused');
 
 ```javascript
 async function stopTask(taskId, userId, currentTime) {
-  const response = await fetch('/api/private/task-time-logs/create', {
+  const response = await fetch('/api/v1/task-time-logs/create', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -1438,8 +1438,8 @@ activeTasks.forEach(task => {
 
 ```javascript
 async function updateTask(taskData) {
-  const response = await fetch('/api/private/tasks/update', {
-    method: 'POST',
+  const response = await fetch('/api/v1/tasks/update', {
+    method: 'PUT',
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -1481,7 +1481,7 @@ await updateTask({
 
 ```javascript
 async function exportTasks() {
-  const response = await fetch('/api/private/admin-tasks/export', {
+  const response = await fetch('/api/v1/admin-ticket-export', {
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -1579,7 +1579,7 @@ The following permissions control access to task management features:
 #### Create Task
 
 ```bash
-curl -X POST https://accountant-api.testingelmo.com/api/private/tasks/create \
+curl -X POST https://accountant-api.testingelmo.com/api/v1/tasks/create \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -1595,7 +1595,7 @@ curl -X POST https://accountant-api.testingelmo.com/api/private/tasks/create \
 #### Start Timer
 
 ```bash
-curl -X POST https://accountant-api.testingelmo.com/api/private/task-time-logs/create \
+curl -X POST https://accountant-api.testingelmo.com/api/v1/task-time-logs/create \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -1610,14 +1610,14 @@ curl -X POST https://accountant-api.testingelmo.com/api/private/task-time-logs/c
 #### Get Active Tasks
 
 ```bash
-curl -X GET https://accountant-api.testingelmo.com/api/private/active-tasks \
+curl -X GET https://accountant-api.testingelmo.com/api/v1/user-active-tasks \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 #### Pause Timer
 
 ```bash
-curl -X POST https://accountant-api.testingelmo.com/api/private/task-time-logs/create \
+curl -X POST https://accountant-api.testingelmo.com/api/v1/task-time-logs/create \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -1632,7 +1632,7 @@ curl -X POST https://accountant-api.testingelmo.com/api/private/task-time-logs/c
 #### Complete Task
 
 ```bash
-curl -X POST https://accountant-api.testingelmo.com/api/private/task-time-logs/create \
+curl -X POST https://accountant-api.testingelmo.com/api/v1/task-time-logs/create \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
