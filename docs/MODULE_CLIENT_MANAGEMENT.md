@@ -619,28 +619,26 @@ Authorization: Bearer {token}
 **Response**:
 ```json
 {
-  "data": [
-    {
-      "id": 1,
-      "ragione_sociale": "Company Name SRL",
-      "iva": "12345678901",
-      "cf": "12345678901",
-      "email": "info@company.com",
-      "phone": "+39 123 456 7890",
-      "has_recurring_invoice": true,
-      "created_at": "2024-01-01T00:00:00.000000Z"
-    }
-  ],
-  "links": {
-    "first": "...",
-    "last": "...",
-    "prev": null,
-    "next": "..."
+  "result": {
+    "clients": [
+      {
+        "id": 1,
+        "ragione_sociale": "Company Name SRL",
+        "iva": "12345678901",
+        "cf": "12345678901",
+        "email": "info@company.com",
+        "phone": "+39 123 456 7890",
+        "has_recurring_invoice": true,
+        "created_at": "2024-01-01T00:00:00.000000Z"
+      }
+    ]
   },
-  "meta": {
-    "current_page": 1,
+  "pagination": {
+    "total": 150,
+    "count": 20,
     "per_page": 20,
-    "total": 150
+    "current_page": 1,
+    "total_pages": 8
   }
 }
 ```
