@@ -359,26 +359,28 @@ pageSize        - Items per page (default: 10)
 **Response:**
 ```json
 {
-  "data": [
-    {
-      "userId": 1,
-      "firstName": "John",
-      "lastName": "Doe",
-      "name": "John Doe",
-      "username": "johndoe",
-      "phone": "+39 123 456 7890",
-      "address": "Via Roma 123, Milano",
-      "status": 1,
-      "avatar": "http://example.com/storage/avatars/avatar.jpg",
-      "roleId": 2,
-      "perHourRate": 50.00,
-      "email": "john.doe@example.com"
-    }
-  ],
-  "meta": {
-    "current_page": 1,
+  "result": {
+    "users": [
+      {
+        "userId": 1,
+        "firstName": "John",
+        "lastName": "Doe",
+        "username": "johndoe",
+        "phone": "+39 123 456 7890",
+        "address": "Via Roma 123, Milano",
+        "status": 1,
+        "avatar": "http://example.com/storage/avatars/avatar.jpg",
+        "perHourRate": 50.00,
+        "email": "john.doe@example.com"
+      }
+    ]
+  },
+  "pagination": {
+    "total": 25,
+    "count": 10,
     "per_page": 10,
-    "total": 25
+    "current_page": 1,
+    "total_pages": 3
   }
 }
 ```
@@ -755,7 +757,8 @@ class UserManager {
   
   async loadUsers(filters = {}) {
     const response = await fetchUsers(filters, this.pageSize);
-    this.users = response.data;
+    this.users = response.result.users;
+    this.pagination = response.pagination;
     return this.users;
   }
   
