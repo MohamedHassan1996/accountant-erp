@@ -324,26 +324,34 @@ Authorization: Bearer {token}
 
 ### Invoice Export
 
-#### POST /api/private/invoice-report-export/xml
-Export invoice to XML format.
+#### GET /api/v1/export-invoice-report
+Export invoice to XML, PDF, or CSV format based on type parameter.
 
 **Headers:**
 ```
 Authorization: Bearer {token}
-Content-Type: application/json
 ```
 
-**Request Body:**
+**Query Parameters:**
+```
+type - Export format: 'xml', 'pdf', or 'csv'
+invoiceIds[] - Array of invoice IDs to export
+```
+
+**Export XML:**
+```
+GET /api/v1/export-invoice-report?type=xml&invoiceIds[]=123
+```
+
+**Response (XML):**
 ```json
 {
-  "invoiceId": 123
+  "data": {
+    "name": "00987920196_00060.xml",
+    "content": "<?xml version=\"1.0\" encoding=\"windows-1252\"?>..."
+  }
 }
 ```
-
-**Response:**
-- XML file download
-- Filename: `invoice_{xmlNumber}.xml`
-- Content-Type: `application/xml`
 
 **Validation Error:**
 ```json
@@ -352,20 +360,29 @@ Content-Type: application/json
 }
 ```
 
-#### POST /api/private/invoice-report-export/pdf
-Export invoice to PDF format.
-
-**Headers:**
+**Export PDF:**
 ```
-Authorization: Bearer {token}
-Content-Type: application/json
+GET /api/v1/export-invoice-report?type=pdf&invoiceIds[]=123
 ```
 
-**Request Body:**
+**Response (PDF):**
 ```json
 {
-  "invoiceId": 123
+  "path": "https://accountant-api.testingelmo.com/storage/exportedInvoices/invoice_123.pdf"
 }
+```
+
+**Export CSV/Excel:**
+```
+GET /api/v1/export-invoice-report?type=csv&invoiceIds[]=123
+```
+
+**Response (CSV/Excel):**
+```json
+{
+  "path": "https://accountant-api.testingelmo.com/storage/exportedInvoices/user_2026_03_05_14_30_45.xlsx"
+}
+```
 ```
 
 **Response:**
@@ -448,15 +465,11 @@ console.log(`Tasks to work: ${stats.tasks.toWork}`);
 
 ```javascript
 async function exportInvoiceXml(invoiceId) {
-  const response = await fetch('/api/private/invoice-report-export/xml', {
-    method: 'POST',
+  const response = await fetch(`/api/v1/export-invoice-report?type=xml&invoiceIds[]=${invoiceId}`, {
+    method: 'GET',
     headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      invoiceId: invoiceId
-    })
+      'Authorization': `Bearer ${token}`
+    }
   });
   
   if (!response.ok) {
@@ -464,12 +477,14 @@ async function exportInvoiceXml(invoiceId) {
     throw new Error(error.message);
   }
   
-  // Download the XML file
-  const blob = await response.blob();
+  const result = await response.json();
+  
+  // Create and download XML file from response data
+  const blob = new Blob([result.data.content], { type: 'application/xml' });
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `invoice_${invoiceId}.xml`;
+  a.download = result.data.name;
   document.body.appendChild(a);
   a.click();
   window.URL.revokeObjectURL(url);
@@ -490,31 +505,42 @@ try {
 
 ```javascript
 async function exportInvoicePdf(invoiceId) {
-  const response = await fetch('/api/private/invoice-report-export/pdf', {
-    method: 'POST',
+  const response = await fetch(`/api/v1/export-invoice-report?type=pdf&invoiceIds[]=${invoiceId}`, {
+    method: 'GET',
     headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      invoiceId: invoiceId
-    })
+      'Authorization': `Bearer ${token}`
+    }
   });
   
-  // Download the PDF file
-  const blob = await response.blob();
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `invoice_${invoiceId}.pdf`;
-  document.body.appendChild(a);
-  a.click();
-  window.URL.revokeObjectURL(url);
-  document.body.removeChild(a);
+  const result = await response.json();
+  
+  // Open PDF in new tab
+  window.open(result.path, '_blank');
 }
 
 // Usage
 await exportInvoicePdf(123);
+```
+
+#### Exporting Invoice to Excel
+
+```javascript
+async function exportInvoiceExcel(invoiceId) {
+  const response = await fetch(`/api/v1/export-invoice-report?type=csv&invoiceIds[]=${invoiceId}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  
+  const result = await response.json();
+  
+  // Open Excel file in new tab
+  window.open(result.path, '_blank');
+}
+
+// Usage
+await exportInvoiceExcel(123);
 ```
 
 #### Exporting Tasks to Excel
@@ -703,25 +729,22 @@ curl -X GET https://accountant-api.testingelmo.com/api/private/reports \
 #### Export Invoice to XML
 
 ```bash
-curl -X POST https://accountant-api.testingelmo.com/api/private/invoice-report-export/xml \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "invoiceId": 123
-  }' \
-  --output invoice_123.xml
+curl -X GET "https://accountant-api.testingelmo.com/api/v1/export-invoice-report?type=xml&invoiceIds[]=123" \
+  -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 #### Export Invoice to PDF
 
 ```bash
-curl -X POST https://accountant-api.testingelmo.com/api/private/invoice-report-export/pdf \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "invoiceId": 123
-  }' \
-  --output invoice_123.pdf
+curl -X GET "https://accountant-api.testingelmo.com/api/v1/export-invoice-report?type=pdf&invoiceIds[]=123" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+#### Export Invoice to Excel
+
+```bash
+curl -X GET "https://accountant-api.testingelmo.com/api/v1/export-invoice-report?type=csv&invoiceIds[]=123" \
+  -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 #### Export Tasks
