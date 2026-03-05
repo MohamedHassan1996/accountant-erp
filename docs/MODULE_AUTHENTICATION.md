@@ -56,12 +56,12 @@ public function login(LoginRequest $request)
       "name": "User Name",
       "email": "user@example.com",
       "status": 1,
-      "created_at": "2024-01-01T00:00:00.000000Z"
+      "createdAt": "2024-01-01T00:00:00.000000Z"
     },
     "role": {
       "id": 1,
       "name": "Admin",
-      "guard_name": "api"
+      "guardName": "api"
     },
     "permissions": [
       "all_tasks",
@@ -286,14 +286,14 @@ JWT_REFRESH_TTL=20160
     "name": "John Doe",
     "email": "user@example.com",
     "status": 1,
-    "created_at": "2024-01-01T00:00:00.000000Z",
-    "updated_at": "2024-01-01T00:00:00.000000Z"
+    "createdAt": "2024-01-01T00:00:00.000000Z",
+    "updatedAt": "2024-01-01T00:00:00.000000Z"
   },
   "role": {
     "id": 1,
     "name": "Admin",
-    "guard_name": "api",
-    "created_at": "2024-01-01T00:00:00.000000Z"
+    "guardName": "api",
+    "createdAt": "2024-01-01T00:00:00.000000Z"
   },
   "permissions": [
     "all_tasks",

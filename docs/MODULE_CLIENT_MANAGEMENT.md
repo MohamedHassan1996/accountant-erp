@@ -622,14 +622,14 @@ Authorization: Bearer {token}
   "result": {
     "clients": [
       {
-        "id": 1,
-        "ragione_sociale": "Company Name SRL",
+        "clientId": 1,
+        "ragioneSociale": "Company Name SRL",
         "iva": "12345678901",
         "cf": "12345678901",
         "email": "info@company.com",
         "phone": "+39 123 456 7890",
-        "has_recurring_invoice": true,
-        "created_at": "2024-01-01T00:00:00.000000Z"
+        "hasRecurringInvoice": true,
+        "createdAt": "2024-01-01T00:00:00.000000Z"
       }
     ]
   },
@@ -722,26 +722,26 @@ Authorization: Bearer {token}
 ```json
 {
   "data": {
-    "id": 1,
-    "ragione_sociale": "Company Name SRL",
+    "clientId": 1,
+    "ragioneSociale": "Company Name SRL",
     "iva": "12345678901",
     "cf": "12345678901",
     "email": "info@company.com",
     "phone": "+39 123 456 7890",
     "note": "Important client",
-    "monthly_price": 500.00,
-    "payment_type_id": 1,
-    "pay_steps_id": 2,
-    "allowed_days_to_pay": 30,
-    "is_company": true,
-    "has_recurring_invoice": true,
-    "total_tax": 2.5,
-    "total_tax_description": "Additional tax",
+    "monthlyPrice": 500.00,
+    "paymentTypeId": 1,
+    "payStepsId": 2,
+    "allowedDaysToPay": 30,
+    "isCompany": true,
+    "hasRecurringInvoice": true,
+    "totalTax": 2.5,
+    "totalTaxDescription": "Additional tax",
     "sdi": "ABC1234",
     "proforma": false,
     "addresses": [
       {
-        "id": 1,
+        "clientAddressId": 1,
         "address": "Via Roma 123",
         "city": "Milano",
         "province": "MI",
@@ -750,46 +750,46 @@ Authorization: Bearer {token}
     ],
     "contacts": [
       {
-        "id": 1,
+        "clientContactId": 1,
         "name": "John Doe",
         "email": "john@company.com",
         "phone": "+39 123 456 7890",
         "cf": "RSSMRA80A01H501U"
       }
     ],
-    "bank_accounts": [
+    "bankAccounts": [
       {
-        "id": 1,
-        "bank_id": 5,
-        "bank_name": "Intesa Sanpaolo",
+        "clientBankAccountId": 1,
+        "bankId": 5,
+        "bankName": "Intesa Sanpaolo",
         "iban": "IT60X0542811101000000123456",
         "abi": "05428",
         "cab": "11101",
-        "is_main": true
+        "isMain": true
       }
     ],
-    "pay_installments": [
+    "payInstallments": [
       {
-        "id": 1,
+        "payInstallmentId": 1,
         "amount": 1000.00,
-        "start_at": "2024-01-01",
-        "end_at": "2024-12-31",
-        "parameter_value": {
-          "id": 10,
-          "parameter_value": "Annual Service"
+        "startAt": "2024-01-01",
+        "endAt": "2024-12-31",
+        "parameterValue": {
+          "parameterValueId": 10,
+          "parameterValue": "Annual Service"
         },
-        "pay_installment_sub_data": [
+        "payInstallmentSubData": [
           {
-            "id": 1,
+            "payInstallmentSubDataId": 1,
             "price": 500.00,
-            "start_at": "2024-01-01",
-            "end_at": "2024-06-30"
+            "startAt": "2024-01-01",
+            "endAt": "2024-06-30"
           },
           {
-            "id": 2,
+            "payInstallmentSubDataId": 2,
             "price": 500.00,
-            "start_at": "2024-07-01",
-            "end_at": "2024-12-31"
+            "startAt": "2024-07-01",
+            "endAt": "2024-12-31"
           }
         ]
       }
