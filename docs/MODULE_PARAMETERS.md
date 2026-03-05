@@ -299,30 +299,34 @@ pageSize       - Items per page (default: 10)
 **Response:**
 ```json
 {
-  "data": [
-    {
-      "parameterValueId": 1,
-      "parameterValue": "BANCO BPM SPA",
-      "description": "Banco BPM",
-      "isDefault": 0,
-      "code": "BPM",
-      "descriptionTwo": "",
-      "descriptionThree": ""
-    },
-    {
-      "parameterValueId": 2,
-      "parameterValue": "INTESA SANPAOLO",
-      "description": "Intesa Sanpaolo",
-      "isDefault": 1,
-      "code": "ISP",
-      "descriptionTwo": "",
-      "descriptionThree": ""
-    }
-  ],
-  "meta": {
-    "current_page": 1,
+  "result": {
+    "parameters": [
+      {
+        "parameterValueId": 1,
+        "parameterValue": "BANCO BPM SPA",
+        "description": "Banco BPM",
+        "isDefault": 0,
+        "code": "BPM",
+        "descriptionTwo": "",
+        "descriptionThree": ""
+      },
+      {
+        "parameterValueId": 2,
+        "parameterValue": "INTESA SANPAOLO",
+        "description": "Intesa Sanpaolo",
+        "isDefault": 1,
+        "code": "ISP",
+        "descriptionTwo": "",
+        "descriptionThree": ""
+      }
+    ]
+  },
+  "pagination": {
+    "total": 25,
+    "count": 10,
     "per_page": 10,
-    "total": 25
+    "current_page": 1,
+    "total_pages": 3
   }
 }
 ```
@@ -573,7 +577,7 @@ class ParameterDropdown {
   
   async load() {
     const response = await fetchParameterValues(this.parameterOrder);
-    this.values = response.data;
+    this.values = response.result.parameters;
     this.render();
   }
   
@@ -628,7 +632,7 @@ await paymentDropdown.load();
 ```javascript
 async function getDefaultParameterValue(parameterOrder) {
   const response = await fetchParameterValues(parameterOrder);
-  const defaultValue = response.data.find(v => v.isDefault === 1);
+  const defaultValue = response.result.parameters.find(v => v.isDefault === 1);
   return defaultValue;
 }
 
@@ -645,7 +649,7 @@ if (defaultBank) {
 ```javascript
 async function getHolidays() {
   const response = await fetchParameterValues(11); // Holidays
-  return response.data.map(h => ({
+  return response.result.parameters.map(h => ({
     id: h.parameterValueId,
     date: h.parameterValue, // Format: "d/m" (e.g., "1/3")
     name: h.description
@@ -676,8 +680,8 @@ await addHoliday('25/12', 'Christmas Day');
 ```javascript
 async function getCurrentInvoiceXmlNumber() {
   const response = await fetchParameterValues(13); // Invoice XML number
-  if (response.data.length > 0) {
-    return response.data[0].parameterValue; // e.g., "1/60"
+  if (response.result.parameters.length > 0) {
+    return response.result.parameters[0].parameterValue; // e.g., "1/60"
   }
   return null;
 }
