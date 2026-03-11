@@ -1412,7 +1412,7 @@ await startTask(123, 3, currentTime);
 
 ```javascript
 async function fetchActiveTasks() {
-  const response = await fetch('/api/private/active-tasks', {
+  const response = await fetch('/api/v1/user-active-tasks', {
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'

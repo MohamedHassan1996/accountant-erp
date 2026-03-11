@@ -538,22 +538,26 @@ When retrieving bank account for invoicing:
 **Response**:
 ```json
 {
-  "installments": [
-    {
-      "number": 1,
-      "amount": 100.00,
-      "startDate": "2024-01-01",
-      "endDate": "2024-01-31",
-      "dueDate": "2024-01-31"
-    },
-    {
-      "number": 2,
-      "amount": 100.00,
-      "startDate": "2024-02-01",
-      "endDate": "2024-02-29",
-      "dueDate": "2024-02-29"
-    }
-  ]
+  "data": {
+    "payInstallments": [
+      {
+        "startAt": "2024-01-01",
+        "endAt": "2024-01-31",
+        "parameterValueName": "",
+        "amount": 100.00,
+        "paymentTypeId": 1,
+        "payInstallmentSubData": []
+      },
+      {
+        "startAt": "2024-02-01",
+        "endAt": "2024-02-29",
+        "parameterValueName": "",
+        "amount": 100.00,
+        "paymentTypeId": 1,
+        "payInstallmentSubData": []
+      }
+    ]
+  }
 }
 ```
 
@@ -868,29 +872,34 @@ Authorization: Bearer {token}
 **Response**:
 ```json
 {
-  "installments": [
-    {
-      "number": 1,
-      "amount": 400.00,
-      "startDate": "2024-01-01",
-      "endDate": "2024-04-30",
-      "dueDate": "2024-04-30"
-    },
-    {
-      "number": 2,
-      "amount": 400.00,
-      "startDate": "2024-05-01",
-      "endDate": "2024-08-31",
-      "dueDate": "2024-08-31"
-    },
-    {
-      "number": 3,
-      "amount": 400.00,
-      "startDate": "2024-09-01",
-      "endDate": "2024-12-31",
-      "dueDate": "2024-12-31"
-    }
-  ]
+  "data": {
+    "payInstallments": [
+      {
+        "startAt": "2024-01-01",
+        "endAt": "2024-04-30",
+        "parameterValueName": "",
+        "amount": 400.00,
+        "paymentTypeId": 1,
+        "payInstallmentSubData": []
+      },
+      {
+        "startAt": "2024-05-01",
+        "endAt": "2024-08-31",
+        "parameterValueName": "",
+        "amount": 400.00,
+        "paymentTypeId": 1,
+        "payInstallmentSubData": []
+      },
+      {
+        "startAt": "2024-09-01",
+        "endAt": "2024-12-31",
+        "parameterValueName": "",
+        "amount": 400.00,
+        "paymentTypeId": 1,
+        "payInstallmentSubData": []
+      }
+    ]
+  }
 }
 ```
 
@@ -1453,17 +1462,17 @@ const calculateInstallments = async (clientId, totalPrice, payStepsId, startDate
       }
     );
     
-    const data = await response.json();
+    const result = await response.json();
     
     console.log('Installment Schedule:');
-    data.installments.forEach(inst => {
-      console.log(`Installment ${inst.number}:`);
+    result.data.payInstallments.forEach((inst, index) => {
+      console.log(`Installment ${index + 1}:`);
       console.log(`  Amount: €${inst.amount}`);
-      console.log(`  Period: ${inst.startDate} to ${inst.endDate}`);
-      console.log(`  Due: ${inst.dueDate}`);
+      console.log(`  Period: ${inst.startAt} to ${inst.endAt}`);
+      console.log(`  Payment Type ID: ${inst.paymentTypeId}`);
     });
     
-    return data.installments;
+    return result.data.payInstallments;
   } catch (error) {
     console.error('Error calculating installments:', error);
   }

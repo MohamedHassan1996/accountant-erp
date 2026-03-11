@@ -298,7 +298,7 @@ $sheet->getStyle('F' . $row)->getNumberFormat()->setFormatCode('[h]:mm:ss');
 
 ### Dashboard Statistics
 
-#### GET /api/private/reports
+#### GET /api/v1/reports
 Get dashboard statistics.
 
 **Headers:**
@@ -392,7 +392,7 @@ GET /api/v1/export-invoice-report?type=csv&invoiceIds[]=123
 
 ### Task Export
 
-#### GET /api/private/admin-tasks/export
+#### GET /api/v1/admin-ticket-export
 Export tasks to Excel.
 
 **Headers:**
@@ -420,7 +420,7 @@ filter[endDate]          - Filter by end date (YYYY-MM-DD)
 
 ### Client Payment Export
 
-#### GET /api/private/client-payment-export
+#### GET /api/v1/export-client-payment
 Export client installments to Excel.
 
 **Headers:**
@@ -443,7 +443,7 @@ Authorization: Bearer {token}
 
 ```javascript
 async function fetchDashboardStats() {
-  const response = await fetch('/api/private/reports', {
+  const response = await fetch('/api/v1/reports', {
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -556,7 +556,7 @@ async function exportTasks(filters = {}) {
   if (filters.startDate) params.append('filter[startDate]', filters.startDate);
   if (filters.endDate) params.append('filter[endDate]', filters.endDate);
   
-  const response = await fetch(`/api/private/admin-tasks/export?${params}`, {
+  const response = await fetch(`/api/v1/admin-ticket-export?${params}`, {
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -581,7 +581,7 @@ await exportTasks({
 
 ```javascript
 async function exportClientPayments() {
-  const response = await fetch('/api/private/client-payment-export', {
+  const response = await fetch('/api/v1/export-client-payment', {
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -722,7 +722,7 @@ Note: Export permissions are typically controlled by the respective module permi
 #### Get Dashboard Statistics
 
 ```bash
-curl -X GET https://accountant-api.testingelmo.com/api/private/reports \
+curl -X GET https://accountant-api.testingelmo.com/api/v1/reports \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -750,14 +750,14 @@ curl -X GET "https://accountant-api.testingelmo.com/api/v1/export-invoice-report
 #### Export Tasks
 
 ```bash
-curl -X GET "https://accountant-api.testingelmo.com/api/private/admin-tasks/export?filter[status]=2&filter[startDate]=2026-03-01&filter[endDate]=2026-03-31" \
+curl -X GET "https://accountant-api.testingelmo.com/api/v1/admin-ticket-export?filter[status]=2&filter[startDate]=2026-03-01&filter[endDate]=2026-03-31" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 #### Export Client Payments
 
 ```bash
-curl -X GET https://accountant-api.testingelmo.com/api/private/client-payment-export \
+curl -X GET https://accountant-api.testingelmo.com/api/v1/export-client-payment \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 

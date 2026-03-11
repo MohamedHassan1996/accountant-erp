@@ -830,8 +830,8 @@ await addInvoiceDetail(123, 100.00, 90.00, 'Additional consulting service');
 
 ```javascript
 async function markInvoiceAsPaid(invoiceId, payDate) {
-  const response = await fetch('/api/private/pay-invoice/update', {
-    method: 'POST',
+  const response = await fetch('/api/v1/invoices/pay-invoice', {
+    method: 'PUT',
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -1037,7 +1037,7 @@ curl -X GET "https://accountant-api.testingelmo.com/api/v1/invoices?filter[unass
 #### Mark Invoice as Paid
 
 ```bash
-curl -X POST https://accountant-api.testingelmo.com/api/private/pay-invoice/update \
+curl -X PUT https://accountant-api.testingelmo.com/api/v1/invoices/pay-invoice \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -1049,7 +1049,7 @@ curl -X POST https://accountant-api.testingelmo.com/api/private/pay-invoice/upda
 #### Export to XML
 
 ```bash
-curl -X POST https://accountant-api.testingelmo.com/api/private/invoice-report-export/xml \
+curl -X GET "https://accountant-api.testingelmo.com/api/v1/export-invoice-report?invoiceId=123&type=xml" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -1061,7 +1061,7 @@ curl -X POST https://accountant-api.testingelmo.com/api/private/invoice-report-e
 #### Export to PDF
 
 ```bash
-curl -X POST https://accountant-api.testingelmo.com/api/private/invoice-report-export/pdf \
+curl -X GET "https://accountant-api.testingelmo.com/api/v1/export-invoice-report?invoiceId=123&type=pdf" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

@@ -282,7 +282,7 @@ This ensures sequential invoice numbering with database locking.
 
 ### Parameter Value Management
 
-#### GET /api/private/parameter-values
+#### GET /api/v1/parameter-values
 Get all parameter values for a specific parameter type.
 
 **Headers:**
@@ -331,7 +331,7 @@ pageSize       - Items per page (default: 10)
 }
 ```
 
-#### POST /api/private/parameter-values/create
+#### POST /api/v1/parameter-values/create
 Create new parameter value.
 
 **Headers:**
@@ -360,7 +360,7 @@ Content-Type: application/json
 }
 ```
 
-#### GET /api/private/parameter-values/edit
+#### GET /api/v1/parameter-values/edit
 Get parameter value details for editing.
 
 **Headers:**
@@ -386,7 +386,7 @@ parameterValueId - Parameter value ID (required)
 }
 ```
 
-#### POST /api/private/parameter-values/update
+#### PUT /api/v1/parameter-values/update
 Update parameter value.
 
 **Headers:**
@@ -415,7 +415,7 @@ Content-Type: application/json
 }
 ```
 
-#### POST /api/private/parameter-values/delete
+#### DELETE /api/v1/parameter-values/delete
 Delete parameter value (soft delete).
 
 **Headers:**
@@ -476,7 +476,7 @@ async function fetchParameterValues(parameterOrder, pageSize = 100) {
   params.append('parameterOrder', parameterOrder);
   params.append('pageSize', pageSize);
   
-  const response = await fetch(`/api/private/parameter-values?${params}`, {
+  const response = await fetch(`/api/v1/parameter-values?${params}`, {
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -499,7 +499,7 @@ const paymentTypes = await fetchParameterValues(3);
 
 ```javascript
 async function createParameterValue(parameterData) {
-  const response = await fetch('/api/private/parameter-values/create', {
+  const response = await fetch('/api/v1/parameter-values/create', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -534,8 +534,8 @@ await createParameterValue({
 
 ```javascript
 async function updateParameterValue(parameterData) {
-  const response = await fetch('/api/private/parameter-values/update', {
-    method: 'POST',
+  const response = await fetch('/api/v1/parameter-values/update', {
+    method: 'PUT',
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -737,14 +737,14 @@ The following permissions control access to parameter features:
 #### Get Parameter Values
 
 ```bash
-curl -X GET "https://accountant-api.testingelmo.com/api/private/parameter-values?parameterOrder=10&pageSize=20" \
+curl -X GET "https://accountant-api.testingelmo.com/api/v1/parameter-values?parameterOrder=10&pageSize=20" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 #### Create Parameter Value
 
 ```bash
-curl -X POST https://accountant-api.testingelmo.com/api/private/parameter-values/create \
+curl -X POST https://accountant-api.testingelmo.com/api/v1/parameter-values/create \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -759,7 +759,7 @@ curl -X POST https://accountant-api.testingelmo.com/api/private/parameter-values
 #### Update Parameter Value
 
 ```bash
-curl -X POST https://accountant-api.testingelmo.com/api/private/parameter-values/update \
+curl -X PUT https://accountant-api.testingelmo.com/api/v1/parameter-values/update \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -774,7 +774,7 @@ curl -X POST https://accountant-api.testingelmo.com/api/private/parameter-values
 #### Delete Parameter Value
 
 ```bash
-curl -X POST https://accountant-api.testingelmo.com/api/private/parameter-values/delete \
+curl -X DELETE https://accountant-api.testingelmo.com/api/v1/parameter-values/delete \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

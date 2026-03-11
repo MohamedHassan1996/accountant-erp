@@ -140,7 +140,7 @@
         <table>
             <tr>
                 <td>Imponibile</td>
-                <td class="text-right">{{ number_format($invoiceTotal, 2) }} €</td>
+                <td class="text-right">{{ number_format($invoiceTaxableTotal, 2) }} €</td>
             </tr>
             <tr>
                 <td>Iva</td>

@@ -402,6 +402,9 @@ public function generateInvoiceXml(array $data)
 
     /* --- DatiTrasmissione --- */
     $trasm = $header->addChild('DatiTrasmissione');
+
+   /*
+
     $idTras = $trasm->addChild('IdTrasmittente');
     if ($usePassepartout) {
         $idTras->addChild('IdPaese', 'SM');
@@ -412,6 +415,15 @@ public function generateInvoiceXml(array $data)
         $idTras->addChild('IdCodice', '00987920196');
         $trasm->addChild('CodiceDestinatario', $safe($data['client']['sdi'] ?? '0000000'));
     }
+    */
+    $idTras = $trasm->addChild('IdTrasmittente');
+if ($usePassepartout) {
+    $idTras->addChild('IdPaese', 'SM');
+    $idTras->addChild('IdCodice', '03473');
+} else {
+    $idTras->addChild('IdPaese', 'IT');
+    $idTras->addChild('IdCodice', '00987920196');
+}
 
     // Check if invoice already has XML number, if not generate new one
     if (!empty($data['invoice']->invoice_xml_number)) {
@@ -440,8 +452,12 @@ public function generateInvoiceXml(array $data)
         });
     }
 
+   // $trasm->addChild('ProgressivoInvio', $invoiceNewNumber);
+//    $trasm->addChild('FormatoTrasmissione', 'FPR12');
+
     $trasm->addChild('ProgressivoInvio', $invoiceNewNumber);
-    $trasm->addChild('FormatoTrasmissione', 'FPR12');
+$trasm->addChild('FormatoTrasmissione', 'FPR12');
+$trasm->addChild('CodiceDestinatario', $safe($data['client']['sdi'] ?? '0000000'));
 
     /* --- CedentePrestatore --- */
     $ced = $header->addChild('CedentePrestatore');
@@ -547,9 +563,15 @@ public function generateInvoiceXml(array $data)
         $det->addChild('PrezzoTotale', number_format((float)$item['priceAfterDiscount'], 2, '.', ''));
         $det->addChild('AliquotaIVA', number_format((float)($item['additionalTaxPercentage'] ?? 22), 2, '.', ''));
         */
-
+        $aliquota = (float)($item['additionalTaxPercentage'] ?? 22);
         $det = $beni->addChild('DettaglioLinee');
 $det->addChild('NumeroLinea', (string)$line);
+if ($aliquota != 0) {
+    // per servizi normali manteniamo CodiceArticolo
+    $codArt = $det->addChild('CodiceArticolo');
+    $codArt->addChild('CodiceTipo', 'PRESTAZIONE');
+    $codArt->addChild('CodiceValore', $item['serviceCode'] ?? '..');
+}
 
 $det->addChild('Descrizione', $safe($item['description'] ?? 'Senza descrizione'));
 $det->addChild('Quantita', '1.00');
@@ -558,17 +580,12 @@ $det->addChild('UnitaMisura', 'NR');
 $det->addChild('PrezzoUnitario', number_format((float)$item['priceAfterDiscount'], 6, '.', ''));
 $det->addChild('PrezzoTotale', number_format((float)$item['priceAfterDiscount'], 2, '.', ''));
 
-$aliquota = (float)($item['additionalTaxPercentage'] ?? 22);
+
 $det->addChild('AliquotaIVA', number_format($aliquota, 2, '.', ''));
 
 if ($aliquota == 0) {
     // per IVA 0% serve Natura
     $det->addChild('Natura', $item['serviceCode'] ?? 'N1');
-} else {
-    // per servizi normali manteniamo CodiceArticolo
-    $codArt = $det->addChild('CodiceArticolo');
-    $codArt->addChild('CodiceTipo', 'PRESTAZIONE');
-    $codArt->addChild('CodiceValore', $item['serviceCode'] ?? '..');
 }
 
 
