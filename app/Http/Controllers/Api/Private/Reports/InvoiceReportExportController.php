@@ -70,6 +70,7 @@ class InvoiceReportExportController extends Controller
         //$totalTax = 0;
         $invoiceTotalToCalcTax = 0;
         $invoiceTotal = 0;
+        $invoiceTaxableTotal = 0;
 
         $invoiceStartAt = Carbon::parse($invoice->created_at)->format('d/m/Y');
 
@@ -116,9 +117,10 @@ class InvoiceReportExportController extends Controller
             //$totalTax += $invoiceItem->price_after_discount * 0.22;
             $invoiceTotal += $invoiceItem->price_after_discount;
             $invoiceTotalToCalcTax += $invoiceItem->price_after_discount;
+            $invoiceTaxableTotal += $invoiceItem->price_after_discount;
 
             if ($invoiceItem->invoiceable_type == Task::class && $invoiceItemData->serviceCategory->extra_is_pricable) {
-                $invoiceItemsData[] = [
+               /* $invoiceItemsData[] = [
                     'description' => $invoiceItemData->serviceCategory->extra_price_description,
                     'price' => $invoiceItem->price == 0 ? $invoiceItemData->serviceCategory->extra_price : $invoiceItem->price,
                     'priceAfterDiscount' => $invoiceItem->price_after_discount == 0 ? $invoiceItemData->serviceCategory->extra_price : $invoiceItem->price,
@@ -126,6 +128,18 @@ class InvoiceReportExportController extends Controller
                     'serviceCode' => $invoiceItemData->serviceCategory->extra_code ?? '..',
                     'test' => 'test'
                 ];
+                */
+
+                $extraPrice = $invoiceItemData->serviceCategory->extra_price;
+
+$invoiceItemsData[] = [
+    'description' => $invoiceItemData->serviceCategory->extra_price_description,
+    'price' => $extraPrice,
+    'priceAfterDiscount' => $extraPrice,
+    'additionalTaxPercentage' => 0,
+    'serviceCode' => $invoiceItemData->serviceCategory->extra_code ?? '..',
+    'test' => 'test'
+];
 
                 $invoiceTotal += $invoiceItemData->serviceCategory->extra_price;
             }
@@ -134,7 +148,8 @@ class InvoiceReportExportController extends Controller
         $client = Client::find($invoice->client_id);
 
 
-        if ($client->total_tax > 0) {
+      /*
+      if ($client->total_tax > 0) {
             $invoiceItemsData[] = [
                 'description' => $client->total_tax_description ?? '',
                 'price' => $invoiceTotal * ($client->total_tax / 100),
@@ -155,8 +170,28 @@ class InvoiceReportExportController extends Controller
 
 
         }
+        */
+
+        if ($client->total_tax > 0) {
+    //$clientTaxAmount = $invoiceTotal * ($client->total_tax / 100);
+    $clientTaxAmount = $invoiceTaxableTotal * ($client->total_tax / 100);
+
+    $invoiceItemsData[] = [
+        'description' => $client->total_tax_description ?? '',
+        'price' => $clientTaxAmount,
+        'priceAfterDiscount' => $clientTaxAmount,
+        'additionalTaxPercentage' => 22,
+        'serviceCode' => '00000001'
+    ];
+
+    $invoiceTotal += $clientTaxAmount;
 
 
+    $invoiceTotalToCalcTax += $invoiceTotalToCalcTax * ($client->total_tax / 100);
+
+
+    $invoiceTaxableTotal += $clientTaxAmount;
+}
 
         $clientAddressFormatted = ClientAddress::where('client_id', $client->id)->first()?->address ?? "";
 
@@ -222,6 +257,7 @@ class InvoiceReportExportController extends Controller
             'invoiceItems' => $invoiceItemsData,
             'invoiceTotalTax' => $invoiceTotalToCalcTax,
             'invoiceTotal' => $invoiceTotal,
+             'invoiceTaxableTotal' => $invoiceTaxableTotal,
             'invoiceTotalWithTax' => $invoiceTotal + $invoiceTotalToCalcTax,
             'client' => $client,
             'clientAddress' => $clientAddressFormatted,
@@ -366,6 +402,9 @@ public function generateInvoiceXml(array $data)
 
     /* --- DatiTrasmissione --- */
     $trasm = $header->addChild('DatiTrasmissione');
+
+   /*
+
     $idTras = $trasm->addChild('IdTrasmittente');
     if ($usePassepartout) {
         $idTras->addChild('IdPaese', 'SM');
@@ -376,6 +415,15 @@ public function generateInvoiceXml(array $data)
         $idTras->addChild('IdCodice', '00987920196');
         $trasm->addChild('CodiceDestinatario', $safe($data['client']['sdi'] ?? '0000000'));
     }
+    */
+    $idTras = $trasm->addChild('IdTrasmittente');
+if ($usePassepartout) {
+    $idTras->addChild('IdPaese', 'SM');
+    $idTras->addChild('IdCodice', '03473');
+} else {
+    $idTras->addChild('IdPaese', 'IT');
+    $idTras->addChild('IdCodice', '00987920196');
+}
 
     // Check if invoice already has XML number, if not generate new one
     if (!empty($data['invoice']->invoice_xml_number)) {
@@ -404,8 +452,12 @@ public function generateInvoiceXml(array $data)
         });
     }
 
+   // $trasm->addChild('ProgressivoInvio', $invoiceNewNumber);
+//    $trasm->addChild('FormatoTrasmissione', 'FPR12');
+
     $trasm->addChild('ProgressivoInvio', $invoiceNewNumber);
-    $trasm->addChild('FormatoTrasmissione', 'FPR12');
+$trasm->addChild('FormatoTrasmissione', 'FPR12');
+$trasm->addChild('CodiceDestinatario', $safe($data['client']['sdi'] ?? '0000000'));
 
     /* --- CedentePrestatore --- */
     $ced = $header->addChild('CedentePrestatore');
@@ -497,6 +549,7 @@ public function generateInvoiceXml(array $data)
     $line = 1;
     foreach (array_values($data['invoiceItems']) as $item) {
         if ((float)($item['priceAfterDiscount'] ?? 0) <= 0) continue;
+/*
 
         $det = $beni->addChild('DettaglioLinee');
         $det->addChild('NumeroLinea', (string)$line);
@@ -509,14 +562,63 @@ public function generateInvoiceXml(array $data)
         $det->addChild('PrezzoUnitario', number_format((float)$item['priceAfterDiscount'], 2, '.', ''));
         $det->addChild('PrezzoTotale', number_format((float)$item['priceAfterDiscount'], 2, '.', ''));
         $det->addChild('AliquotaIVA', number_format((float)($item['additionalTaxPercentage'] ?? 22), 2, '.', ''));
+        */
+        $aliquota = (float)($item['additionalTaxPercentage'] ?? 22);
+        $det = $beni->addChild('DettaglioLinee');
+$det->addChild('NumeroLinea', (string)$line);
+if ($aliquota != 0) {
+    // per servizi normali manteniamo CodiceArticolo
+    $codArt = $det->addChild('CodiceArticolo');
+    $codArt->addChild('CodiceTipo', 'PRESTAZIONE');
+    $codArt->addChild('CodiceValore', $item['serviceCode'] ?? '..');
+}
+
+$det->addChild('Descrizione', $safe($item['description'] ?? 'Senza descrizione'));
+$det->addChild('Quantita', '1.00');
+$det->addChild('UnitaMisura', 'NR');
+
+$det->addChild('PrezzoUnitario', number_format((float)$item['priceAfterDiscount'], 6, '.', ''));
+$det->addChild('PrezzoTotale', number_format((float)$item['priceAfterDiscount'], 2, '.', ''));
+
+
+$det->addChild('AliquotaIVA', number_format($aliquota, 2, '.', ''));
+
+if ($aliquota == 0) {
+    // per IVA 0% serve Natura
+    $det->addChild('Natura', $item['serviceCode'] ?? 'N1');
+}
+
+
+
+
         $line++;
     }
 
+    $extraTotal = 0;
+
+foreach ($data['invoiceItems'] as $item) {
+    if ((float)($item['additionalTaxPercentage'] ?? 22) == 0) {
+        $extraTotal += (float)$item['priceAfterDiscount'];
+    }
+}
+
     $riep = $beni->addChild('DatiRiepilogo');
     $riep->addChild('AliquotaIVA', '22.00');
-    $riep->addChild('ImponibileImporto', number_format((float)$data['invoiceTotal'], 2, '.', ''));
+   // $riep->addChild('ImponibileImporto', number_format((float)$data['invoiceTotal'], 2, '.', ''));
+    $riep->addChild('ImponibileImporto', number_format((float)$data['invoiceTaxableTotal'], 2, '.', ''));
     $riep->addChild('Imposta', number_format((float)$data['invoiceTotalTax'], 2, '.', ''));
     $riep->addChild('EsigibilitaIVA', 'I');
+
+    if ($extraTotal > 0) {
+
+    $riepN1 = $beni->addChild('DatiRiepilogo');
+    $riepN1->addChild('AliquotaIVA', '0.00');
+    $riepN1->addChild('Natura', 'N1');
+    $riepN1->addChild('ImponibileImporto', number_format($extraTotal, 2, '.', ''));
+    $riepN1->addChild('Imposta', '0.00');
+    $riepN1->addChild('RiferimentoNormativo', 'Operazione Esclusa art.15 DPR 633/72');
+
+}
 
     /* ================= PAGAMENTO ================= */
     $pag = $body->addChild('DatiPagamento');
