@@ -39,6 +39,8 @@ class InvoiceReportExportController extends Controller
             return $this->generateInvoicePdf($this->getInvoiceData($request));
         } elseif($request->type == 'csv'){
             return $this->generateInvoiceExcel($this->getInvoiceData($request));
+        } elseif($request->type == 'xlsx'){
+            return $this->generateSimpleXlsx($this->getInvoiceData($request));
         }elseif($request->type == 'xml'){
             $data = $this->getInvoiceData($request);
 
@@ -287,6 +289,47 @@ $invoiceItemsData[] = [
         $url = asset('storage/' . $path);
 
         return response()->json(['path' => env('APP_URL') . $url]);
+    }
+
+    public function generateSimpleXlsx(array $data)
+    {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $sheet->setCellValue('A1', 'Cliente');
+        $sheet->setCellValue('B1', 'Descrizione');
+        $sheet->setCellValue('C1', 'Totale');
+
+        $sheet->getStyle('A1:C1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:C1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        $row = 2;
+        foreach ($data['invoiceItems'] as $entry) {
+            $sheet->setCellValue('A' . $row, $data['client']->ragione_sociale ?? '');
+            $sheet->setCellValue('B' . $row, $entry['description'] ?? '');
+            $sheet->setCellValue('C' . $row, $entry['priceAfterDiscount'] ?? 0);
+            $row++;
+        }
+
+        $sheet->getStyle('A1:C' . ($row - 1))
+            ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+
+        foreach (['A', 'B', 'C'] as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $sheet->setAutoFilter('A1:C1');
+
+        $fileName = 'invoice_' . $data['invoice']->id . '_' . now()->format('Y_m_d_H_i_s') . '.xlsx';
+        $filePath = 'exportedInvoices/' . $fileName;
+
+        ob_start();
+        (new Xlsx($spreadsheet))->save('php://output');
+        Storage::disk('public')->put($filePath, ob_get_clean());
+
+        return response()->json([
+            'path' => env('APP_URL') . parse_url(asset('storage/' . $filePath), PHP_URL_PATH),
+        ]);
     }
 
     public function generateInvoiceExcel($data)

@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\Private\Reports\ReportController;
 use App\Http\Controllers\Api\Private\Task\AdminTaskController;
 use App\Http\Controllers\Api\Private\Invoice\InvoiceController;
 use App\Http\Controllers\Api\Private\Invoice\PayInvoiceController;
+use App\Http\Controllers\Api\Private\Invoice\PaidInvoicesTotalController;
 use App\Http\Controllers\Api\Private\Task\ActiveTaskController;
 use App\Http\Controllers\Api\Private\Task\TaskTimeLogController;
 use App\Http\Controllers\Api\Private\Parameter\ParameterController;
@@ -178,6 +179,7 @@ Route::prefix('v1/invoices')->group(function(){
     Route::post('add-tasks', [InvoiceController::class, 'addTasksToInvoice']);
     Route::post('generate-xml-number', [InvoiceController::class, 'generateXmlNumber']);
     Route::put('pay-invoice', [PayInvoiceController::class, 'update']);
+    Route::get('paid-total', PaidInvoicesTotalController::class);
 });
 
 Route::prefix('v1/invoice-details')->group(function(){
