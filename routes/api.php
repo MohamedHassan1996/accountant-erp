@@ -181,7 +181,7 @@ Route::prefix('v1/invoices')->group(function(){
     Route::put('pay-invoice', [PayInvoiceController::class, 'update']);
 });
 
-Route::get('invoice-income-stats', PaidInvoicesTotalController::class);
+Route::get('v1/invoice-income-stats', PaidInvoicesTotalController::class);
 
 
 Route::prefix('v1/invoice-details')->group(function(){
