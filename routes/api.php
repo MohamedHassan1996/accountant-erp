@@ -179,8 +179,10 @@ Route::prefix('v1/invoices')->group(function(){
     Route::post('add-tasks', [InvoiceController::class, 'addTasksToInvoice']);
     Route::post('generate-xml-number', [InvoiceController::class, 'generateXmlNumber']);
     Route::put('pay-invoice', [PayInvoiceController::class, 'update']);
-    Route::get('paid-total', PaidInvoicesTotalController::class);
 });
+
+Route::get('invoice-income-stats', PaidInvoicesTotalController::class);
+
 
 Route::prefix('v1/invoice-details')->group(function(){
     Route::get('', [InvoiceDetailController::class, 'index']);
