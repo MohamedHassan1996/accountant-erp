@@ -31,6 +31,8 @@ class PaidInvoicesTotalController extends Controller
                 ->when($request->filled('month'), fn($q) => $q->whereMonth('invoices.pay_date', $request->month))
                 ->sum(DB::raw('COALESCE(invoice_details.price_after_discount, invoice_details.price, 0)'));
 
+            $totalWithTax = round($total * 1.22, 2);
+
             $overdueCount = Invoice::where('pay_status', 0)
                 ->whereNotNull('end_at')
                 ->where('end_at', '<', Carbon::today())
@@ -44,7 +46,7 @@ class PaidInvoicesTotalController extends Controller
                 ->count();
 
             return response()->json([
-                'totalAmountCollected' => round($total, 2),
+                'totalAmountCollected' => $totalWithTax,
                 'overdueUnpaidCount'   => $overdueCount,
                 'aboutToExpireCount'   => $aboutToExpireCount,
             ], 200);

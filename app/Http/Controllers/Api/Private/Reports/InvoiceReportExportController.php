@@ -305,9 +305,13 @@ $invoiceItemsData[] = [
 
         $row = 2;
         foreach ($data['invoiceItems'] as $entry) {
+            $price = (float)($entry['priceAfterDiscount'] ?? 0);
+            $tax   = (float)($entry['additionalTaxPercentage'] ?? 22);
+            $total = $tax > 0 ? $price * (1 + $tax / 100) : $price;
+
             $sheet->setCellValue('A' . $row, $data['client']->ragione_sociale ?? '');
             $sheet->setCellValue('B' . $row, $entry['description'] ?? '');
-            $sheet->setCellValue('C' . $row, $entry['priceAfterDiscount'] ?? 0);
+            $sheet->setCellValue('C' . $row, round($total, 2));
             $row++;
         }
 
