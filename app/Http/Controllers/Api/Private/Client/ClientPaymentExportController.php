@@ -67,9 +67,9 @@ public function index(Request $request)
 
             // Main installment row
             $sheet->setCellValue('A' . $row, $client->ragione_sociale);
-            $sheet->setCellValue('B' . $row, $installment->start_at);
+            $sheet->setCellValue('B' . $row, $installment->start_at ? \Carbon\Carbon::parse($installment->start_at)->format('d/m/Y') : '');
             $sheet->setCellValue('C' . $row, $installment->description);
-            $sheet->setCellValue('D' . $row, $installment->amount);
+            $sheet->setCellValue('D' . $row, $installment->amount ?? 0);
             $row++;
 
             // Sub installments (each as separated row)
@@ -85,9 +85,9 @@ public function index(Request $request)
 
             foreach ($subs as $sub) {
                 $sheet->setCellValue('A' . $row, $client->ragione_sociale);
-                $sheet->setCellValue('B' . $row, null);
+                $sheet->setCellValue('B' . $row, '');
                 $sheet->setCellValue('C' . $row, $sub->description);
-                $sheet->setCellValue('D' . $row, $sub->price);
+                $sheet->setCellValue('D' . $row, $sub->price ?? 0);
                 $row++;
             }
         }
@@ -110,11 +110,17 @@ public function index(Request $request)
     $proposta = $spreadsheet->createSheet();
     $proposta->setTitle('Proposta');
 
-    // Get parameter_values where parameter_order = 8 or 9
+    // Get parameter_values where parameter_order = 8 or 9 — only those actually used in installments
     $paramValues = DB::table('parameter_values as pv')
         ->leftJoin('parameters as p', 'p.id', '=', 'pv.parameter_id')
         ->whereIn('p.parameter_order', [8, 9])
         ->whereNull('pv.deleted_at')
+        ->whereExists(function ($query) {
+            $query->select(DB::raw(1))
+                ->from('client_pay_installments as cpi')
+                ->whereColumn('cpi.parameter_value_id', 'pv.id')
+                ->whereNull('cpi.deleted_at');
+        })
         ->select('pv.id', 'pv.parameter_value')
         ->orderBy('p.parameter_order')
         ->orderBy('pv.parameter_value')
@@ -183,12 +189,26 @@ public function index(Request $request)
     $macro = $spreadsheet->createSheet();
     $macro->setTitle('Macro_Servizi');
 
-    // Categories = parameter_values where parameter_order = 12
-    $categories = DB::table('parameter_values')
-        ->whereNull('deleted_at')
-        ->where('parameter_order', 12)
-        ->select('id', 'parameter_value')
-        ->orderBy('parameter_value')
+    // Categories = only those linked to parameter_values actually used in installments
+    $categories = DB::table('parameter_values as cat')
+        ->whereNull('cat.deleted_at')
+        ->where('cat.parameter_order', 12)
+        ->whereExists(function ($query) {
+            $query->select(DB::raw(1))
+                ->from('parameter_values as pv')
+                ->join('parameters as p', 'p.id', '=', 'pv.parameter_id')
+                ->whereIn('p.parameter_order', [8, 9])
+                ->whereNull('pv.deleted_at')
+                ->whereColumn(DB::raw('CAST(pv.description2 AS UNSIGNED)'), 'cat.id')
+                ->whereExists(function ($q2) {
+                    $q2->select(DB::raw(1))
+                        ->from('client_pay_installments as cpi')
+                        ->whereColumn('cpi.parameter_value_id', 'pv.id')
+                        ->whereNull('cpi.deleted_at');
+                });
+        })
+        ->select('cat.id', 'cat.parameter_value')
+        ->orderBy('cat.parameter_value')
         ->get();
 
     // Build category column map: category parameter_value (string) => col index
@@ -271,6 +291,20 @@ public function index(Request $request)
     $riepilogoData = DB::table('parameter_values as cat')
         ->where('cat.parameter_order', 12)
         ->whereNull('cat.deleted_at')
+        ->whereExists(function ($query) {
+            $query->select(DB::raw(1))
+                ->from('parameter_values as pv')
+                ->join('parameters as p', 'p.id', '=', 'pv.parameter_id')
+                ->whereIn('p.parameter_order', [8, 9])
+                ->whereNull('pv.deleted_at')
+                ->whereColumn(DB::raw('CAST(pv.description2 AS UNSIGNED)'), 'cat.id')
+                ->whereExists(function ($q2) {
+                    $q2->select(DB::raw(1))
+                        ->from('client_pay_installments as cpi')
+                        ->whereColumn('cpi.parameter_value_id', 'pv.id')
+                        ->whereNull('cpi.deleted_at');
+                });
+        })
         ->leftJoin('parameter_values as pv', function($join) {
             $join->on(DB::raw('CAST(pv.description2 AS UNSIGNED)'), '=', 'cat.id')
                  ->whereIn('pv.parameter_order', [8, 9]);

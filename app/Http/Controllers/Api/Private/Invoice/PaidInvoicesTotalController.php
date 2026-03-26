@@ -44,6 +44,9 @@ use Illuminate\Http\Request;class PaidInvoicesTotalController extends Controller
         $invoices = Invoice::with(['invoiceDetails', 'client'])
             ->when(!is_null($paidStatus), fn($q) => $q->where('pay_status', $paidStatus))
             ->whereNull('invoices.deleted_at')
+            ->when($paidStatus === 0, fn($q) => $q->where(fn($q2) =>
+                $q2->whereNull('invoices.end_at')->orWhere('invoices.end_at', '>=', now()->toDateString())
+            ))
             ->when($start,    fn($q) => $q->whereDate($dateColumn, '>=', $start))
             ->when($end,      fn($q) => $q->whereDate($dateColumn, '<=', $end))
             ->when($year,     fn($q) => $q->whereYear($dateColumn, $year))
