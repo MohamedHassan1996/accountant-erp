@@ -27,11 +27,6 @@ class ClientPaymentExportController extends Controller
 
 public function index(Request $request)
 {
-    $clients = DB::table('clients')
-        ->whereNull('deleted_at')
-        ->orderBy('ragione_sociale')
-        ->get();
-
     $spreadsheet = new Spreadsheet();
     $sheet = $spreadsheet->getActiveSheet();
 
@@ -48,50 +43,51 @@ public function index(Request $request)
 
     $row = 2;
 
-    foreach ($clients as $client) {
+    // Get all installments with client info (only those with parameter_order 8 or 9)
+    $installments = DB::table('client_pay_installments as cpi')
+        ->whereNull('cpi.deleted_at')
+        ->join('clients as c', 'c.id', '=', 'cpi.client_id')
+        ->whereNull('c.deleted_at')
+        ->leftJoin('parameter_values as pv', 'pv.id', '=', 'cpi.parameter_value_id')
+        ->join('parameters as p', 'p.id', '=', 'pv.parameter_id')
+        ->whereIn('p.parameter_order', [8, 9])
+        ->select(
+            'cpi.id',
+            'cpi.start_at',
+            'c.ragione_sociale',
+            'pv.description as description',
+            'cpi.amount'
+        )
+        ->orderBy('c.ragione_sociale')
+        ->orderBy('cpi.start_at')
+        ->get();
 
-        // Get installments per client
-        $installments = DB::table('client_pay_installments as cpi')
-            ->where('cpi.client_id', $client->id)
-            ->whereNull('cpi.deleted_at')
-            ->leftJoin('parameter_values as pv', 'pv.id', '=', 'cpi.parameter_value_id')
-            ->join('parameters as p', 'p.id', '=', 'pv.parameter_id')
-            ->whereIn('p.parameter_order', [8, 9])
+    foreach ($installments as $installment) {
+
+        // Main installment row
+        $sheet->setCellValue('A' . $row, $installment->ragione_sociale);
+        $sheet->setCellValue('B' . $row, $installment->start_at ? Carbon::parse($installment->start_at)->format('d/m/Y') : '');
+        $sheet->setCellValue('C' . $row, $installment->description);
+        $sheet->setCellValue('D' . $row, $installment->amount ?? 0);
+        $row++;
+
+        // Sub installments (each as separated row)
+        $subs = DB::table('client_pay_installment_sub_data as sub')
+            ->where('sub.client_pay_installment_id', $installment->id)
+            ->whereNull('sub.deleted_at')
+            ->leftJoin('parameter_values as pv', 'pv.id', '=', 'sub.parameter_value_id')
             ->select(
-                'cpi.id',
-                'cpi.start_at',
                 'pv.description as description',
-                'cpi.amount'
+                'sub.price'
             )
             ->get();
 
-        foreach ($installments as $installment) {
-
-            // Main installment row
-            $sheet->setCellValue('A' . $row, $client->ragione_sociale);
-            $sheet->setCellValue('B' . $row, $installment->start_at ? \Carbon\Carbon::parse($installment->start_at)->format('d/m/Y') : '');
-            $sheet->setCellValue('C' . $row, $installment->description);
-            $sheet->setCellValue('D' . $row, $installment->amount ?? 0);
+        foreach ($subs as $sub) {
+            $sheet->setCellValue('A' . $row, $installment->ragione_sociale);
+            $sheet->setCellValue('B' . $row, $installment->start_at ? Carbon::parse($installment->start_at)->format('d/m/Y') : '');
+            $sheet->setCellValue('C' . $row, $sub->description);
+            $sheet->setCellValue('D' . $row, $sub->price ?? 0);
             $row++;
-
-            // Sub installments (each as separated row)
-            $subs = DB::table('client_pay_installment_sub_data as sub')
-                ->where('sub.client_pay_installment_id', $installment->id)
-                ->whereNull('sub.deleted_at')
-                ->leftJoin('parameter_values as pv', 'pv.id', '=', 'sub.parameter_value_id')
-                ->select(
-                    'pv.description as description',
-                    'sub.price'
-                )
-                ->get();
-
-            foreach ($subs as $sub) {
-                $sheet->setCellValue('A' . $row, $client->ragione_sociale);
-                $sheet->setCellValue('B' . $row, $installment->start_at ? \Carbon\Carbon::parse($installment->start_at)->format('d/m/Y') : '');
-                $sheet->setCellValue('C' . $row, $sub->description);
-                $sheet->setCellValue('D' . $row, $sub->price ?? 0);
-                $row++;
-            }
         }
     }
 
@@ -171,9 +167,20 @@ public function index(Request $request)
         ->get()
         ->groupBy('client_id');
 
+    // Get client names for lookup
+    $clients = DB::table('clients')
+        ->whereNull('deleted_at')
+        ->select('id', 'ragione_sociale')
+        ->get()
+        ->keyBy('id');
+
     $propostaRow = 2;
-    foreach ($clients as $client) {
-        $proposta->setCellValueByColumnAndRow(1, $propostaRow, $client->ragione_sociale);
+
+    // Iterate over installmentData directly to ensure we don't miss any clients
+    foreach ($installmentData as $clientId => $clientData) {
+        $clientName = $clients->get($clientId)->ragione_sociale ?? 'Unknown Client';
+
+        $proposta->setCellValueByColumnAndRow(1, $propostaRow, $clientName);
 
         // fill all pv columns with 0 first
         foreach ($colMap as $colIdx) {
@@ -181,7 +188,6 @@ public function index(Request $request)
         }
 
         $rowTotal = 0;
-        $clientData = $installmentData->get((string)$client->id, collect());
 
         foreach ($clientData as $item) {
             if (isset($colMap[$item->pv_id])) {
