@@ -175,14 +175,19 @@ public function index(Request $request)
     foreach ($clients as $client) {
         $proposta->setCellValueByColumnAndRow(1, $propostaRow, $client->ragione_sociale);
 
+        // fill all pv columns with 0 first
+        foreach ($colMap as $colIdx) {
+            $proposta->setCellValueByColumnAndRow($colIdx, $propostaRow, 0);
+        }
+
         $rowTotal = 0;
         $clientData = $installmentData->get($client->id, collect());
 
         foreach ($clientData as $item) {
             if (isset($colMap[$item->pv_id])) {
                 $proposta->setCellValueByColumnAndRow($colMap[$item->pv_id], $propostaRow, $item->total);
+                $rowTotal += $item->total;
             }
-            $rowTotal += $item->total;
         }
 
         $proposta->setCellValueByColumnAndRow($totalColIndex, $propostaRow, $rowTotal);
@@ -276,14 +281,19 @@ public function index(Request $request)
     foreach ($clients as $client) {
         $macro->setCellValueByColumnAndRow(1, $macroRow, $client->ragione_sociale);
 
+        // fill all category columns with 0 first
+        foreach ($catColMap as $colIdx) {
+            $macro->setCellValueByColumnAndRow($colIdx, $macroRow, 0);
+        }
+
         $rowTotal = 0;
         $clientCats = $macroData->get($client->id, collect());
 
         foreach ($clientCats as $item) {
             if (isset($catColMap[$item->category])) {
                 $macro->setCellValueByColumnAndRow($catColMap[$item->category], $macroRow, $item->total);
+                $rowTotal += $item->total;  // only sum what's in a known category column
             }
-            $rowTotal += $item->total;
         }
 
         $macro->setCellValueByColumnAndRow($macroTotalCol, $macroRow, $rowTotal);
