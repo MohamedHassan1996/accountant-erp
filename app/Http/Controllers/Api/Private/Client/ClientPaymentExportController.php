@@ -309,7 +309,7 @@ public function index(Request $request)
     $riepilogo->getStyle('A1:B1')->getFont()->setBold(true);
     $riepilogo->getStyle('A1:B1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-    // Sum all installments grouped by category (include categories with 0)
+    // Sum all installments grouped by category — same source as Sheet 3
     $riepilogoData = DB::table('client_pay_installments as cpi')
         ->whereNull('cpi.deleted_at')
         ->join('parameter_values as pv', 'pv.id', '=', 'cpi.parameter_value_id')
