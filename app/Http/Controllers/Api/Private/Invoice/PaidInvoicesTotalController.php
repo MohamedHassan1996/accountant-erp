@@ -4,11 +4,7 @@ namespace App\Http\Controllers\Api\Private\Invoice;
 
 use App\Http\Controllers\Controller;
 use App\Models\Invoice\Invoice;
-use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
-
-class PaidInvoicesTotalController extends Controller
+use Illuminate\Http\Request;class PaidInvoicesTotalController extends Controller
 {
     public function __construct()
     {
@@ -19,40 +15,79 @@ class PaidInvoicesTotalController extends Controller
     {
         try {
             $request->validate([
-                'month' => 'nullable|integer|min:1|max:12',
-                'year'  => 'nullable|integer|min:2000',
+                'startDate' => 'nullable|date',
+                'endDate'   => 'nullable|date',
             ]);
 
-            $total = Invoice::where('pay_status', 1)
-                ->join('invoice_details', 'invoices.id', '=', 'invoice_details.invoice_id')
-                ->whereNull('invoices.deleted_at')
-                ->whereNull('invoice_details.deleted_at')
-                ->when($request->filled('year'),  fn($q) => $q->whereYear('invoices.pay_date', $request->year))
-                ->when($request->filled('month'), fn($q) => $q->whereMonth('invoices.pay_date', $request->month))
-                ->sum(DB::raw('COALESCE(invoice_details.price_after_discount, invoice_details.price, 0)'));
+            $totalAmountCollected = $this->calcTotal(
+                paidStatus: 1,
+                startDate: $request->startDate,
+                endDate: $request->endDate,
+                dateColumn: 'invoices.pay_date'
+            );
 
-            $totalWithTax = round($total * 1.22, 2);
+            $totalInvoicesAmount = $this->calcTotal(
+                paidStatus: null,
+                startDate: $request->startDate,
+                endDate: $request->endDate,
+                dateColumn: 'invoices.end_at'
+            );
 
-            $overdueCount = Invoice::where('pay_status', 0)
-                ->whereNotNull('end_at')
-                ->where('end_at', '<', Carbon::today())
-                ->whereNull('deleted_at')
-                ->count();
-
-            $aboutToExpireCount = Invoice::where('pay_status', 0)
-                ->whereNotNull('end_at')
-                ->whereBetween('end_at', [Carbon::today(), Carbon::today()->addDays(10)])
-                ->whereNull('deleted_at')
-                ->count();
+            $totalUncollected = $this->calcTotal(
+                paidStatus: 0,
+                startDate: $request->startDate,
+                endDate: $request->endDate,
+                dateColumn: 'invoices.end_at'
+            );
 
             return response()->json([
-                'totalAmountCollected' => $totalWithTax,
-                'overdueUnpaidCount'   => $overdueCount,
-                'aboutToExpireCount'   => $aboutToExpireCount,
+                'totalAmountCollected' => $totalAmountCollected,
+                'totalInvoicesAmount'  => $totalInvoicesAmount,
+                'totalUncollected'     => $totalUncollected,
             ], 200);
 
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
         }
+    }
+
+    private function calcTotal(?int $paidStatus, ?string $startDate, ?string $endDate, string $dateColumn): float
+    {
+        $invoices = Invoice::with(['invoiceDetails', 'client'])
+            ->when(!is_null($paidStatus), fn($q) => $q->where('pay_status', $paidStatus))
+            ->whereNull('invoices.deleted_at')
+            ->when($startDate, fn($q) => $q->whereDate($dateColumn, '>=', $startDate))
+            ->when($endDate,   fn($q) => $q->whereDate($dateColumn, '<=', $endDate))
+            ->get();
+
+        $total = 0;
+
+        foreach ($invoices as $invoice) {
+            // 1. sum price_after_discount for all details
+            $subtotal = $invoice->invoiceDetails->sum('price_after_discount');
+
+            // 2. IVA 22% always
+            $subtotal = $subtotal + ($subtotal * 0.22);
+
+            // 3. client additional tax
+            if ($invoice->client && $invoice->client->total_tax > 0) {
+                $subtotal = $subtotal + ($subtotal * ($invoice->client->total_tax / 100));
+            }
+
+            // 4. invoice discount
+            if ($invoice->discount_amount > 0) {
+                if ($invoice->discount_type == 0) {
+                    // fixed
+                    $subtotal -= $invoice->discount_amount;
+                } elseif ($invoice->discount_type == 1) {
+                    // percentage
+                    $subtotal -= $subtotal * ($invoice->discount_amount / 100);
+                }
+            }
+
+            $total += $subtotal;
+        }
+
+        return round($total, 2);
     }
 }
