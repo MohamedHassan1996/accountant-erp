@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\Private\Task\AdminTaskController;
 use App\Http\Controllers\Api\Private\Invoice\InvoiceController;
 use App\Http\Controllers\Api\Private\Invoice\PayInvoiceController;
 use App\Http\Controllers\Api\Private\Invoice\PaidInvoicesTotalController;
+use App\Http\Controllers\Api\Private\Invoice\InvoiceListByStatusController;
 use App\Http\Controllers\Api\Private\Task\ActiveTaskController;
 use App\Http\Controllers\Api\Private\Task\TaskTimeLogController;
 use App\Http\Controllers\Api\Private\Parameter\ParameterController;
@@ -182,6 +183,7 @@ Route::prefix('v1/invoices')->group(function(){
 });
 
 Route::get('v1/invoice-income-stats', PaidInvoicesTotalController::class);
+Route::get('v1/invoices-list-by-status', InvoiceListByStatusController::class);
 
 
 Route::prefix('v1/invoice-details')->group(function(){

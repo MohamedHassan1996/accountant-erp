@@ -17,12 +17,14 @@ use Illuminate\Http\Request;class PaidInvoicesTotalController extends Controller
             $request->validate([
                 'startDate' => 'nullable|date',
                 'endDate'   => 'nullable|date',
+                'year'      => 'nullable|integer|min:2000',
             ]);
 
             $totalAmountCollected = $this->calcTotal(
                 paidStatus: 1,
                 startDate: $request->startDate,
                 endDate: $request->endDate,
+                year: $request->year,
                 dateColumn: 'invoices.pay_date'
             );
 
@@ -30,6 +32,7 @@ use Illuminate\Http\Request;class PaidInvoicesTotalController extends Controller
                 paidStatus: null,
                 startDate: $request->startDate,
                 endDate: $request->endDate,
+                year: $request->year,
                 dateColumn: 'invoices.end_at'
             );
 
@@ -37,6 +40,7 @@ use Illuminate\Http\Request;class PaidInvoicesTotalController extends Controller
                 paidStatus: 0,
                 startDate: $request->startDate,
                 endDate: $request->endDate,
+                year: $request->year,
                 dateColumn: 'invoices.end_at'
             );
 
