@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Private\Invoice;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Invoice\InvoiceListCollection;
 use App\Models\Invoice\Invoice;
 use App\Utils\PaginateCollection;
 use Illuminate\Http\Request;
@@ -75,7 +76,7 @@ class InvoiceListByStatusController extends Controller
             $pageSize = $request->pageSize ?? 10;
             $paginated = PaginateCollection::paginate(collect($data), $pageSize);
 
-            return response()->json($paginated, 200);
+            return response()->json(new InvoiceListCollection($paginated), 200);
 
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
