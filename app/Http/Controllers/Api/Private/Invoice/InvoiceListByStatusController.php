@@ -21,8 +21,8 @@ class InvoiceListByStatusController extends Controller
         try {
             $request->validate([
                 'type'      => 'required|in:0,1,2',
-                'startDate' => 'nullable|date',
-                'endDate'   => 'nullable|date',
+                'startDate' => 'nullable',
+                'endDate'   => 'nullable',
                 'year'      => 'nullable|integer|min:2000',
                 'clientId'  => 'nullable|integer|exists:clients,id',
                 'pageSize'  => 'nullable|integer|min:1',
@@ -38,8 +38,8 @@ class InvoiceListByStatusController extends Controller
                 ->whereNull('invoices.deleted_at')
                 ->when($key === 1, fn($q) => $q->where('pay_status', 1))
                 ->when($key === 2, fn($q) => $q->where('pay_status', 0))
-                ->when($request->filled('startDate'), fn($q) => $q->whereDate($dateColumn, '>=', $request->startDate))
-                ->when($request->filled('endDate'),   fn($q) => $q->whereDate($dateColumn, '<=', $request->endDate))
+                ->when($request->filled('startDate'), fn($q) => $q->whereDate($dateColumn, '>=', \Carbon\Carbon::parse($request->startDate)->format('Y-m-d')))
+                ->when($request->filled('endDate'),   fn($q) => $q->whereDate($dateColumn, '<=', \Carbon\Carbon::parse($request->endDate)->format('Y-m-d')))
                 ->when($request->filled('year'),      fn($q) => $q->whereYear($dateColumn, $request->year))
                 ->when($request->filled('clientId'),  fn($q) => $q->where('invoices.client_id', $request->clientId))
                 ->get();

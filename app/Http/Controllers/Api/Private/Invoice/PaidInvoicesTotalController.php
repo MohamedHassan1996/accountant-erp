@@ -15,8 +15,8 @@ use Illuminate\Http\Request;class PaidInvoicesTotalController extends Controller
     {
         try {
             $request->validate([
-                'startDate' => 'nullable|date',
-                'endDate'   => 'nullable|date',
+                'startDate' => 'nullable',
+                'endDate'   => 'nullable',
                 'year'      => 'nullable|integer|min:2000',
                 'clientId'  => 'nullable|integer|exists:clients,id',
             ]);
@@ -38,13 +38,16 @@ use Illuminate\Http\Request;class PaidInvoicesTotalController extends Controller
 
     private function calcTotal(?int $paidStatus, ?string $startDate, ?string $endDate, ?string $year, string $dateColumn, ?int $clientId = null): float
     {
+        $start = $startDate ? \Carbon\Carbon::parse($startDate)->format('Y-m-d') : null;
+        $end   = $endDate   ? \Carbon\Carbon::parse($endDate)->format('Y-m-d')   : null;
+
         $invoices = Invoice::with(['invoiceDetails', 'client'])
             ->when(!is_null($paidStatus), fn($q) => $q->where('pay_status', $paidStatus))
             ->whereNull('invoices.deleted_at')
-            ->when($startDate,  fn($q) => $q->whereDate($dateColumn, '>=', $startDate))
-            ->when($endDate,    fn($q) => $q->whereDate($dateColumn, '<=', $endDate))
-            ->when($year,       fn($q) => $q->whereYear($dateColumn, $year))
-            ->when($clientId,   fn($q) => $q->where('invoices.client_id', $clientId))
+            ->when($start,    fn($q) => $q->whereDate($dateColumn, '>=', $start))
+            ->when($end,      fn($q) => $q->whereDate($dateColumn, '<=', $end))
+            ->when($year,     fn($q) => $q->whereYear($dateColumn, $year))
+            ->when($clientId, fn($q) => $q->where('invoices.client_id', $clientId))
             ->get();
 
         $total = 0;
