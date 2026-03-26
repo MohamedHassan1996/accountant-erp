@@ -278,8 +278,18 @@ public function index(Request $request)
         ->groupBy('client_id');
 
     $macroRow = 2;
+
+    // Create a map of client_id => ragione_sociale for quick lookup
+    $clientNames = [];
     foreach ($clients as $client) {
-        $macro->setCellValueByColumnAndRow(1, $macroRow, $client->ragione_sociale);
+        $clientNames[$client->id] = $client->ragione_sociale;
+    }
+
+    // Iterate over macroData directly to ensure we don't miss any clients
+    foreach ($macroData as $clientId => $clientCats) {
+        $clientName = $clientNames[$clientId] ?? 'Unknown Client';
+
+        $macro->setCellValueByColumnAndRow(1, $macroRow, $clientName);
 
         // fill all category columns with 0 first
         foreach ($catColMap as $colIdx) {
@@ -287,7 +297,6 @@ public function index(Request $request)
         }
 
         $rowTotal = 0;
-        $clientCats = $macroData->get((string)$client->id, collect());
 
         foreach ($clientCats as $item) {
             if (isset($catColMap[$item->category])) {
