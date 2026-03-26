@@ -144,14 +144,19 @@ class TaskService{
     $tasks = $query->paginate($pageSize);
     $taskIds = $tasks->pluck('id');
 
-    // Fetch Latest Logs for Each Task
+    // Fetch Latest Logs — scoped to current page task IDs only
     $latestLogs = DB::table('task_time_logs as ttl')
-        ->join(
-            DB::raw('(SELECT task_id, MAX(created_at) as latest FROM task_time_logs GROUP BY task_id) as latest_logs'),
+        ->joinSub(
+            DB::table('task_time_logs')
+                ->select('task_id', DB::raw('MAX(created_at) as latest'))
+                ->whereIn('task_id', $taskIds)
+                ->groupBy('task_id'),
+            'latest_logs',
             fn($join) => $join->on('ttl.task_id', '=', 'latest_logs.task_id')
                               ->on('ttl.created_at', '=', 'latest_logs.latest')
         )
         ->whereIn('ttl.task_id', $taskIds)
+        ->select('ttl.task_id', 'ttl.status', 'ttl.total_time', 'ttl.created_at')
         ->get();
 
 
