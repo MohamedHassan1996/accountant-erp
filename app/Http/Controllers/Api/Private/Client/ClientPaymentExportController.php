@@ -309,27 +309,18 @@ public function index(Request $request)
     $riepilogo->getStyle('A1:B1')->getFont()->setBold(true);
     $riepilogo->getStyle('A1:B1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-    // Sum all installments grouped by category — same source as Sheet 3
-    $riepilogoData = DB::table('client_pay_installments as cpi')
-        ->whereNull('cpi.deleted_at')
-        ->join('parameter_values as pv', 'pv.id', '=', 'cpi.parameter_value_id')
-        ->join('parameters as p', 'p.id', '=', 'pv.parameter_id')
-        ->whereIn('p.parameter_order', [8, 9])
-        ->whereNotNull('pv.description2')
-        ->join('parameter_values as cat', DB::raw('CAST(pv.description2 AS UNSIGNED)'), '=', 'cat.id')
-        ->where('cat.parameter_order', 12)
-        ->leftJoinSub(
-            DB::table('client_pay_installment_sub_data')
-                ->whereNull('deleted_at')
-                ->select('client_pay_installment_id', DB::raw('SUM(COALESCE(price, 0)) as sub_total'))
-                ->groupBy('client_pay_installment_id'),
-            'sub_totals',
-            'sub_totals.client_pay_installment_id', '=', 'cpi.id'
-        )
-        ->select('cat.parameter_value as category', DB::raw('SUM(COALESCE(cpi.amount, 0) + COALESCE(sub_totals.sub_total, 0)) as total'))
-        ->groupBy('cat.id', 'cat.parameter_value')
-        ->orderBy('cat.parameter_value')
-        ->get();
+    // Sum all installments grouped by category — derived directly from macroData (Sheet 3)
+    $riepilogoData = collect();
+    $catTotals = [];
+    foreach ($macroData as $clientRows) {
+        foreach ($clientRows as $item) {
+            $catTotals[$item->category] = ($catTotals[$item->category] ?? 0) + $item->total;
+        }
+    }
+    ksort($catTotals);
+    foreach ($catTotals as $category => $total) {
+        $riepilogoData->push((object)['category' => $category, 'total' => $total]);
+    }
 
     $rRow = 2;
     foreach ($riepilogoData as $item) {
