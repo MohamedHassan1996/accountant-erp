@@ -181,8 +181,8 @@ public function index(Request $request)
         foreach ($clientData as $item) {
             if (isset($colMap[$item->pv_id])) {
                 $proposta->setCellValueByColumnAndRow($colMap[$item->pv_id], $propostaRow, $item->total);
-                $rowTotal += $item->total;
             }
+            $rowTotal += $item->total;
         }
 
         $proposta->setCellValueByColumnAndRow($totalColIndex, $propostaRow, $rowTotal);
@@ -282,8 +282,8 @@ public function index(Request $request)
         foreach ($clientCats as $item) {
             if (isset($catColMap[$item->category])) {
                 $macro->setCellValueByColumnAndRow($catColMap[$item->category], $macroRow, $item->total);
-                $rowTotal += $item->total;
             }
+            $rowTotal += $item->total;
         }
 
         $macro->setCellValueByColumnAndRow($macroTotalCol, $macroRow, $rowTotal);
