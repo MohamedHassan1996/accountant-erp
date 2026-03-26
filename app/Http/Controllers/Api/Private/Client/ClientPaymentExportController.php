@@ -231,6 +231,35 @@ public function index(Request $request)
     $macro = $spreadsheet->createSheet();
     $macro->setTitle('Macro_Servizi');
 
+    // Get installments grouped by client and category FIRST
+    // pv.description2 stores the category id (parameter_order=12) as string
+    // IMPORTANT: We should include ALL installments (with or without category) to match Sheet 1 & 2
+    $macroData = DB::table('client_pay_installments as cpi')
+        ->whereNull('cpi.deleted_at')
+        ->join('parameter_values as pv', 'pv.id', '=', 'cpi.parameter_value_id')
+        ->join('parameters as p', 'p.id', '=', 'pv.parameter_id')
+        ->whereIn('p.parameter_order', [8, 9])
+        ->leftJoin('parameter_values as cat', function($join) {
+            $join->on(DB::raw('CAST(pv.description2 AS UNSIGNED)'), '=', 'cat.id')
+                 ->where('cat.parameter_order', '=', 12);
+        })
+        ->leftJoinSub(
+            DB::table('client_pay_installment_sub_data')
+                ->whereNull('deleted_at')
+                ->select('client_pay_installment_id', DB::raw('SUM(COALESCE(price, 0)) as sub_total'))
+                ->groupBy('client_pay_installment_id'),
+            'sub_totals',
+            'sub_totals.client_pay_installment_id', '=', 'cpi.id'
+        )
+        ->select(
+            'cpi.client_id',
+            DB::raw('COALESCE(cat.parameter_value, "Senza Categoria") as category'),
+            DB::raw('SUM(COALESCE(cpi.amount, 0) + COALESCE(sub_totals.sub_total, 0)) as total')
+        )
+        ->groupBy('cpi.client_id', 'cat.parameter_value')
+        ->get()
+        ->groupBy('client_id');
+
     // Categories = all those that appear in macroData (including "Senza Categoria" for items without category)
     $categories = collect();
     foreach ($macroData as $clientRows) {
@@ -261,35 +290,6 @@ public function index(Request $request)
     $macro->getStyle('A1:' . $macroLastCol . '1')->getFont()->setBold(true);
     $macro->getStyle('A1:' . $macroLastCol . '1')
         ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-
-    // Get installments grouped by client and category
-    // pv.description2 stores the category id (parameter_order=12) as string
-    // IMPORTANT: We should include ALL installments (with or without category) to match Sheet 1 & 2
-    $macroData = DB::table('client_pay_installments as cpi')
-        ->whereNull('cpi.deleted_at')
-        ->join('parameter_values as pv', 'pv.id', '=', 'cpi.parameter_value_id')
-        ->join('parameters as p', 'p.id', '=', 'pv.parameter_id')
-        ->whereIn('p.parameter_order', [8, 9])
-        ->leftJoin('parameter_values as cat', function($join) {
-            $join->on(DB::raw('CAST(pv.description2 AS UNSIGNED)'), '=', 'cat.id')
-                 ->where('cat.parameter_order', '=', 12);
-        })
-        ->leftJoinSub(
-            DB::table('client_pay_installment_sub_data')
-                ->whereNull('deleted_at')
-                ->select('client_pay_installment_id', DB::raw('SUM(COALESCE(price, 0)) as sub_total'))
-                ->groupBy('client_pay_installment_id'),
-            'sub_totals',
-            'sub_totals.client_pay_installment_id', '=', 'cpi.id'
-        )
-        ->select(
-            'cpi.client_id',
-            DB::raw('COALESCE(cat.parameter_value, "Senza Categoria") as category'),
-            DB::raw('SUM(COALESCE(cpi.amount, 0) + COALESCE(sub_totals.sub_total, 0)) as total')
-        )
-        ->groupBy('cpi.client_id', 'cat.parameter_value')
-        ->get()
-        ->groupBy('client_id');
 
     $macroRow = 2;
 
