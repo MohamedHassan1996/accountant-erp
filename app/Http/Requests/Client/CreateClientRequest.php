@@ -54,7 +54,8 @@ class CreateClientRequest extends FormRequest
             'payInstallments' => ['nullable'],
             'emailF24' => ['nullable'],
             'sdi' => ['nullable'],
-            'proforma' => ['nullable', 'boolean']
+            'proforma' => ['nullable', 'boolean'],
+            'limitDecreto' => ['nullable', 'numeric'],
         ];
     }
 

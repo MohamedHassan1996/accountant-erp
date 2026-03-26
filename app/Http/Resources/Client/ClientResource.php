@@ -45,7 +45,8 @@ class ClientResource extends JsonResource
             'contacts' => AllClientContactResource::collection($this->whenLoaded('contacts')),
             'payInstallments' => AllPayInstallmentResource::collection($this->whenLoaded('payInstallments')),
             'sdi' => $this->sdi??"",
-            'proforma' => $this->proforma??false
+            'proforma' => $this->proforma??false,
+            'limitDecreto' => $this->limit_decreto??0,
         ];
     }
 }

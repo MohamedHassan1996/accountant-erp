@@ -30,7 +30,8 @@ class AllClientResource extends JsonResource
             'allowedDaysToPay'=>$this->allowed_days_to_pay??0,
             'iban' => $this->iban??"",
             'abi'=> $this->abi??"",
-            'cab' => $this->cab??""
+            'cab' => $this->cab??"",
+            'limitDecreto' => $this->limit_decreto??0,
         ];
     }
 }

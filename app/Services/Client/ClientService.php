@@ -50,7 +50,8 @@ class ClientService{
                 : 0,
             'total_tax_description'=>$clientData['totalTaxDescription']??"",
             'sdi' =>$clientData['sdi']??"",
-            'proforma' =>$clientData['proforma']??false
+            'proforma' =>$clientData['proforma']??false,
+            'limit_decreto' => $clientData['limitDecreto']??0,
         ]);
 
         return $client;
@@ -93,7 +94,8 @@ class ClientService{
                 : 0,
             'total_tax_description'=>$clientData['totalTaxDescription']??"",
             'sdi' =>$clientData['sdi']??"",
-            'proforma' =>$clientData['proforma']??false
+            'proforma' =>$clientData['proforma']??false,
+            'limit_decreto' => $clientData['limitDecreto']??0,
         ]);
 
         $client->save();
