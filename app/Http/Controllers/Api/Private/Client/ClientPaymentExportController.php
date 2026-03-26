@@ -181,7 +181,7 @@ public function index(Request $request)
         }
 
         $rowTotal = 0;
-        $clientData = $installmentData->get($client->id, collect());
+        $clientData = $installmentData->get((string)$client->id, collect());
 
         foreach ($clientData as $item) {
             if (isset($colMap[$item->pv_id])) {
@@ -287,7 +287,7 @@ public function index(Request $request)
         }
 
         $rowTotal = 0;
-        $clientCats = $macroData->get($client->id, collect());
+        $clientCats = $macroData->get((string)$client->id, collect());
 
         foreach ($clientCats as $item) {
             if (isset($catColMap[$item->category])) {
