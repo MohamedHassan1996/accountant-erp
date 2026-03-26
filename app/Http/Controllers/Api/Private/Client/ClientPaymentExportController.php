@@ -43,14 +43,13 @@ public function index(Request $request)
 
     $row = 2;
 
-    // Get all installments with client info (only those with parameter_order 8 or 9)
+    // Get all installments with client info (only those with parameter_id 8 or 9)
     $installments = DB::table('client_pay_installments as cpi')
         ->whereNull('cpi.deleted_at')
         ->join('clients as c', 'c.id', '=', 'cpi.client_id')
         ->whereNull('c.deleted_at')
         ->leftJoin('parameter_values as pv', 'pv.id', '=', 'cpi.parameter_value_id')
-        ->join('parameters as p', 'p.id', '=', 'pv.parameter_id')
-        ->whereIn('p.parameter_order', [8, 9])
+        ->whereIn('pv.parameter_id', [8, 9])
         ->select(
             'cpi.id',
             'cpi.start_at',
@@ -113,20 +112,18 @@ public function index(Request $request)
     $proposta = $spreadsheet->createSheet();
     $proposta->setTitle('Proposta');
 
-    // Get parameter_values where parameter_order = 8 or 9 AND have description2 (category)
+    // Get parameter_values where parameter_id = 8 or 9 — only those actually used in installments
     $paramValues = DB::table('parameter_values as pv')
-        ->leftJoin('parameters as p', 'p.id', '=', 'pv.parameter_id')
-        ->whereIn('p.parameter_order', [8, 9])
+        ->whereIn('pv.parameter_id', [8, 9])
         ->whereNull('pv.deleted_at')
-        ->whereNotNull('pv.description2')
         ->whereExists(function ($query) {
             $query->select(DB::raw(1))
                 ->from('client_pay_installments as cpi')
                 ->whereColumn('cpi.parameter_value_id', 'pv.id')
                 ->whereNull('cpi.deleted_at');
         })
-        ->select('pv.id', 'pv.parameter_value')
-        ->orderBy('p.parameter_order')
+        ->select('pv.id', 'pv.parameter_value', 'pv.parameter_id')
+        ->orderBy('pv.parameter_id')
         ->orderBy('pv.parameter_value')
         ->get();
 
@@ -150,13 +147,11 @@ public function index(Request $request)
     $proposta->getStyle('A1:' . $lastHeaderCol . '1')
         ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-    // Get installments grouped by client and parameter_value (only order 8 or 9 AND have description2)
+    // Get installments grouped by client and parameter_value (only parameter_id 8 or 9)
     $installmentData = DB::table('client_pay_installments as cpi')
         ->whereNull('cpi.deleted_at')
         ->join('parameter_values as pv', 'pv.id', '=', 'cpi.parameter_value_id')
-        ->join('parameters as p', 'p.id', '=', 'pv.parameter_id')
-        ->whereIn('p.parameter_order', [8, 9])
-        ->whereNotNull('pv.description2')
+        ->whereIn('pv.parameter_id', [8, 9])
         ->leftJoinSub(
             DB::table('client_pay_installment_sub_data')
                 ->whereNull('deleted_at')
@@ -237,8 +232,7 @@ public function index(Request $request)
     $macroData = DB::table('client_pay_installments as cpi')
         ->whereNull('cpi.deleted_at')
         ->join('parameter_values as pv', 'pv.id', '=', 'cpi.parameter_value_id')
-        ->join('parameters as p', 'p.id', '=', 'pv.parameter_id')
-        ->whereIn('p.parameter_order', [8, 9])
+        ->whereIn('pv.parameter_id', [8, 9])
         ->leftJoin('parameter_values as cat', function($join) {
             $join->on(DB::raw('CAST(pv.description2 AS UNSIGNED)'), '=', 'cat.id')
                  ->where('cat.parameter_order', '=', 12);
