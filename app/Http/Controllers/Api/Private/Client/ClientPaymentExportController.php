@@ -258,6 +258,41 @@ public function index(Request $request)
 
     $macro->setAutoFilter('A1:' . $macroLastCol . '1');
 
+    // ===================== Sheet 4: Riepilogo =====================
+    $riepilogo = $spreadsheet->createSheet();
+    $riepilogo->setTitle('Riepilogo');
+
+    $riepilogo->setCellValue('A1', 'Macro Servizi');
+    $riepilogo->setCellValue('B1', 'Totale');
+    $riepilogo->getStyle('A1:B1')->getFont()->setBold(true);
+    $riepilogo->getStyle('A1:B1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+    // Sum all installments grouped by category
+    $riepilogoData = DB::table('client_pay_installments as cpi')
+        ->whereNull('cpi.deleted_at')
+        ->join('parameter_values as pv', 'pv.id', '=', 'cpi.parameter_value_id')
+        ->join('parameters as p', 'p.id', '=', 'pv.parameter_id')
+        ->whereIn('p.parameter_order', [8, 9])
+        ->whereNotNull('pv.description2')
+        ->join('parameter_values as cat', DB::raw('CAST(pv.description2 AS UNSIGNED)'), '=', 'cat.id')
+        ->where('cat.parameter_order', 12)
+        ->select('cat.parameter_value as category', DB::raw('SUM(cpi.amount) as total'))
+        ->groupBy('cat.parameter_value')
+        ->orderBy('cat.parameter_value')
+        ->get();
+
+    $rRow = 2;
+    foreach ($riepilogoData as $item) {
+        $riepilogo->setCellValue('A' . $rRow, $item->category);
+        $riepilogo->setCellValue('B' . $rRow, $item->total);
+        $rRow++;
+    }
+
+    $riepilogo->getStyle('A1:B' . ($rRow - 1))
+        ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+    $riepilogo->getColumnDimension('A')->setAutoSize(true);
+    $riepilogo->getColumnDimension('B')->setAutoSize(true);
+
     // Save Excel
     $fileName = 'client_installments_' . now()->format('Y_m_d_H_i_s') . '.xlsx';
     $filePath = 'client_installments_exports/' . $fileName;
