@@ -18,11 +18,12 @@ use Illuminate\Http\Request;class PaidInvoicesTotalController extends Controller
                 'startDate' => 'nullable|date',
                 'endDate'   => 'nullable|date',
                 'year'      => 'nullable|integer|min:2000',
+                'clientId'  => 'nullable|integer|exists:clients,id',
             ]);
 
-            $totalAmountCollected = $this->calcTotal(1, $request->startDate, $request->endDate, $request->year, 'invoices.pay_date');
-            $totalInvoicesAmount  = $this->calcTotal(null, $request->startDate, $request->endDate, $request->year, 'invoices.end_at');
-            $totalUncollected     = $this->calcTotal(0, $request->startDate, $request->endDate, $request->year, 'invoices.end_at');
+            $totalAmountCollected = $this->calcTotal(1, $request->startDate, $request->endDate, $request->year, 'invoices.pay_date', $request->clientId);
+            $totalInvoicesAmount  = $this->calcTotal(null, $request->startDate, $request->endDate, $request->year, 'invoices.end_at', $request->clientId);
+            $totalUncollected     = $this->calcTotal(0, $request->startDate, $request->endDate, $request->year, 'invoices.end_at', $request->clientId);
 
             return response()->json([
                 'totalAmountCollected' => $totalAmountCollected,
@@ -35,14 +36,15 @@ use Illuminate\Http\Request;class PaidInvoicesTotalController extends Controller
         }
     }
 
-    private function calcTotal(?int $paidStatus, ?string $startDate, ?string $endDate, ?string $year, string $dateColumn): float
+    private function calcTotal(?int $paidStatus, ?string $startDate, ?string $endDate, ?string $year, string $dateColumn, ?int $clientId = null): float
     {
         $invoices = Invoice::with(['invoiceDetails', 'client'])
             ->when(!is_null($paidStatus), fn($q) => $q->where('pay_status', $paidStatus))
             ->whereNull('invoices.deleted_at')
-            ->when($startDate, fn($q) => $q->whereDate($dateColumn, '>=', $startDate))
-            ->when($endDate,   fn($q) => $q->whereDate($dateColumn, '<=', $endDate))
-            ->when($year,      fn($q) => $q->whereYear($dateColumn, $year))
+            ->when($startDate,  fn($q) => $q->whereDate($dateColumn, '>=', $startDate))
+            ->when($endDate,    fn($q) => $q->whereDate($dateColumn, '<=', $endDate))
+            ->when($year,       fn($q) => $q->whereYear($dateColumn, $year))
+            ->when($clientId,   fn($q) => $q->where('invoices.client_id', $clientId))
             ->get();
 
         $total = 0;

@@ -57,7 +57,7 @@ public function index(Request $request)
             ->leftJoin('parameter_values as pv', 'pv.id', '=', 'cpi.parameter_value_id')
             ->select(
                 'cpi.id',
-                'cpi.start_date',
+                'cpi.start_at',
                 'pv.description as description',
                 'cpi.amount'
             )
@@ -67,7 +67,7 @@ public function index(Request $request)
 
             // Main installment row
             $sheet->setCellValue('A' . $row, $client->ragione_sociale);
-            $sheet->setCellValue('B' . $row, $installment->start_date);
+            $sheet->setCellValue('B' . $row, $installment->start_at);
             $sheet->setCellValue('C' . $row, $installment->description);
             $sheet->setCellValue('D' . $row, $installment->amount);
             $row++;

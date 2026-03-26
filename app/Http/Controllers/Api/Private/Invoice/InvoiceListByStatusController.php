@@ -24,6 +24,7 @@ class InvoiceListByStatusController extends Controller
                 'startDate' => 'nullable|date',
                 'endDate'   => 'nullable|date',
                 'year'      => 'nullable|integer|min:2000',
+                'clientId'  => 'nullable|integer|exists:clients,id',
                 'pageSize'  => 'nullable|integer|min:1',
                 'page'      => 'nullable|integer|min:1',
             ]);
@@ -40,6 +41,7 @@ class InvoiceListByStatusController extends Controller
                 ->when($request->filled('startDate'), fn($q) => $q->whereDate($dateColumn, '>=', $request->startDate))
                 ->when($request->filled('endDate'),   fn($q) => $q->whereDate($dateColumn, '<=', $request->endDate))
                 ->when($request->filled('year'),      fn($q) => $q->whereYear($dateColumn, $request->year))
+                ->when($request->filled('clientId'),  fn($q) => $q->where('invoices.client_id', $request->clientId))
                 ->get();
 
             $data = $invoices->map(function ($invoice) use ($key) {
