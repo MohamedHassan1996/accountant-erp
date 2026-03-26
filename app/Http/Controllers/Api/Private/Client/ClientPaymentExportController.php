@@ -115,9 +115,9 @@ public function index(Request $request)
         ->leftJoin('parameters as p', 'p.id', '=', 'pv.parameter_id')
         ->whereIn('p.parameter_order', [8, 9])
         ->whereNull('pv.deleted_at')
-        ->select('pv.id', 'pv.description')
+        ->select('pv.id', 'pv.parameter_value')
         ->orderBy('p.parameter_order')
-        ->orderBy('pv.description')
+        ->orderBy('pv.parameter_value')
         ->get();
 
     // Build column map: param_value_id => column index (starting from 2 = col B)
@@ -131,7 +131,7 @@ public function index(Request $request)
     // Header row
     $proposta->setCellValueByColumnAndRow(1, 1, 'Cliente');
     foreach ($paramValues as $pv) {
-        $proposta->setCellValueByColumnAndRow($colMap[$pv->id], 1, $pv->description);
+        $proposta->setCellValueByColumnAndRow($colMap[$pv->id], 1, $pv->parameter_value);
     }
     $proposta->setCellValueByColumnAndRow($totalColIndex, 1, 'Totale');
 
@@ -190,7 +190,7 @@ public function index(Request $request)
     Storage::disk('public')->put($filePath, $excelOutput);
 
     return response()->json([
-        'path' => asset('storage/' . $filePath),
+        'path' => Storage::disk('public')->url($filePath),
     ]);
 }
 
