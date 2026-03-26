@@ -203,7 +203,7 @@ public function index(Request $request)
     $macro = $spreadsheet->createSheet();
     $macro->setTitle('Macro_Servizi');
 
-    // Categories = only those linked to parameter_values actually used in installments
+    // Categories = all those that appear in macroData
     $categories = DB::table('parameter_values as cat')
         ->whereNull('cat.deleted_at')
         ->where('cat.parameter_order', 12)
@@ -212,7 +212,7 @@ public function index(Request $request)
                 ->from('parameter_values as pv')
                 ->join('parameters as p', 'p.id', '=', 'pv.parameter_id')
                 ->whereIn('p.parameter_order', [8, 9])
-                ->whereNull('pv.deleted_at')
+                ->whereNotNull('pv.description2')
                 ->whereColumn(DB::raw('CAST(pv.description2 AS UNSIGNED)'), 'cat.id')
                 ->whereExists(function ($q2) {
                     $q2->select(DB::raw(1))
