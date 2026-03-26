@@ -150,7 +150,7 @@ public function index(Request $request)
     // Get installments grouped by client and parameter_value (only parameter_id 8 or 9)
     $installmentData = DB::table('client_pay_installments as cpi')
         ->whereNull('cpi.deleted_at')
-        ->join('parameter_values as pv', 'pv.id', '=', 'cpi.parameter_value_id')
+        ->leftJoin('parameter_values as pv', 'pv.id', '=', 'cpi.parameter_value_id')
         ->whereIn('pv.parameter_id', [8, 9])
         ->leftJoinSub(
             DB::table('client_pay_installment_sub_data')
@@ -231,7 +231,7 @@ public function index(Request $request)
     // IMPORTANT: We should include ALL installments (with or without category) to match Sheet 1 & 2
     $macroData = DB::table('client_pay_installments as cpi')
         ->whereNull('cpi.deleted_at')
-        ->join('parameter_values as pv', 'pv.id', '=', 'cpi.parameter_value_id')
+        ->leftJoin('parameter_values as pv', 'pv.id', '=', 'cpi.parameter_value_id')
         ->whereIn('pv.parameter_id', [8, 9])
         ->leftJoin('parameter_values as cat', function($join) {
             $join->on(DB::raw('CAST(pv.description2 AS UNSIGNED)'), '=', 'cat.id')
