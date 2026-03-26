@@ -150,8 +150,11 @@ public function index(Request $request)
     // Get installments grouped by client and parameter_value (only parameter_id 8 or 9)
     $installmentData = DB::table('client_pay_installments as cpi')
         ->whereNull('cpi.deleted_at')
-        ->leftJoin('parameter_values as pv', 'pv.id', '=', 'cpi.parameter_value_id')
-        ->whereIn('pv.parameter_id', [8, 9])
+        ->leftJoin('parameter_values as pv', function($join) {
+            $join->on('pv.id', '=', 'cpi.parameter_value_id')
+                 ->whereIn('pv.parameter_id', [8, 9]);
+        })
+        ->whereNotNull('pv.id') // Only include rows where the join succeeded
         ->leftJoinSub(
             DB::table('client_pay_installment_sub_data')
                 ->whereNull('deleted_at')
@@ -231,8 +234,11 @@ public function index(Request $request)
     // IMPORTANT: We should include ALL installments (with or without category) to match Sheet 1 & 2
     $macroData = DB::table('client_pay_installments as cpi')
         ->whereNull('cpi.deleted_at')
-        ->leftJoin('parameter_values as pv', 'pv.id', '=', 'cpi.parameter_value_id')
-        ->whereIn('pv.parameter_id', [8, 9])
+        ->leftJoin('parameter_values as pv', function($join) {
+            $join->on('pv.id', '=', 'cpi.parameter_value_id')
+                 ->whereIn('pv.parameter_id', [8, 9]);
+        })
+        ->whereNotNull('pv.id') // Only include rows where the join succeeded
         ->leftJoin('parameter_values as cat', function($join) {
             $join->on(DB::raw('CAST(pv.description2 AS UNSIGNED)'), '=', 'cat.id')
                  ->where('cat.parameter_order', '=', 12);
