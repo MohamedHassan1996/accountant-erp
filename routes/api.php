@@ -183,7 +183,7 @@ Route::prefix('v1/invoices')->group(function(){
 });
 
 Route::get('v1/invoice-income-stats', PaidInvoicesTotalController::class);
-Route::get('v1/invoices-list-by-status', InvoiceListByStatusController::class);
+Route::get('v1/invoice-income-items', InvoiceListByStatusController::class);
 
 
 Route::prefix('v1/invoice-details')->group(function(){

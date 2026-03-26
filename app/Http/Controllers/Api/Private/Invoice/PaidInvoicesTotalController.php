@@ -20,29 +20,9 @@ use Illuminate\Http\Request;class PaidInvoicesTotalController extends Controller
                 'year'      => 'nullable|integer|min:2000',
             ]);
 
-            $totalAmountCollected = $this->calcTotal(
-                paidStatus: 1,
-                startDate: $request->startDate,
-                endDate: $request->endDate,
-                year: $request->year,
-                dateColumn: 'invoices.pay_date'
-            );
-
-            $totalInvoicesAmount = $this->calcTotal(
-                paidStatus: null,
-                startDate: $request->startDate,
-                endDate: $request->endDate,
-                year: $request->year,
-                dateColumn: 'invoices.end_at'
-            );
-
-            $totalUncollected = $this->calcTotal(
-                paidStatus: 0,
-                startDate: $request->startDate,
-                endDate: $request->endDate,
-                year: $request->year,
-                dateColumn: 'invoices.end_at'
-            );
+            $totalAmountCollected = $this->calcTotal(1, $request->startDate, $request->endDate, $request->year, 'invoices.pay_date');
+            $totalInvoicesAmount  = $this->calcTotal(null, $request->startDate, $request->endDate, $request->year, 'invoices.end_at');
+            $totalUncollected     = $this->calcTotal(0, $request->startDate, $request->endDate, $request->year, 'invoices.end_at');
 
             return response()->json([
                 'totalAmountCollected' => $totalAmountCollected,
