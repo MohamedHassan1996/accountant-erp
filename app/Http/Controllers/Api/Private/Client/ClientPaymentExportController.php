@@ -87,7 +87,7 @@ public function index(Request $request)
 
             foreach ($subs as $sub) {
                 $sheet->setCellValue('A' . $row, $client->ragione_sociale);
-                $sheet->setCellValue('B' . $row, '');
+                $sheet->setCellValue('B' . $row, $installment->start_at ? \Carbon\Carbon::parse($installment->start_at)->format('d/m/Y') : '');
                 $sheet->setCellValue('C' . $row, $sub->description);
                 $sheet->setCellValue('D' . $row, $sub->price ?? 0);
                 $row++;
@@ -310,31 +310,14 @@ public function index(Request $request)
     $riepilogo->getStyle('A1:B1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
     // Sum all installments grouped by category (include categories with 0)
-    $riepilogoData = DB::table('parameter_values as cat')
+    $riepilogoData = DB::table('client_pay_installments as cpi')
+        ->whereNull('cpi.deleted_at')
+        ->join('parameter_values as pv', 'pv.id', '=', 'cpi.parameter_value_id')
+        ->join('parameters as p', 'p.id', '=', 'pv.parameter_id')
+        ->whereIn('p.parameter_order', [8, 9])
+        ->whereNotNull('pv.description2')
+        ->join('parameter_values as cat', DB::raw('CAST(pv.description2 AS UNSIGNED)'), '=', 'cat.id')
         ->where('cat.parameter_order', 12)
-        ->whereNull('cat.deleted_at')
-        ->whereExists(function ($query) {
-            $query->select(DB::raw(1))
-                ->from('parameter_values as pv')
-                ->join('parameters as p', 'p.id', '=', 'pv.parameter_id')
-                ->whereIn('p.parameter_order', [8, 9])
-                ->whereNull('pv.deleted_at')
-                ->whereColumn(DB::raw('CAST(pv.description2 AS UNSIGNED)'), 'cat.id')
-                ->whereExists(function ($q2) {
-                    $q2->select(DB::raw(1))
-                        ->from('client_pay_installments as cpi')
-                        ->whereColumn('cpi.parameter_value_id', 'pv.id')
-                        ->whereNull('cpi.deleted_at');
-                });
-        })
-        ->leftJoin('parameter_values as pv', function($join) {
-            $join->on(DB::raw('CAST(pv.description2 AS UNSIGNED)'), '=', 'cat.id')
-                 ->whereIn('pv.parameter_order', [8, 9]);
-        })
-        ->leftJoin('client_pay_installments as cpi', function($join) {
-            $join->on('cpi.parameter_value_id', '=', 'pv.id')
-                 ->whereNull('cpi.deleted_at');
-        })
         ->leftJoinSub(
             DB::table('client_pay_installment_sub_data')
                 ->whereNull('deleted_at')
@@ -343,7 +326,7 @@ public function index(Request $request)
             'sub_totals',
             'sub_totals.client_pay_installment_id', '=', 'cpi.id'
         )
-        ->select('cat.parameter_value as category', DB::raw('COALESCE(SUM(COALESCE(cpi.amount, 0) + COALESCE(sub_totals.sub_total, 0)), 0) as total'))
+        ->select('cat.parameter_value as category', DB::raw('SUM(COALESCE(cpi.amount, 0) + COALESCE(sub_totals.sub_total, 0)) as total'))
         ->groupBy('cat.id', 'cat.parameter_value')
         ->orderBy('cat.parameter_value')
         ->get();
