@@ -267,17 +267,20 @@ public function index(Request $request)
     $riepilogo->getStyle('A1:B1')->getFont()->setBold(true);
     $riepilogo->getStyle('A1:B1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-    // Sum all installments grouped by category
-    $riepilogoData = DB::table('client_pay_installments as cpi')
-        ->whereNull('cpi.deleted_at')
-        ->join('parameter_values as pv', 'pv.id', '=', 'cpi.parameter_value_id')
-        ->join('parameters as p', 'p.id', '=', 'pv.parameter_id')
-        ->whereIn('p.parameter_order', [8, 9])
-        ->whereNotNull('pv.description2')
-        ->join('parameter_values as cat', DB::raw('CAST(pv.description2 AS UNSIGNED)'), '=', 'cat.id')
+    // Sum all installments grouped by category (include categories with 0)
+    $riepilogoData = DB::table('parameter_values as cat')
         ->where('cat.parameter_order', 12)
-        ->select('cat.parameter_value as category', DB::raw('SUM(cpi.amount) as total'))
-        ->groupBy('cat.parameter_value')
+        ->whereNull('cat.deleted_at')
+        ->leftJoin('parameter_values as pv', function($join) {
+            $join->on(DB::raw('CAST(pv.description2 AS UNSIGNED)'), '=', 'cat.id')
+                 ->whereIn('pv.parameter_order', [8, 9]);
+        })
+        ->leftJoin('client_pay_installments as cpi', function($join) {
+            $join->on('cpi.parameter_value_id', '=', 'pv.id')
+                 ->whereNull('cpi.deleted_at');
+        })
+        ->select('cat.parameter_value as category', DB::raw('COALESCE(SUM(cpi.amount), 0) as total'))
+        ->groupBy('cat.id', 'cat.parameter_value')
         ->orderBy('cat.parameter_value')
         ->get();
 
