@@ -179,6 +179,85 @@ public function index(Request $request)
 
     $proposta->setAutoFilter('A1:' . $lastHeaderCol . '1');
 
+    // ===================== Sheet 3: Macro_Servizi =====================
+    $macro = $spreadsheet->createSheet();
+    $macro->setTitle('Macro_Servizi');
+
+    // Categories = parameter_values where parameter_order = 12
+    $categories = DB::table('parameter_values')
+        ->whereNull('deleted_at')
+        ->where('parameter_order', 12)
+        ->select('id', 'parameter_value')
+        ->orderBy('parameter_value')
+        ->get();
+
+    // Build category column map: category parameter_value (string) => col index
+    $catColMap = [];
+    $catColIndex = 2;
+    foreach ($categories as $cat) {
+        $catColMap[$cat->parameter_value] = $catColIndex++;
+    }
+    $macroTotalCol = $catColIndex;
+
+    // Header row
+    $macro->setCellValueByColumnAndRow(1, 1, 'Cliente');
+    foreach ($categories as $cat) {
+        $macro->setCellValueByColumnAndRow($catColMap[$cat->parameter_value], 1, $cat->parameter_value);
+    }
+    $macro->setCellValueByColumnAndRow($macroTotalCol, 1, 'Totale');
+
+    $macroLastCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($macroTotalCol);
+    $macro->getStyle('A1:' . $macroLastCol . '1')->getFont()->setBold(true);
+    $macro->getStyle('A1:' . $macroLastCol . '1')
+        ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+    // Get installments grouped by client and category
+    // pv.description2 stores the category id (parameter_order=12) as string
+    $macroData = DB::table('client_pay_installments as cpi')
+        ->whereNull('cpi.deleted_at')
+        ->join('parameter_values as pv', 'pv.id', '=', 'cpi.parameter_value_id')
+        ->join('parameters as p', 'p.id', '=', 'pv.parameter_id')
+        ->whereIn('p.parameter_order', [8, 9])
+        ->whereNotNull('pv.description2')
+        ->join('parameter_values as cat', DB::raw('CAST(pv.description2 AS UNSIGNED)'), '=', 'cat.id')
+        ->where('cat.parameter_order', 12)
+        ->select(
+            'cpi.client_id',
+            'cat.parameter_value as category',
+            DB::raw('SUM(cpi.amount) as total')
+        )
+        ->groupBy('cpi.client_id', 'cat.parameter_value')
+        ->get()
+        ->groupBy('client_id');
+
+    $macroRow = 2;
+    foreach ($clients as $client) {
+        $macro->setCellValueByColumnAndRow(1, $macroRow, $client->ragione_sociale);
+
+        $rowTotal = 0;
+        $clientCats = $macroData->get($client->id, collect());
+
+        foreach ($clientCats as $item) {
+            if (isset($catColMap[$item->category])) {
+                $macro->setCellValueByColumnAndRow($catColMap[$item->category], $macroRow, $item->total);
+                $rowTotal += $item->total;
+            }
+        }
+
+        $macro->setCellValueByColumnAndRow($macroTotalCol, $macroRow, $rowTotal);
+        $macroRow++;
+    }
+
+    // Styling Macro_Servizi
+    $macro->getStyle('A1:' . $macroLastCol . ($macroRow - 1))
+        ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+
+    for ($i = 1; $i <= $macroTotalCol; $i++) {
+        $macro->getColumnDimensionByColumn($i)->setAutoSize(true);
+    }
+
+    $macro->setAutoFilter('A1:' . $macroLastCol . '1');
+
     // Save Excel
     $fileName = 'client_installments_' . now()->format('Y_m_d_H_i_s') . '.xlsx';
     $filePath = 'client_installments_exports/' . $fileName;
