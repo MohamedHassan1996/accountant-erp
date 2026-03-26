@@ -91,8 +91,13 @@ public function index(Request $request)
         }
     }
 
+    // Add total row
+    $sheet->setCellValue('A' . $row, 'TOTALE');
+    $sheet->setCellValue('D' . $row, '=SUM(D2:D' . ($row - 1) . ')');
+    $sheet->getStyle('A' . $row . ':D' . $row)->getFont()->setBold(true);
+
     // Borders & styling
-    $sheet->getStyle('A1:D' . ($row - 1))
+    $sheet->getStyle('A1:D' . $row)
         ->getBorders()
         ->getAllBorders()
         ->setBorderStyle(Border::BORDER_THIN);
@@ -108,11 +113,12 @@ public function index(Request $request)
     $proposta = $spreadsheet->createSheet();
     $proposta->setTitle('Proposta');
 
-    // Get parameter_values where parameter_order = 8 or 9 — only those actually used in installments
+    // Get parameter_values where parameter_order = 8 or 9 AND have description2 (category)
     $paramValues = DB::table('parameter_values as pv')
         ->leftJoin('parameters as p', 'p.id', '=', 'pv.parameter_id')
         ->whereIn('p.parameter_order', [8, 9])
         ->whereNull('pv.deleted_at')
+        ->whereNotNull('pv.description2')
         ->whereExists(function ($query) {
             $query->select(DB::raw(1))
                 ->from('client_pay_installments as cpi')
@@ -144,12 +150,13 @@ public function index(Request $request)
     $proposta->getStyle('A1:' . $lastHeaderCol . '1')
         ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-    // Get installments grouped by client and parameter_value (only order 8 or 9)
+    // Get installments grouped by client and parameter_value (only order 8 or 9 AND have description2)
     $installmentData = DB::table('client_pay_installments as cpi')
         ->whereNull('cpi.deleted_at')
         ->join('parameter_values as pv', 'pv.id', '=', 'cpi.parameter_value_id')
         ->join('parameters as p', 'p.id', '=', 'pv.parameter_id')
         ->whereIn('p.parameter_order', [8, 9])
+        ->whereNotNull('pv.description2')
         ->leftJoinSub(
             DB::table('client_pay_installment_sub_data')
                 ->whereNull('deleted_at')
@@ -200,6 +207,16 @@ public function index(Request $request)
         $propostaRow++;
     }
 
+    // Add total row for Sheet 2
+    $proposta->setCellValueByColumnAndRow(1, $propostaRow, 'TOTALE');
+    for ($i = 2; $i < $totalColIndex; $i++) {
+        $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($i);
+        $proposta->setCellValue($colLetter . $propostaRow, '=SUM(' . $colLetter . '2:' . $colLetter . ($propostaRow - 1) . ')');
+    }
+    $totalColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($totalColIndex);
+    $proposta->setCellValue($totalColLetter . $propostaRow, '=SUM(' . $totalColLetter . '2:' . $totalColLetter . ($propostaRow - 1) . ')');
+    $proposta->getStyle('A' . $propostaRow . ':' . $lastHeaderCol . $propostaRow)->getFont()->setBold(true);
+
     // Styling Proposta
     $proposta->getStyle('A1:' . $lastHeaderCol . ($propostaRow - 1))
         ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
@@ -214,27 +231,16 @@ public function index(Request $request)
     $macro = $spreadsheet->createSheet();
     $macro->setTitle('Macro_Servizi');
 
-    // Categories = all those that appear in macroData
-    $categories = DB::table('parameter_values as cat')
-        ->whereNull('cat.deleted_at')
-        ->where('cat.parameter_order', 12)
-        ->whereExists(function ($query) {
-            $query->select(DB::raw(1))
-                ->from('parameter_values as pv')
-                ->join('parameters as p', 'p.id', '=', 'pv.parameter_id')
-                ->whereIn('p.parameter_order', [8, 9])
-                ->whereNotNull('pv.description2')
-                ->whereColumn(DB::raw('CAST(pv.description2 AS UNSIGNED)'), 'cat.id')
-                ->whereExists(function ($q2) {
-                    $q2->select(DB::raw(1))
-                        ->from('client_pay_installments as cpi')
-                        ->whereColumn('cpi.parameter_value_id', 'pv.id')
-                        ->whereNull('cpi.deleted_at');
-                });
-        })
-        ->select('cat.id', 'cat.parameter_value')
-        ->orderBy('cat.parameter_value')
-        ->get();
+    // Categories = all those that appear in macroData (including "Senza Categoria" for items without category)
+    $categories = collect();
+    foreach ($macroData as $clientRows) {
+        foreach ($clientRows as $item) {
+            if (!$categories->contains('parameter_value', $item->category)) {
+                $categories->push((object)['parameter_value' => $item->category]);
+            }
+        }
+    }
+    $categories = $categories->sortBy('parameter_value')->values();
 
     // Build category column map: category parameter_value (string) => col index
     $catColMap = [];
@@ -258,14 +264,16 @@ public function index(Request $request)
 
     // Get installments grouped by client and category
     // pv.description2 stores the category id (parameter_order=12) as string
+    // IMPORTANT: We should include ALL installments (with or without category) to match Sheet 1 & 2
     $macroData = DB::table('client_pay_installments as cpi')
         ->whereNull('cpi.deleted_at')
         ->join('parameter_values as pv', 'pv.id', '=', 'cpi.parameter_value_id')
         ->join('parameters as p', 'p.id', '=', 'pv.parameter_id')
         ->whereIn('p.parameter_order', [8, 9])
-        ->whereNotNull('pv.description2')
-        ->join('parameter_values as cat', DB::raw('CAST(pv.description2 AS UNSIGNED)'), '=', 'cat.id')
-        ->where('cat.parameter_order', 12)
+        ->leftJoin('parameter_values as cat', function($join) {
+            $join->on(DB::raw('CAST(pv.description2 AS UNSIGNED)'), '=', 'cat.id')
+                 ->where('cat.parameter_order', '=', 12);
+        })
         ->leftJoinSub(
             DB::table('client_pay_installment_sub_data')
                 ->whereNull('deleted_at')
@@ -276,7 +284,7 @@ public function index(Request $request)
         )
         ->select(
             'cpi.client_id',
-            'cat.parameter_value as category',
+            DB::raw('COALESCE(cat.parameter_value, "Senza Categoria") as category'),
             DB::raw('SUM(COALESCE(cpi.amount, 0) + COALESCE(sub_totals.sub_total, 0)) as total')
         )
         ->groupBy('cpi.client_id', 'cat.parameter_value')
@@ -314,6 +322,16 @@ public function index(Request $request)
         $macro->setCellValueByColumnAndRow($macroTotalCol, $macroRow, $rowTotal);
         $macroRow++;
     }
+
+    // Add total row for Sheet 3
+    $macro->setCellValueByColumnAndRow(1, $macroRow, 'TOTALE');
+    for ($i = 2; $i < $macroTotalCol; $i++) {
+        $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($i);
+        $macro->setCellValue($colLetter . $macroRow, '=SUM(' . $colLetter . '2:' . $colLetter . ($macroRow - 1) . ')');
+    }
+    $macroTotalColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($macroTotalCol);
+    $macro->setCellValue($macroTotalColLetter . $macroRow, '=SUM(' . $macroTotalColLetter . '2:' . $macroTotalColLetter . ($macroRow - 1) . ')');
+    $macro->getStyle('A' . $macroRow . ':' . $macroLastCol . $macroRow)->getFont()->setBold(true);
 
     // Styling Macro_Servizi
     $macro->getStyle('A1:' . $macroLastCol . ($macroRow - 1))
@@ -354,7 +372,12 @@ public function index(Request $request)
         $rRow++;
     }
 
-    $riepilogo->getStyle('A1:B' . ($rRow - 1))
+    // Add total row for Sheet 4
+    $riepilogo->setCellValue('A' . $rRow, 'TOTALE');
+    $riepilogo->setCellValue('B' . $rRow, '=SUM(B2:B' . ($rRow - 1) . ')');
+    $riepilogo->getStyle('A' . $rRow . ':B' . $rRow)->getFont()->setBold(true);
+
+    $riepilogo->getStyle('A1:B' . $rRow)
         ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
     $riepilogo->getColumnDimension('A')->setAutoSize(true);
     $riepilogo->getColumnDimension('B')->setAutoSize(true);
