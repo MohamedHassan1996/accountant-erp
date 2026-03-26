@@ -55,13 +55,14 @@ use Illuminate\Http\Request;class PaidInvoicesTotalController extends Controller
         }
     }
 
-    private function calcTotal(?int $paidStatus, ?string $startDate, ?string $endDate, string $dateColumn): float
+    private function calcTotal(?int $paidStatus, ?string $startDate, ?string $endDate, ?string $year, string $dateColumn): float
     {
         $invoices = Invoice::with(['invoiceDetails', 'client'])
             ->when(!is_null($paidStatus), fn($q) => $q->where('pay_status', $paidStatus))
             ->whereNull('invoices.deleted_at')
             ->when($startDate, fn($q) => $q->whereDate($dateColumn, '>=', $startDate))
             ->when($endDate,   fn($q) => $q->whereDate($dateColumn, '<=', $endDate))
+            ->when($year,      fn($q) => $q->whereYear($dateColumn, $year))
             ->get();
 
         $total = 0;
