@@ -55,6 +55,8 @@ public function index(Request $request)
             ->where('cpi.client_id', $client->id)
             ->whereNull('cpi.deleted_at')
             ->leftJoin('parameter_values as pv', 'pv.id', '=', 'cpi.parameter_value_id')
+            ->join('parameters as p', 'p.id', '=', 'pv.parameter_id')
+            ->whereIn('p.parameter_order', [8, 9])
             ->select(
                 'cpi.id',
                 'cpi.start_at',
