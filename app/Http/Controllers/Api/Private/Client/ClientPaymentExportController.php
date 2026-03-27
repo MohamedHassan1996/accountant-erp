@@ -26,7 +26,14 @@ class ClientPaymentExportController extends Controller
     {
         $spreadsheet = new Spreadsheet();
 
-        // 1. جلب البيانات الأساسية والفرعية في مجموعة واحدة موحدة لضمان تطابق الأرقام
+        // 1. جلب قاموس الفئات (Macro Servizi) - نفترض أن parameter_order = 12 هي الفئات
+        $categoryNames = DB::table('parameter_values')
+            ->where('parameter_order', 12)
+            ->pluck('parameter_value', 'id')
+            ->toArray();
+
+        // 2. بناء مصدر البيانات الموحد (Flat Data Structure)
+        // هذا الجزء يضمن أن ما يظهر في الصفحة الأولى هو "البذرة" لكل العمليات الحسابية اللاحقة
         $rawInstallments = DB::table('client_pay_installments as cpi')
             ->whereNull('cpi.deleted_at')
             ->join('clients as c', 'c.id', '=', 'cpi.client_id')
@@ -41,7 +48,7 @@ class ClientPaymentExportController extends Controller
                 'pv.id as pv_id',
                 'pv.parameter_value as pv_name',
                 'pv.description as description',
-                'pv.description2 as category_id', // معرف الفئة
+                'pv.description2 as category_id', // هذا الحقل يجب أن يحتوي على ID الفئة
                 'cpi.amount'
             )
             ->get();
@@ -49,7 +56,7 @@ class ClientPaymentExportController extends Controller
         $allTransactions = collect();
 
         foreach ($rawInstallments as $inst) {
-            // إضافة المبلغ الأساسي
+            // إضافة الحركة الأساسية
             $allTransactions->push([
                 'client_id'       => $inst->client_id,
                 'ragione_sociale' => $inst->ragione_sociale,
@@ -57,16 +64,22 @@ class ClientPaymentExportController extends Controller
                 'description'     => $inst->description,
                 'pv_id'           => $inst->pv_id,
                 'pv_name'         => $inst->pv_name,
-                'category_id'     => $inst->category_id,
+                'cat_name'        => $categoryNames[$inst->category_id] ?? 'Senza Categoria',
                 'amount'          => (float)($inst->amount ?? 0)
             ]);
 
-            // إضافة المبالغ الفرعية (Sub Installments)
+            // إضافة الحركات الفرعية (Sub Data)
             $subs = DB::table('client_pay_installment_sub_data as sub')
                 ->where('sub.client_pay_installment_id', $inst->id)
                 ->whereNull('sub.deleted_at')
                 ->leftJoin('parameter_values as pv_sub', 'pv_sub.id', '=', 'sub.parameter_value_id')
-                ->select('pv_sub.description', 'sub.price', 'pv_sub.id as pv_id', 'pv_sub.parameter_value as pv_name', 'pv_sub.description2 as category_id')
+                ->select(
+                    'pv_sub.id as pv_id',
+                    'pv_sub.parameter_value as pv_name',
+                    'pv_sub.description',
+                    'pv_sub.description2 as category_id',
+                    'sub.price'
+                )
                 ->get();
 
             foreach ($subs as $sub) {
@@ -75,25 +88,21 @@ class ClientPaymentExportController extends Controller
                     'ragione_sociale' => $inst->ragione_sociale,
                     'date'            => $inst->start_at ? Carbon::parse($inst->start_at)->format('d/m/Y') : '',
                     'description'     => $sub->description,
-                    'pv_id'           => $sub->pv_id ?? $inst->pv_id, // إذا لم يوجد نوع للفرعي نأخذ نوع الرئيسي
+                    'pv_id'           => $sub->pv_id ?? $inst->pv_id,
                     'pv_name'         => $sub->pv_name ?? $inst->pv_name,
-                    'category_id'     => $sub->category_id ?? $inst->category_id,
+                    'cat_name'        => $categoryNames[$sub->category_id ?? $inst->category_id] ?? 'Senza Categoria',
                     'amount'          => (float)($sub->price ?? 0)
                 ]);
             }
         }
 
-        // جلب أسماء الفئات (Macro Servizi) للقاموس
-        $categoryNames = DB::table('parameter_values')
-            ->where('parameter_order', 12)
-            ->pluck('parameter_value', 'id')
-            ->toArray();
-
-        // ===================== الصفحة 1: Dettaglio =====================
+        // ===================== الصفحة 1: Dettaglio (المرجع) =====================
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Dettaglio');
-        $headers = ['Cliente', 'Start Date', 'Descrizione', 'Totale'];
-        $sheet->fromArray($headers, NULL, 'A1');
+        $sheet->setCellValue('A1', 'Cliente');
+        $sheet->setCellValue('B1', 'Start Date');
+        $sheet->setCellValue('C1', 'Descrizione');
+        $sheet->setCellValue('D1', 'Totale');
 
         $row = 2;
         foreach ($allTransactions as $trans) {
@@ -111,66 +120,57 @@ class ClientPaymentExportController extends Controller
         $proposta = $spreadsheet->createSheet();
         $proposta->setTitle('Proposta');
 
-        $pvGroups = $allTransactions->groupBy('pv_id');
-        $clientGroups = $allTransactions->groupBy('client_id');
-
-        $col = 2;
+        $activePvs = $allTransactions->where('amount', '>', 0)->groupBy('pv_id');
         $pvColMap = [];
+        $col = 2;
         $proposta->setCellValueByColumnAndRow(1, 1, 'Cliente');
-
-        foreach ($pvGroups as $pvId => $items) {
-            $pvName = $items->first()['pv_name'] ?? 'N/A';
-            $proposta->setCellValueByColumnAndRow($col, 1, $pvName);
+        foreach ($activePvs as $pvId => $items) {
+            $proposta->setCellValueByColumnAndRow($col, 1, $items->first()['pv_name']);
             $pvColMap[$pvId] = $col;
             $col++;
         }
-        $totalColIdx = $col;
-        $proposta->setCellValueByColumnAndRow($totalColIdx, 1, 'Totale');
+        $pTotalCol = $col;
+        $proposta->setCellValueByColumnAndRow($pTotalCol, 1, 'Totale');
 
         $pRow = 2;
-        foreach ($clientGroups as $clientId => $transactions) {
-            $proposta->setCellValueByColumnAndRow(1, $pRow, $transactions->first()['ragione_sociale']);
+        foreach ($allTransactions->groupBy('client_id') as $clientId => $clientTrans) {
+            $proposta->setCellValueByColumnAndRow(1, $pRow, $clientTrans->first()['ragione_sociale']);
             foreach ($pvColMap as $pvId => $colIdx) {
-                $sum = $transactions->where('pv_id', $pvId)->sum('amount');
-                $proposta->setCellValueByColumnAndRow($colIdx, $pRow, $sum);
+                $proposta->setCellValueByColumnAndRow($colIdx, $pRow, $clientTrans->where('pv_id', $pvId)->sum('amount'));
             }
-            $proposta->setCellValueByColumnAndRow($totalColIdx, $pRow, $transactions->sum('amount'));
+            $proposta->setCellValueByColumnAndRow($pTotalCol, $pRow, $clientTrans->sum('amount'));
             $pRow++;
         }
-        $this->addFooterTotals($proposta, $pRow, $totalColIdx);
+        $this->addFooterTotals($proposta, $pRow, $pTotalCol);
 
-        // ===================== الصفحة 3: Macro_Servizi =====================
+        // ===================== الصفحة 3: Macro_Servizi (حل مشكلة الأصفار) =====================
         $macro = $spreadsheet->createSheet();
         $macro->setTitle('Macro_Servizi');
 
-        $allTransactions = $allTransactions->map(function($item) use ($categoryNames) {
-            $item['cat_name'] = $categoryNames[$item['category_id']] ?? 'Senza Categoria';
-            return $item;
-        });
-
-        $catGroups = $allTransactions->groupBy('cat_name');
+        // جلب الفئات التي تحتوي على مبالغ فقط لعدم عرض أعمدة فارغة
+        $activeCats = $allTransactions->where('amount', '>', 0)->pluck('cat_name')->unique()->sort();
         $catColMap = [];
         $col = 2;
         $macro->setCellValueByColumnAndRow(1, 1, 'Cliente');
-        foreach ($catGroups->keys()->sort() as $catName) {
+        foreach ($activeCats as $catName) {
             $macro->setCellValueByColumnAndRow($col, 1, $catName);
             $catColMap[$catName] = $col;
             $col++;
         }
-        $mTotalColIdx = $col;
-        $macro->setCellValueByColumnAndRow($mTotalColIdx, 1, 'Totale');
+        $mTotalCol = $col;
+        $macro->setCellValueByColumnAndRow($mTotalCol, 1, 'Totale');
 
         $mRow = 2;
-        foreach ($clientGroups as $clientId => $transactions) {
-            $macro->setCellValueByColumnAndRow(1, $mRow, $transactions->first()['ragione_sociale']);
+        // عرض العملاء الذين لديهم تعاملات فقط
+        foreach ($allTransactions->where('amount', '>', 0)->groupBy('client_id') as $clientId => $clientTrans) {
+            $macro->setCellValueByColumnAndRow(1, $mRow, $clientTrans->first()['ragione_sociale']);
             foreach ($catColMap as $catName => $colIdx) {
-                $sum = $transactions->where('cat_name', $catName)->sum('amount');
-                $macro->setCellValueByColumnAndRow($colIdx, $mRow, $sum);
+                $macro->setCellValueByColumnAndRow($colIdx, $mRow, $clientTrans->where('cat_name', $catName)->sum('amount'));
             }
-            $macro->setCellValueByColumnAndRow($mTotalColIdx, $mRow, $transactions->sum('amount'));
+            $macro->setCellValueByColumnAndRow($mTotalCol, $mRow, $clientTrans->sum('amount'));
             $mRow++;
         }
-        $this->addFooterTotals($macro, $mRow, $mTotalColIdx);
+        $this->addFooterTotals($macro, $mRow, $mTotalCol);
 
         // ===================== الصفحة 4: Riepilogo =====================
         $riepilogo = $spreadsheet->createSheet();
@@ -180,48 +180,42 @@ class ClientPaymentExportController extends Controller
 
         $rRow = 2;
         foreach ($allTransactions->groupBy('cat_name') as $catName => $items) {
-            $riepilogo->setCellValue('A' . $rRow, $catName);
-            $riepilogo->setCellValue('B' . $rRow, $items->sum('amount'));
-            $rRow++;
+            $catSum = $items->sum('amount');
+            if ($catSum > 0) {
+                $riepilogo->setCellValue('A' . $rRow, $catName);
+                $riepilogo->setCellValue('B' . $rRow, $catSum);
+                $rRow++;
+            }
         }
         $riepilogo->setCellValue('A' . $rRow, 'TOTALE');
         $riepilogo->setCellValue('B' . $rRow, "=SUM(B2:B" . ($rRow - 1) . ")");
         $this->applyStyle($riepilogo, 'B', $rRow);
 
-        // التخزين والتحميل
-        $fileName = 'client_installments_' . now()->format('Y_m_d_H_i_s') . '.xlsx';
-        $filePath = 'client_installments_exports/' . $fileName;
-
+        // تصدير الملف
+        $fileName = 'client_payments_' . now()->format('YmdHis') . '.xlsx';
+        $filePath = 'exports/' . $fileName;
+        $writer = new Xlsx($spreadsheet);
         ob_start();
-        (new Xlsx($spreadsheet))->save('php://output');
-        $excelOutput = ob_get_clean();
-        Storage::disk('public')->put($filePath, $excelOutput);
+        $writer->save('php://output');
+        Storage::disk('public')->put($filePath, ob_get_clean());
 
         return response()->json(['path' => Storage::disk('public')->url($filePath)]);
     }
 
-    private function applyStyle($sheet, $lastColLetter, $lastRow)
-    {
-        $sheet->getStyle("A1:{$lastColLetter}1")->getFont()->setBold(true);
-        $sheet->getStyle("A1:{$lastColLetter}{$lastRow}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        foreach (range('A', $lastColLetter) as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
-        }
+    private function applyStyle($sheet, $lastCol, $lastRow) {
+        $sheet->getStyle("A1:{$lastCol}1")->getFont()->setBold(true);
+        $sheet->getStyle("A1:{$lastCol}{$lastRow}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        foreach (range('A', $lastCol) as $c) $sheet->getColumnDimension($c)->setAutoSize(true);
     }
 
-    private function addFooterTotals($sheet, $row, $lastColIdx)
-    {
+    private function addFooterTotals($sheet, $row, $lastColIdx) {
+        $lastColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($lastColIdx);
         $sheet->setCellValueByColumnAndRow(1, $row, 'TOTALE');
         for ($i = 2; $i <= $lastColIdx; $i++) {
-            $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($i);
-            $sheet->setCellValue($colLetter . $row, "=SUM({$colLetter}2:{$colLetter}" . ($row - 1) . ")");
+            $colL = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($i);
+            $sheet->setCellValue($colL . $row, "=SUM({$colL}2:{$colL}" . ($row - 1) . ")");
         }
-        $lastColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($lastColIdx);
-        $sheet->getStyle("A1:{$lastColLetter}1")->getFont()->setBold(true);
         $sheet->getStyle("A{$row}:{$lastColLetter}{$row}")->getFont()->setBold(true);
-        $sheet->getStyle("A1:{$lastColLetter}{$row}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-        for ($i = 1; $i <= $lastColIdx; $i++) {
-            $sheet->getColumnDimensionByColumn($i)->setAutoSize(true);
-        }
+        $this->applyStyle($sheet, $lastColLetter, $row);
     }
 }
