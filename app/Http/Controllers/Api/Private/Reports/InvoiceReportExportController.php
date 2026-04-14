@@ -178,6 +178,12 @@ $invoiceItemsData[] = [
     //$clientTaxAmount = $invoiceTotal * ($client->total_tax / 100);
     $clientTaxAmount = $invoiceTaxableTotal * ($client->total_tax / 100);
 
+    if ($client->limit_decreto > 0 &&  $clientTaxAmount >$client->limit_decreto){
+
+        $clientTaxAmount =$client->limit_decreto;
+
+    }
+
     $invoiceItemsData[] = [
         'description' => $client->total_tax_description ?? '',
         'price' => $clientTaxAmount,
@@ -189,7 +195,7 @@ $invoiceItemsData[] = [
     $invoiceTotal += $clientTaxAmount;
 
 
-    $invoiceTotalToCalcTax += $invoiceTotalToCalcTax * ($client->total_tax / 100);
+   // $invoiceTotalToCalcTax += $invoiceTotalToCalcTax * ($client->total_tax / 100);
 
 
     $invoiceTaxableTotal += $clientTaxAmount;
@@ -240,7 +246,8 @@ $invoiceItemsData[] = [
 
         $paymentMethod = ParameterValue::find($invoice->payment_type_id ?? null);
 
-        $invoiceTotalToCalcTax = $invoiceTotalToCalcTax * 0.22;
+       // $invoiceTotalToCalcTax = $invoiceTotalToCalcTax * 0.22;
+        $invoiceTotalToCalcTax = $invoiceTaxableTotal * 0.22;
 
         $bankAccount = null;
 
@@ -279,6 +286,18 @@ $invoiceItemsData[] = [
 
     private function generateInvoicePdf(array $data)
     {
+        $extraTotal = 0;
+
+foreach ($data['invoiceItems'] as $item) {
+    if ((float)($item['additionalTaxPercentage'] ?? 22) == 0) {
+        $extraTotal += (float)$item['priceAfterDiscount'];
+    }
+}
+
+$data['applyStamp'] = $extraTotal > 77.47;
+$data['stampAmount'] = 2.00;
+
+
         $pdf = PDF::loadView('invoice_pdf_report', $data);
 
         $fileName = 'invoice_' . $data['invoice']->id . '.pdf';
@@ -436,6 +455,20 @@ public function generateInvoiceXml(array $data)
 
     $usePassepartout = !empty($data['client']['sdi_code']) && $data['client']['sdi_code'] !== '0000000';
 
+
+          $extraTotal = 0;
+
+foreach ($data['invoiceItems'] as $item) {
+    if ((float)($item['additionalTaxPercentage'] ?? 22) == 0) {
+        $extraTotal += (float)$item['priceAfterDiscount'];
+    }
+}
+
+
+$applyStamp = $extraTotal > 77.47;
+$stampAmount = 2.00;
+$totalWithStamp = (float)$data['invoiceTotalWithTax'] + ($applyStamp ? $stampAmount : 0);
+
     /* ================= 1. Build basic structure without Namespaces temporarily ================= */
     // Start with temporary Root without Namespace to avoid prefix p: inheritance issues or xmlns="" appearance
     $xml = new \SimpleXMLElement(
@@ -572,6 +605,10 @@ $trasm->addChild('CodiceDestinatario', $safe($data['client']['sdi'] ?? '0000000'
     /* ================= BODY ================= */
     $body = $xml->addChild('FatturaElettronicaBody');
     $gen = $body->addChild('DatiGenerali');
+
+
+
+
     $doc = $gen->addChild('DatiGeneraliDocumento');
     $doc->addChild('TipoDocumento', 'TD01');
     $doc->addChild('Divisa', 'EUR');
@@ -582,7 +619,16 @@ $trasm->addChild('CodiceDestinatario', $safe($data['client']['sdi'] ?? '0000000'
     $invoiceNumero = $invoiceNumberParts[1] ?? $data['invoice']['number'];
     $doc->addChild('Numero', $safe($invoiceNumero));
 
-    $doc->addChild('ImportoTotaleDocumento', number_format((float)$data['invoiceTotalWithTax'], 2, '.', ''));
+   // $doc->addChild('ImportoTotaleDocumento', number_format((float)$data['invoiceTotalWithTax'], 2, '.', ''));
+
+
+    $doc->addChild('ImportoTotaleDocumento', number_format($totalWithStamp, 2, '.', ''));
+
+if ($applyStamp) {
+    $datiBollo = $doc->addChild('DatiBollo');
+    $datiBollo->addChild('BolloVirtuale', 'SI');
+    $datiBollo->addChild('ImportoBollo', number_format($stampAmount, 2, '.', ''));
+}
 
     // Causale from first item
     foreach ($data['invoiceItems'] as $item) {
@@ -641,13 +687,19 @@ if ($aliquota == 0) {
         $line++;
     }
 
-    $extraTotal = 0;
-
-foreach ($data['invoiceItems'] as $item) {
-    if ((float)($item['additionalTaxPercentage'] ?? 22) == 0) {
-        $extraTotal += (float)$item['priceAfterDiscount'];
-    }
+    if ($applyStamp) {
+    $det = $beni->addChild('DettaglioLinee');
+    $det->addChild('NumeroLinea', (string)$line);
+    $det->addChild('Descrizione', 'Imposta di bollo');
+    $det->addChild('Quantita', '1.00');
+    $det->addChild('UnitaMisura', 'NR');
+    $det->addChild('PrezzoUnitario', number_format($stampAmount, 2, '.', ''));
+    $det->addChild('PrezzoTotale', number_format($stampAmount, 2, '.', ''));
+    $det->addChild('AliquotaIVA', '0.00');
+    $det->addChild('Natura', 'N1');
 }
+
+
 
     $riep = $beni->addChild('DatiRiepilogo');
     $riep->addChild('AliquotaIVA', '22.00');
@@ -661,7 +713,13 @@ foreach ($data['invoiceItems'] as $item) {
     $riepN1 = $beni->addChild('DatiRiepilogo');
     $riepN1->addChild('AliquotaIVA', '0.00');
     $riepN1->addChild('Natura', 'N1');
-    $riepN1->addChild('ImponibileImporto', number_format($extraTotal, 2, '.', ''));
+    //$riepN1->addChild('ImponibileImporto', number_format($extraTotal, 2, '.', ''));
+    $riepN1->addChild('ImponibileImporto', number_format(
+    $extraTotal + ($applyStamp ? $stampAmount : 0),
+    2,
+    '.',
+    ''
+));
     $riepN1->addChild('Imposta', '0.00');
     $riepN1->addChild('RiferimentoNormativo', 'Operazione Esclusa art.15 DPR 633/72');
 
@@ -674,7 +732,8 @@ foreach ($data['invoiceItems'] as $item) {
     $modalita = $data['paymentMethod'];
     $detPag->addChild('ModalitaPagamento', $modalita);
     $detPag->addChild('DataScadenzaPagamento', $parseDate($data['invoice']['end_at'] ?? $data['invoiceStartAt']));
-    $detPag->addChild('ImportoPagamento', number_format((float)$data['invoiceTotalWithTax'], 2, '.', ''));
+    //$detPag->addChild('ImportoPagamento', number_format((float)$data['invoiceTotalWithTax'], 2, '.', ''));
+    $detPag->addChild('ImportoPagamento', number_format($totalWithStamp, 2, '.', ''));
 
     if ($modalita === 'MP05') {
         $detPag->addChild('IstitutoFinanziario', $safe($data['bankAccount']['bankName'] ?? ''));

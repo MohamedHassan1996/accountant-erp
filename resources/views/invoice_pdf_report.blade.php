@@ -137,6 +137,10 @@
 
     <!-- Totals Box -->
     <div class="box">
+
+        @php
+    $totalWithStamp = $invoiceTotalWithTax + (!empty($applyStamp) && $applyStamp ? $stampAmount : 0);
+@endphp
         <table>
             <tr>
                 <td>Imponibile</td>
@@ -146,14 +150,21 @@
                 <td>Iva</td>
                 <td class="text-right">{{ number_format($invoiceTotalTax, 2) }} €</td>
             </tr>
+            @if(!empty($applyStamp) && $applyStamp)
+<tr>
+    <td>Imposta di bollo</td>
+    <td class="text-right">{{ number_format($stampAmount, 2, ',', '.') }} €</td>
+</tr>
+@endif
+
             <tr>
                 <td>Totale fattura</td>
-                <td class="text-right">{{ number_format($invoiceTotalWithTax, 2) }} €</td>
+               <td class="text-right">{{ number_format($totalWithStamp, 2, ',', '.') }} €</td>
             </tr>
             <tr>
                 <td colspan="2" style="padding-top: 15px; border-top: 1px solid #ccc; font-weight: bold; font-size: 18px;">
                     Totale dovuto
-                    <span style="float: right;">{{ number_format($invoiceTotalWithTax, 2) }} €</span>
+                    <span style="float: right;">{{ number_format($totalWithStamp, 2, ',', '.') }} €</span>
                 </td>
             </tr>
         </table>
@@ -177,7 +188,7 @@
             </td>
             <td>
                 <div style="font-weight: 600; color: #7f8fa6;">IMPORTO</div>
-                <div>{{ number_format($invoiceTotalWithTax, 2) }} €</div>
+               <div>{{ number_format($totalWithStamp, 2, ',', '.') }} €</div>
             </td>
         </tr>
     </table>
