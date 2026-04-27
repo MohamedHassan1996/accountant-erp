@@ -187,13 +187,15 @@ class InvoiceController extends Controller
                         : max(0, $servicePrice - $discountValue);
                 }
 
-                $formattedData[$search]['totalPrice'] += $servicePrice;
-                $formattedData[$search]['totalPriceAfterDiscount'] += $servicePriceAfterDiscount;
+                $taskQty = $invoice->taskQuantity ?? 1;
+                $formattedData[$search]['totalPrice'] += $servicePrice * $taskQty;
+                $formattedData[$search]['totalPriceAfterDiscount'] += $servicePriceAfterDiscount * $taskQty;
 
 
             } else {
-                $formattedData[$search]['totalPrice'] += $servicePrice;
-                $formattedData[$search]['totalPriceAfterDiscount'] += $servicePrice;
+                $taskQty = $invoice->taskQuantity ?? 1;
+                $formattedData[$search]['totalPrice'] += $servicePrice * $taskQty;
+                $formattedData[$search]['totalPriceAfterDiscount'] += $servicePrice * $taskQty;
 
             }
 
@@ -216,7 +218,7 @@ class InvoiceController extends Controller
                 'taskCreatedAt' => Carbon::parse($invoice->taskCreatedAt)->format('d/m/Y'),
                 'quantity' => $invoice->taskQuantity ?? 1,
                 'unitPrice' => $servicePrice,
-                'total' => ($invoice->taskQuantity ?? 1) * $servicePriceAfterDiscount,
+                'total' => $taskQty * $servicePriceAfterDiscount,
             ];
 
 
