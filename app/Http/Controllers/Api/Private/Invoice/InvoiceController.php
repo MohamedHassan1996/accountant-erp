@@ -350,6 +350,8 @@ class InvoiceController extends Controller
 
 
 
+                        $qty = ($task->quantity && $task->quantity > 0) ? $task->quantity : 1;
+
                         $task->update([
                             "price" => $servicePrice,
                             "price_after_discount" => $priceAfterDiscount,
@@ -357,10 +359,12 @@ class InvoiceController extends Controller
                         ]);
 
                         $invoiceDetail = new InvoiceDetail([
-                            'invoice_id' => $invoice->id, // Invoice ID
+                            'invoice_id' => $invoice->id,
                             'price' => $servicePrice,
                             'price_after_discount' => $priceAfterDiscount,
-                            'extra_price' => $extraPrice
+                            'extra_price' => $extraPrice,
+                            'quantity' => $qty,
+                            'unit_price' => $servicePrice,
                         ]);
 
                         $task->invoiceDetails()->save($invoiceDetail);

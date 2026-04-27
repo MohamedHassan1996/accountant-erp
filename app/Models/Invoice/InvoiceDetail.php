@@ -18,6 +18,8 @@ class InvoiceDetail extends Model
         'price',
         'price_after_discount',
         'extra_price',
-        'description'
+        'description',
+        'quantity',
+        'unit_price',
     ];
 }
