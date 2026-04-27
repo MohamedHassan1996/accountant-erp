@@ -674,11 +674,13 @@ if ($aliquota != 0) {
 }
 
 $det->addChild('Descrizione', $safe($item['description'] ?? 'Senza descrizione'));
-$det->addChild('Quantita', '1.00');
+$itemQty = ($item['quantity'] ?? 1) > 0 ? (float)($item['quantity'] ?? 1) : 1;
+$itemUnitPrice = ($item['unitPrice'] ?? 0) > 0 ? (float)$item['unitPrice'] : (float)$item['priceAfterDiscount'];
+$det->addChild('Quantita', number_format($itemQty, 2, '.', ''));
 $det->addChild('UnitaMisura', 'NR');
 
-$det->addChild('PrezzoUnitario', number_format((float)$item['priceAfterDiscount'], 6, '.', ''));
-$det->addChild('PrezzoTotale', number_format((float)$item['priceAfterDiscount'], 2, '.', ''));
+$det->addChild('PrezzoUnitario', number_format($itemUnitPrice, 6, '.', ''));
+$det->addChild('PrezzoTotale', number_format($itemQty * (float)$item['priceAfterDiscount'], 2, '.', ''));
 
 
 $det->addChild('AliquotaIVA', number_format($aliquota, 2, '.', ''));
