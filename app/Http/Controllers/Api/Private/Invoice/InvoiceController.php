@@ -616,7 +616,7 @@ class InvoiceController extends Controller
                 'extraPrice' => $invoice->invoiceDetailExtraPrice??0,
                 'quantity' => $qty,
                 'unitPrice' => $unitPrice,
-                'total' => $qty * $unitPrice,
+                'total' => $qty * $invoice->invoiceDetailPriceAfterDiscount,
             ];
 
 
