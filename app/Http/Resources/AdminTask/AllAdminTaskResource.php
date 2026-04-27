@@ -78,7 +78,8 @@ class AllAdminTaskResource extends JsonResource
             "startTime"=>$this->timeLogs()->first()?Carbon::parse($this->timeLogs()->first()->created_at)->format('d/m/Y H:i:s') : "",
             //"endTime"=>$this->timeLogs()->latest()->first()?Carbon::parse($this->timeLogs()->latest()->first()->created_at)->format('d/m/Y H:i:s'):"",
             //"endTime"=>$this->closed_at?Carbon::parse(time: $this->closed_at)->format('d/m/Y H:i'):"",
-            "endTime" => $formattedEndTime
+            "endTime" => $formattedEndTime,
+            'quantity' => $this->quantity??0,
         ];
     }
 }
