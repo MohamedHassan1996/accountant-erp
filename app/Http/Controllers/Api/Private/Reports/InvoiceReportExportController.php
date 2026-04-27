@@ -65,7 +65,9 @@ class InvoiceReportExportController extends Controller
                 'invoice_details.price_after_discount',
                 'invoice_details.invoiceable_id',
                 'invoice_details.invoiceable_type',
-                'invoice_details.description'
+                'invoice_details.description',
+                'invoice_details.quantity',
+                'invoice_details.unit_price',
             ])->get();
 
         $invoiceItemsData = [];
@@ -108,18 +110,23 @@ class InvoiceReportExportController extends Controller
                 $serviceCode = $invoiceItemData->parameterValue->code ?? '..';
             }
 
+            $qty = ($invoiceItem->quantity && $invoiceItem->quantity > 0) ? (float)$invoiceItem->quantity : 1;
+            $unitPrice = ($invoiceItem->unit_price && $invoiceItem->unit_price > 0) ? (float)$invoiceItem->unit_price : (float)$invoiceItem->price;
+
             $invoiceItemsData[] = [
                 'description' => $description,
                 'price' => $invoiceItem->price,
                 'priceAfterDiscount' => $invoiceItem->price_after_discount,
                 'additionalTaxPercentage' => 22,
-                'serviceCode' => $serviceCode
+                'serviceCode' => $serviceCode,
+                'quantity' => $qty,
+                'unitPrice' => $unitPrice,
+                'total' => $qty * (float)$invoiceItem->price_after_discount,
             ];
 
-            //$totalTax += $invoiceItem->price_after_discount * 0.22;
-            $invoiceTotal += $invoiceItem->price_after_discount;
-            $invoiceTotalToCalcTax += $invoiceItem->price_after_discount;
-            $invoiceTaxableTotal += $invoiceItem->price_after_discount;
+            $invoiceTotal += $invoiceItem->price_after_discount * $qty;
+            $invoiceTotalToCalcTax += $invoiceItem->price_after_discount * $qty;
+            $invoiceTaxableTotal += $invoiceItem->price_after_discount * $qty;
 
             if ($invoiceItem->invoiceable_type == Task::class && $invoiceItemData->serviceCategory->extra_is_pricable) {
                /* $invoiceItemsData[] = [

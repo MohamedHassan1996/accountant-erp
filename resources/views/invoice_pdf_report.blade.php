@@ -96,6 +96,7 @@
         <thead>
             <tr>
                 <th>DESCRIZIONE</th>
+                <th class="text-right">QTÀ</th>
                 <th class="text-right">IMPORTO</th>
                 <th class="text-right">TOTALE</th>
                 <th class="text-right">% IVA</th>
@@ -105,8 +106,9 @@
             @foreach($invoiceItems as $item)
                 <tr>
                     <td>{{ $item['description'] }}</td>
+                    <td class="text-right">{{ $item['quantity'] ?? 1 }}</td>
                     <td class="text-right">{{ is_string($item['price'])? $item['price']: number_format($item['price'], 2) }}</td>
-                    <td class="text-right">{{ is_string($item['priceAfterDiscount'])? $item['priceAfterDiscount']: number_format($item['priceAfterDiscount'], 2) }}</td>
+                    <td class="text-right">{{ isset($item['total']) ? number_format($item['total'], 2) : (is_string($item['priceAfterDiscount'])? $item['priceAfterDiscount']: number_format($item['priceAfterDiscount'], 2)) }}</td>
                     <td class="text-right">{{ $item['additionalTaxPercentage']}}%</td>
                 </tr>
             @endforeach
