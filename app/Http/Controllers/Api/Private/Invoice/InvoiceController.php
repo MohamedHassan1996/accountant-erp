@@ -187,13 +187,13 @@ class InvoiceController extends Controller
                         : max(0, $servicePrice - $discountValue);
                 }
 
-                $taskQty = $invoice->taskQuantity ?? 1;
+                $taskQty = ($invoice->taskQuantity && $invoice->taskQuantity > 0) ? $invoice->taskQuantity : 1;
                 $formattedData[$search]['totalPrice'] += $servicePrice * $taskQty;
                 $formattedData[$search]['totalPriceAfterDiscount'] += $servicePriceAfterDiscount * $taskQty;
 
 
             } else {
-                $taskQty = $invoice->taskQuantity ?? 1;
+                $taskQty = ($invoice->taskQuantity && $invoice->taskQuantity > 0) ? $invoice->taskQuantity : 1;
                 $formattedData[$search]['totalPrice'] += $servicePrice * $taskQty;
                 $formattedData[$search]['totalPriceAfterDiscount'] += $servicePrice * $taskQty;
 
@@ -216,7 +216,7 @@ class InvoiceController extends Controller
                 'priceAfterDiscount' =>$invoice->taskPriceAfterDiscount??$servicePriceAfterDiscount,
                 'extraPrice' => $invoice->extraPrice??0,
                 'taskCreatedAt' => Carbon::parse($invoice->taskCreatedAt)->format('d/m/Y'),
-                'quantity' => $invoice->taskQuantity ?? 1,
+                'quantity' => $taskQty,
                 'unitPrice' => $servicePrice,
                 'total' => $taskQty * $servicePriceAfterDiscount,
             ];
@@ -577,7 +577,8 @@ class InvoiceController extends Controller
             $search = array_search($key, array_column($formattedData, 'key'));
 
 
-            $qty = $invoice->invoiceDetailQuantity ?? 1;
+            $qty = ($invoice->invoiceDetailQuantity && $invoice->invoiceDetailQuantity > 0) ? $invoice->invoiceDetailQuantity : 1;
+            $unitPrice = ($invoice->invoiceDetailUnitPrice && $invoice->invoiceDetailUnitPrice > 0) ? $invoice->invoiceDetailUnitPrice : $invoice->invoiceDetailPrice;
             $formattedData[$search]['totalPrice'] += $invoice->invoiceDetailPrice * $qty;
             $formattedData[$search]['totalPriceAfterDiscount'] += $invoice->invoiceDetailPriceAfterDiscount * $qty;
             $formattedData[$search]['totalCosts'] += $invoice->invoiceDetailExtraPrice??0;
@@ -609,9 +610,9 @@ class InvoiceController extends Controller
                 'price' =>$invoice->invoiceDetailPrice,
                 'priceAfterDiscount' =>$invoice->invoiceDetailPriceAfterDiscount,
                 'extraPrice' => $invoice->invoiceDetailExtraPrice??0,
-                'quantity' => $invoice->invoiceDetailQuantity ?? 1,
-                'unitPrice' => $invoice->invoiceDetailUnitPrice ?? $invoice->invoiceDetailPrice,
-                'total' => $qty * ($invoice->invoiceDetailUnitPrice ?? $invoice->invoiceDetailPrice),
+                'quantity' => $qty,
+                'unitPrice' => $unitPrice,
+                'total' => $qty * $unitPrice,
             ];
 
 
