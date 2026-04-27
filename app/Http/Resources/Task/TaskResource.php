@@ -30,6 +30,7 @@ class TaskResource extends JsonResource
             'currentTime' => $this->current_time,
             'latestTimeLogId' => $latestLog?->id??"",
             'connectionTypeId' => $this->connection_type_id,
+            'quantity' => $this->quantity??0,
             //'startDate' => $this->start_date??"",
             //'endDate' => $this->end_date??"",
 

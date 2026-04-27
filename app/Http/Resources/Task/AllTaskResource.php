@@ -74,7 +74,8 @@ class AllTaskResource extends JsonResource
             'startDate' => $this->start_date?Carbon::parse($this->start_at)->format('d/m/Y'):"",
             'endDate' => $this->end_date?Carbon::parse($this->end_date)->format('d/m/Y'):"",
             "startTime"=>$this->timeLogs()->first()?Carbon::parse($this->timeLogs()->first()->created_at)->format('d/m/Y H:i:s') : "",
-            "endTime"=> $formattedEndTime
+            "endTime"=> $formattedEndTime,
+            'quantity' => $this->quantity??0,
         ];
     }
 }

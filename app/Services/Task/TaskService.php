@@ -237,6 +237,7 @@ $formattedTotalTime = sprintf(
             'connection_type_id' => $taskData['connectionTypeId']??null,
             'start_date' => $taskData['startDate']??null,
             'end_date' => $taskData['endDate']??null,
+            'quantity' => $taskData['quantity']??null,
         ]);
 
         return $task;
@@ -283,6 +284,7 @@ $formattedTotalTime = sprintf(
         $task->connection_type_id = $taskData['connectionTypeId']??null;
         $task->start_date = $taskData['startDate']??null;
         $task->end_date = $taskData['endDate']??null;
+        $task->quantity = $taskData['quantity']??null;
 
         if($task->status != TaskStatus::DONE){
             $task->status = TaskStatus::from($taskData['status'])->value;

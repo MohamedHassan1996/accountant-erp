@@ -102,6 +102,7 @@ class InvoiceController extends Controller
                 'service_categories.extra_is_pricable as extraIsPricable',
                 'service_categories.extra_code as extraCode',
                 'service_categories.extra_price as extraPrice',
+                'tasks.quantity as taskQuantity',
             ])->when(isset($filters['startAt']) && isset($filters['endAt']), function ($query) use ($filters) {
                 return $query->whereBetween('tasks.created_at', [
                     Carbon::parse($filters['startAt'])->startOfDay(),
@@ -212,7 +213,10 @@ class InvoiceController extends Controller
                 'price' =>$invoice->taskPrice ?? $servicePrice,
                 'priceAfterDiscount' =>$invoice->taskPriceAfterDiscount??$servicePriceAfterDiscount,
                 'extraPrice' => $invoice->extraPrice??0,
-                'taskCreatedAt' => Carbon::parse($invoice->taskCreatedAt)->format('d/m/Y')
+                'taskCreatedAt' => Carbon::parse($invoice->taskCreatedAt)->format('d/m/Y'),
+                'quantity' => $invoice->taskQuantity ?? 1,
+                'unitPrice' => $servicePrice,
+                'total' => ($invoice->taskQuantity ?? 1) * $servicePriceAfterDiscount,
             ];
 
 
@@ -470,6 +474,8 @@ class InvoiceController extends Controller
                 'invoice_details.invoiceable_type as invoiceableType',
                 'invoice_details.extra_price as invoiceDetailExtraPrice',
                 'invoice_details.description as invoiceDetailDescription',
+                'invoice_details.quantity as invoiceDetailQuantity',
+                'invoice_details.unit_price as invoiceDetailUnitPrice',
                 'client_pay_installments.start_at as installmentStartAt',
                 /*'tasks.id as taskId',
                 'tasks.status as taskStatus',
@@ -600,7 +606,9 @@ class InvoiceController extends Controller
                 'price' =>$invoice->invoiceDetailPrice,
                 'priceAfterDiscount' =>$invoice->invoiceDetailPriceAfterDiscount,
                 'extraPrice' => $invoice->invoiceDetailExtraPrice??0,
-                //'taskCreatedAt' => Carbon::parse($invoice->taskCreatedAt)->format('d/m/Y')
+                'quantity' => $invoice->invoiceDetailQuantity ?? 1,
+                'unitPrice' => $invoice->invoiceDetailUnitPrice ?? $invoice->invoiceDetailPrice,
+                'total' => ($invoice->invoiceDetailQuantity ?? 1) * ($invoice->invoiceDetailUnitPrice ?? $invoice->invoiceDetailPrice),
             ];
 
 

@@ -35,7 +35,8 @@ class UpdateTaskRequest extends FormRequest
             'serviceCategoryId' => ['required'],
             'connectionTypeId' => ['nullable'],
             'startDate' => ['nullable'],
-            'endDate' => ['nullable']
+            'endDate' => ['nullable'],
+            'quantity' => ['nullable', 'numeric']
         ];
     }
 
