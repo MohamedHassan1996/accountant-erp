@@ -23,6 +23,7 @@ class ClientContact extends Model
         'note',
         'client_id',
         'parameter_id',
+        'parameter_value_id',
         'cf'
     ];
 
