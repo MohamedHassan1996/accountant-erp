@@ -575,8 +575,9 @@ class InvoiceController extends Controller
             $search = array_search($key, array_column($formattedData, 'key'));
 
 
-            $formattedData[$search]['totalPrice'] += $invoice->invoiceDetailPrice;
-            $formattedData[$search]['totalPriceAfterDiscount'] += $invoice->invoiceDetailPriceAfterDiscount;
+            $qty = $invoice->invoiceDetailQuantity ?? 1;
+            $formattedData[$search]['totalPrice'] += $invoice->invoiceDetailPrice * $qty;
+            $formattedData[$search]['totalPriceAfterDiscount'] += $invoice->invoiceDetailPriceAfterDiscount * $qty;
             $formattedData[$search]['totalCosts'] += $invoice->invoiceDetailExtraPrice??0;
 
             $task = $invoice->invoiceableType == Task::class ? Task::with('serviceCategory')->find($invoice->invoiceableId) : "";
@@ -608,7 +609,7 @@ class InvoiceController extends Controller
                 'extraPrice' => $invoice->invoiceDetailExtraPrice??0,
                 'quantity' => $invoice->invoiceDetailQuantity ?? 1,
                 'unitPrice' => $invoice->invoiceDetailUnitPrice ?? $invoice->invoiceDetailPrice,
-                'total' => ($invoice->invoiceDetailQuantity ?? 1) * ($invoice->invoiceDetailUnitPrice ?? $invoice->invoiceDetailPrice),
+                'total' => $qty * ($invoice->invoiceDetailUnitPrice ?? $invoice->invoiceDetailPrice),
             ];
 
 
