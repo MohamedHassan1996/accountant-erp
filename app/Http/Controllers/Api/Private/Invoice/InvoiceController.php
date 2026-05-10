@@ -452,7 +452,7 @@ class InvoiceController extends Controller
                      ->where('invoice_details.invoiceable_type', '=', 'App\\Models\\Client\\ClientPayInstallment');
             })
             ->whereNull('invoices.deleted_at')
-            //->whereNull('invoice_details.deleted_at')
+            ->whereNull('invoice_details.deleted_at')
             ->when($filters['unassigned'] == 0, function ($query) {
                 $query->whereDate('invoice_details.created_at', '>', Carbon::parse('2026-01-04'));
             })
