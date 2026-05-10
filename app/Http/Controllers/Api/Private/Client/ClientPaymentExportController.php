@@ -43,7 +43,7 @@ class ClientPaymentExportController extends Controller
             ->select(
                 'cpi.id',
                 'cpi.client_id',
-                'cpi.start_at',
+                'cpi.end_at',
                 'c.ragione_sociale',
                 'pv.id as pv_id',
                 'pv.parameter_value as pv_name',
@@ -60,7 +60,7 @@ class ClientPaymentExportController extends Controller
             $allTransactions->push([
                 'client_id'       => $inst->client_id,
                 'ragione_sociale' => $inst->ragione_sociale,
-                'date'            => $inst->start_at ? Carbon::parse($inst->start_at)->format('d/m/Y') : '',
+                'date'            => $inst->end_at ? Carbon::parse($inst->end_at)->format('d/m/Y') : '',
                 'description'     => $inst->description,
                 'pv_id'           => $inst->pv_id,
                 'pv_name'         => $inst->pv_name,
@@ -86,7 +86,7 @@ class ClientPaymentExportController extends Controller
                 $allTransactions->push([
                     'client_id'       => $inst->client_id,
                     'ragione_sociale' => $inst->ragione_sociale,
-                    'date'            => $inst->start_at ? Carbon::parse($inst->start_at)->format('d/m/Y') : '',
+                    'date'            => $inst->end_at ? Carbon::parse($inst->end_at)->format('d/m/Y') : '',
                     'description'     => $sub->description,
                     'pv_id'           => $sub->pv_id ?? $inst->pv_id,
                     'pv_name'         => $sub->pv_name ?? $inst->pv_name,
@@ -100,7 +100,7 @@ class ClientPaymentExportController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Dettaglio');
         $sheet->setCellValue('A1', 'Cliente');
-        $sheet->setCellValue('B1', 'Start Date');
+        $sheet->setCellValue('B1', 'End Date');
         $sheet->setCellValue('C1', 'Descrizione');
         $sheet->setCellValue('D1', 'Totale');
 

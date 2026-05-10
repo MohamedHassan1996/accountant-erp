@@ -622,13 +622,15 @@ $trasm->addChild('CodiceDestinatario', $safe($data['client']['sdi'] ?? '0000000'
    // $doc->addChild('ImportoTotaleDocumento', number_format((float)$data['invoiceTotalWithTax'], 2, '.', ''));
 
 
-    $doc->addChild('ImportoTotaleDocumento', number_format($totalWithStamp, 2, '.', ''));
 
 if ($applyStamp) {
     $datiBollo = $doc->addChild('DatiBollo');
     $datiBollo->addChild('BolloVirtuale', 'SI');
     $datiBollo->addChild('ImportoBollo', number_format($stampAmount, 2, '.', ''));
 }
+
+    $doc->addChild('ImportoTotaleDocumento', number_format($totalWithStamp, 2, '.', ''));
+
 
     // Causale from first item
     foreach ($data['invoiceItems'] as $item) {

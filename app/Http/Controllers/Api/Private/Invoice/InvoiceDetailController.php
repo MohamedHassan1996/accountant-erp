@@ -121,9 +121,19 @@ class InvoiceDetailController extends Controller
     {
         try {
             DB::beginTransaction();
+
             $invoiceDetail = InvoiceDetail::find($request->invoiceDetailId);
+
+            if (!$invoiceDetail) {
+                return response()->json([
+                    'message' => __('messages.error.not_found')
+                ], 404);
+            }
+
             $invoiceDetail->delete();
+
             DB::commit();
+
             return response()->json([
                 'message' => __('messages.success.deleted')
             ], 200);

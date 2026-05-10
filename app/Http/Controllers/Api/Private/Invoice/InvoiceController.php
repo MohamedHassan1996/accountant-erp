@@ -24,6 +24,7 @@ use App\Models\Client\ClientPayInstallment;
 use App\Models\Client\ClientPayInstallmentSubData;
 use App\Models\Invoice\InvoiceDetail;
 use App\Models\ServiceCategory\ServiceCategory;
+use App\Models\Parameter\ParameterValue;
 use Carbon\Carbon;
 
 class InvoiceController extends Controller
@@ -452,10 +453,14 @@ class InvoiceController extends Controller
             ->when($filters['unassigned'] == 0, function ($query) {
                 $query->whereDate('invoice_details.created_at', '>', Carbon::parse('2026-01-04'));
             })
+            ->when(isset($filters['payStatus']), function ($query) use ($filters) {
+                return $query->where('invoices.pay_status', $filters['payStatus']);
+            })
             ->select([
                 'invoices.id as invoiceId',
                 'invoices.created_at as invoiceCreatedAt',
                 'invoices.invoice_xml_number as invoiceXmlNumber',
+                'invoices.pay_status as invoicePayStatus',
                 'clients.id as clientId',
                 'clients.total_tax as clientTotalTax',
                 'clients.ragione_sociale as clientName',
@@ -554,7 +559,8 @@ class InvoiceController extends Controller
                     'clientTotalTax' => $invoice->clientTotalTax,
                     'invoiceDiscount' => 0,
                     'totalInvoiceAfterDiscount' => 0,
-                    'invoiceDate' => $invoiceDate
+                    'invoiceDate' => $invoiceDate,
+                    'payStatus' => $invoice->invoicePayStatus ?? 0,
                 ];
 
                 /*if(count($formattedData) >1) {
@@ -655,6 +661,14 @@ class InvoiceController extends Controller
             $invoice->discount_amount = $request->discountAmount;
             $invoice->bank_account_id = $request->bankAccountId;
 
+            // Update start_date if provided, adjusting for weekends/holidays
+            if ($request->filled('startDate')) {
+                $startDate = Carbon::parse($request->startDate);
+                $holidays = $this->getHolidays();
+                $startDate = $this->adjustForWeekendsAndHolidays($startDate, $holidays);
+                $invoice->start_date = $startDate->format('Y-m-d');
+            }
+
             $invoice->save();
 
             DB::commit();
@@ -667,8 +681,54 @@ class InvoiceController extends Controller
             DB::rollBack();
             throw $e;
         }
+    }
 
+    /**
+     * Get holidays from parameter_values where parameter_order = 11
+     */
+    private function getHolidays(): array
+    {
+        return ParameterValue::where('parameter_order', 11)
+            ->pluck('parameter_value')
+            ->map(function ($date) {
+                $parts = explode('/', $date);
+                if (count($parts) == 2) {
+                    $day   = str_pad($parts[0], 2, '0', STR_PAD_LEFT);
+                    $month = str_pad($parts[1], 2, '0', STR_PAD_LEFT);
+                    $year  = Carbon::now()->year;
+                    return "{$year}-{$month}-{$day}";
+                }
+                return Carbon::parse($date)->format('Y-m-d');
+            })
+            ->toArray();
+    }
 
+    /**
+     * Adjust date if it falls on weekend (Saturday/Sunday) or holiday
+     * Move to next working day
+     */
+    private function adjustForWeekendsAndHolidays(Carbon $date, array $holidays): Carbon
+    {
+        $adjustedDate = $date->copy();
+
+        while (true) {
+            $dayOfWeek  = $adjustedDate->dayOfWeek;
+            $dateString = $adjustedDate->format('Y-m-d');
+
+            if ($dayOfWeek === Carbon::SATURDAY || $dayOfWeek === Carbon::SUNDAY) {
+                $adjustedDate->next(Carbon::MONDAY);
+                continue;
+            }
+
+            if (in_array($dateString, $holidays)) {
+                $adjustedDate->addDay();
+                continue;
+            }
+
+            break;
+        }
+
+        return $adjustedDate;
     }
 
     /**
