@@ -109,6 +109,27 @@ class InvoiceReportExportController extends Controller
                 $serviceCode = $invoiceItemData->parameterValue->code ?? '..';
             }
 
+            // Skip Task items with zero price
+            if ($invoiceItem->invoiceable_type == Task::class && $invoiceItemData && $invoiceItemData->serviceCategory) {
+                if ($invoiceItem->price_after_discount == 0 && $invoiceItem->price == 0) {
+                    // Still check extra_is_pricable even if main price is zero
+                    if ($invoiceItemData->serviceCategory->extra_is_pricable) {
+                        $extraPrice = $invoiceItemData->serviceCategory->extra_price;
+                        $invoiceItemsData[] = [
+                            'description' => $invoiceItemData->serviceCategory->extra_price_description,
+                            'price' => $extraPrice,
+                            'priceAfterDiscount' => $extraPrice,
+                            'additionalTaxPercentage' => 22,
+                            'serviceCode' => $invoiceItemData->serviceCategory->extra_code ?? '..',
+                        ];
+                        $invoiceTotal += $extraPrice;
+                        $invoiceTotalToCalcTax += $extraPrice;
+                        $invoiceTaxableTotal += $extraPrice;
+                    }
+                    continue;
+                }
+            }
+
             $invoiceItemsData[] = [
                 'description' => $description,
                 'price' => $invoiceItem->price,
@@ -123,28 +144,15 @@ class InvoiceReportExportController extends Controller
             $invoiceTaxableTotal += $invoiceItem->price_after_discount;
 
             if ($invoiceItem->invoiceable_type == Task::class && $invoiceItemData->serviceCategory->extra_is_pricable) {
-               /* $invoiceItemsData[] = [
+                $extraPrice = $invoiceItemData->serviceCategory->extra_price;
+                $invoiceItemsData[] = [
                     'description' => $invoiceItemData->serviceCategory->extra_price_description,
-                    'price' => $invoiceItem->price == 0 ? $invoiceItemData->serviceCategory->extra_price : $invoiceItem->price,
-                    'priceAfterDiscount' => $invoiceItem->price_after_discount == 0 ? $invoiceItemData->serviceCategory->extra_price : $invoiceItem->price,
+                    'price' => $extraPrice,
+                    'priceAfterDiscount' => $extraPrice,
                     'additionalTaxPercentage' => 0,
                     'serviceCode' => $invoiceItemData->serviceCategory->extra_code ?? '..',
-                    'test' => 'test'
                 ];
-                */
-
-                $extraPrice = $invoiceItemData->serviceCategory->extra_price;
-
-$invoiceItemsData[] = [
-    'description' => $invoiceItemData->serviceCategory->extra_price_description,
-    'price' => $extraPrice,
-    'priceAfterDiscount' => $extraPrice,
-    'additionalTaxPercentage' => 0,
-    'serviceCode' => $invoiceItemData->serviceCategory->extra_code ?? '..',
-    'test' => 'test'
-];
-
-                $invoiceTotal += $invoiceItemData->serviceCategory->extra_price;
+                $invoiceTotal += $extraPrice;
             }
         }
 
