@@ -60,6 +60,7 @@ class InvoiceReportExportController extends Controller
 
         $invoiceItems = DB::table('invoice_details')
             ->where('invoice_details.invoice_id', $invoice->id)
+            ->whereNull('invoice_details.deleted_at')
             ->select([
                 'invoice_details.price',
                 'invoice_details.price_after_discount',
