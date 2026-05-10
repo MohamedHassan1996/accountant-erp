@@ -309,7 +309,7 @@ $data['stampAmount'] = 2.00;
 
         $pdf = PDF::loadView('invoice_pdf_report', $data);
 
-        $fileName = 'invoice_' . $data['invoice']->id . '.pdf';
+        $fileName = 'invoice_' . $data['invoice']->id . '_' . now()->format('d_m_Y_H_i_s') . '.pdf';
         $path = 'exportedInvoices/' . $fileName;
 
         Storage::disk('public')->put($path, $pdf->output());
