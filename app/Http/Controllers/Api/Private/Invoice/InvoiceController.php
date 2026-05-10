@@ -385,8 +385,12 @@ class InvoiceController extends Controller
 
         $invoiceableType = "";
 
-        $startAt = Carbon::parse($invoice->create_at)->format('d/m/Y');
-
+        // Priority: start_date (if set) → ClientPayInstallment.start_at → invoice.created_at
+        if (!empty($invoice->start_date)) {
+            $startAt = Carbon::parse($invoice->start_date)->format('Y-m-d');
+        } else {
+            $startAt = Carbon::parse($invoice->created_at)->format('d/m/Y');
+        }
 
         foreach ($invoice->invoiceDetails as $invoiceDetail) {
             if($invoiceDetail->invoiceable_type == Task::class) {
@@ -397,12 +401,10 @@ class InvoiceController extends Controller
                 $invoiceableType = "recurring";
             }
 
-
-            if($invoiceDetail->invoiceable_type == ClientPayInstallment::class) {
+            if($invoiceDetail->invoiceable_type == ClientPayInstallment::class && empty($invoice->start_date)) {
                 $clientPayInstallment = ClientPayInstallment::find($invoiceDetail->invoiceable_id)->start_at;
                 $startAt = Carbon::parse($clientPayInstallment)->format('Y-m-d');
             }
-
 
             $invoiceDetailsData[] = [
                 'price' => $invoiceDetail->price,
@@ -433,6 +435,7 @@ class InvoiceController extends Controller
                 'discountType' => $invoice->discount_type??'',
                 'discountAmount' => $invoice->discount_amount??0,
                 'bankAccountId' => $invoice->bank_account_id??'',
+                'startDate' => $invoice->start_date ?? null,
                 'invoiceDetails' => $invoiceDetailsData
             ]
         ]);
@@ -461,6 +464,7 @@ class InvoiceController extends Controller
                 'invoices.created_at as invoiceCreatedAt',
                 'invoices.invoice_xml_number as invoiceXmlNumber',
                 'invoices.pay_status as invoicePayStatus',
+                'invoices.start_date as invoiceStartDate',
                 'clients.id as clientId',
                 'clients.total_tax as clientTotalTax',
                 'clients.ragione_sociale as clientName',
@@ -496,16 +500,16 @@ class InvoiceController extends Controller
                 return $query->where('clients.id', $filters['clientId']);
             })
             ->when(isset($filters['startAt']) && isset($filters['endAt']), function ($query) use ($filters) {
-                return $query->whereBetween(DB::raw('COALESCE(client_pay_installments.start_at, invoices.created_at)'), [
+                return $query->whereBetween(DB::raw('COALESCE(invoices.start_date, client_pay_installments.start_at, invoices.created_at)'), [
                     Carbon::parse($filters['startAt'])->startOfDay(),
                     Carbon::parse($filters['endAt'])->endOfDay(),
                 ]);
             })
             ->when(isset($filters['startAt']) && !isset($filters['endAt']), function ($query) use ($filters) {
-                return $query->where(DB::raw('COALESCE(client_pay_installments.start_at, invoices.created_at)'), '>=', Carbon::parse($filters['startAt'])->startOfDay());
+                return $query->where(DB::raw('COALESCE(invoices.start_date, client_pay_installments.start_at, invoices.created_at)'), '>=', Carbon::parse($filters['startAt'])->startOfDay());
             })
             ->when(!isset($filters['startAt']) && isset($filters['endAt']), function ($query) use ($filters) {
-                return $query->where(DB::raw('COALESCE(client_pay_installments.start_at, invoices.created_at)'), '<=', Carbon::parse($filters['endAt'])->endOfDay());
+                return $query->where(DB::raw('COALESCE(invoices.start_date, client_pay_installments.start_at, invoices.created_at)'), '<=', Carbon::parse($filters['endAt'])->endOfDay());
             })
             ->when(isset($filters['hasXmlNumber']), function ($query) use ($filters) {
                 if ($filters['hasXmlNumber'] == 1) {
@@ -534,7 +538,12 @@ class InvoiceController extends Controller
 
             $invoiceClientPayInstallment = InvoiceDetail::where('invoice_id', $invoice->invoiceId)->where('invoiceable_type', ClientPayInstallment::class)->first();
 
-            $invoiceDate = $invoice->installmentStartAt ?? $invoice->invoiceCreatedAt;
+            // Priority: start_date (if set) → installmentStartAt → invoiceCreatedAt
+            if (!empty($invoice->invoiceStartDate)) {
+                $invoiceDate = $invoice->invoiceStartDate;
+            } else {
+                $invoiceDate = $invoice->installmentStartAt ?? $invoice->invoiceCreatedAt;
+            }
 
             // Format date to Y-m-d only (remove time)
             if ($invoiceDate) {
