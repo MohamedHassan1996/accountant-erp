@@ -75,7 +75,9 @@ class InvoiceReportExportController extends Controller
         $invoiceTotal = 0;
         $invoiceTaxableTotal = 0;
 
-        $invoiceStartAt = Carbon::parse($invoice->created_at)->format('d/m/Y');
+        $invoiceStartAt = !empty($invoice->start_date)
+            ? Carbon::parse($invoice->start_date)->format('d/m/Y')
+            : Carbon::parse($invoice->created_at)->format('d/m/Y');
 
         foreach ($invoiceItems as $invoiceItem) {
             $invoiceItemData = match ($invoiceItem->invoiceable_type) {
@@ -86,17 +88,15 @@ class InvoiceReportExportController extends Controller
             };
 
 
-            $description = $invoiceItem->invoiceable_type == Task::class
-                ? $invoiceItemData->serviceCategory->name
-                : $invoiceItemData->parameterValue?->description ?? $invoiceItem->description;
+            $description = !empty($invoiceItem->description)
+                ? $invoiceItem->description
+                : ($invoiceItem->invoiceable_type == Task::class
+                    ? $invoiceItemData->serviceCategory->name
+                    : $invoiceItemData->parameterValue?->description ?? '');
 
-            $invoiceStartAt = $invoiceItem->invoiceable_type == ClientPayInstallment::class
+            $invoiceStartAt = ($invoiceItem->invoiceable_type == ClientPayInstallment::class && empty($invoice->start_date))
                 ? Carbon::parse(ClientPayInstallment::find($invoiceItem->invoiceable_id)->start_at)->format('d/m/Y')
                 : $invoiceStartAt;
-
-            if($invoiceItem->description != null){
-                $description = $invoiceItem->description;
-            }
 
             // Get service code from Task's ServiceCategory or ParameterValue
             $serviceCode = '..'; // Default value
