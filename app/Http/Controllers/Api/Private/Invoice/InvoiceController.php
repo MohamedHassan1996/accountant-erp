@@ -569,6 +569,7 @@ class InvoiceController extends Controller
                     'invoiceDiscount' => 0,
                     'totalInvoiceAfterDiscount' => 0,
                     'invoiceDate' => $invoiceDate,
+                    'startAt' => $invoice->invoiceStartDate ?? null,
                     'payStatus' => $invoice->invoicePayStatus ?? 0,
                 ];
 
@@ -670,12 +671,8 @@ class InvoiceController extends Controller
             $invoice->discount_amount = $request->discountAmount;
             $invoice->bank_account_id = $request->bankAccountId;
 
-            // Update start_date if provided, adjusting for weekends/holidays
             if ($request->filled('startDate')) {
-                $startDate = Carbon::parse($request->startDate);
-                $holidays = $this->getHolidays();
-                $startDate = $this->adjustForWeekendsAndHolidays($startDate, $holidays);
-                $invoice->start_date = $startDate->format('Y-m-d');
+                $invoice->start_date = Carbon::parse($request->startDate)->format('Y-m-d');
             }
 
             $invoice->save();
