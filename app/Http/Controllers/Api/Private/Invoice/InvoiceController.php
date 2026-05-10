@@ -671,8 +671,8 @@ class InvoiceController extends Controller
             $invoice->discount_amount = $request->discountAmount;
             $invoice->bank_account_id = $request->bankAccountId;
 
-            if ($request->filled('startDate')) {
-                $invoice->start_date = Carbon::parse($request->startDate)->format('Y-m-d');
+            if ($request->filled('startAt')) {
+                $invoice->start_date = Carbon::parse($request->startAt)->format('Y-m-d');
             }
 
             $invoice->save();
