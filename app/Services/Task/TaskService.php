@@ -144,18 +144,20 @@ class TaskService{
 
     $filteredTaskIds = (clone $query)->pluck('id');
 
-    $totalOverDuoTasks = 0;
-    if ($filteredTaskIds->isNotEmpty()) {
-        $filteredLatestLogs = DB::table('task_time_logs as ttl')
+        $totalOverDuoTasks = 0;
+        if ($filteredTaskIds->isNotEmpty()) {
+            $filteredLatestLogs = DB::table('task_time_logs as ttl')
             ->joinSub(
                 DB::table('task_time_logs')
                     ->select('task_id', DB::raw('MAX(created_at) as latest'))
+                    ->where('type', TaskTimeLogType::TIME_LOG->value)
                     ->whereIn('task_id', $filteredTaskIds)
                     ->groupBy('task_id'),
                 'latest_logs',
                 fn($join) => $join->on('ttl.task_id', '=', 'latest_logs.task_id')
                                   ->on('ttl.created_at', '=', 'latest_logs.latest')
             )
+            ->where('ttl.type', TaskTimeLogType::TIME_LOG->value)
             ->whereIn('ttl.task_id', $filteredTaskIds)
             ->select('ttl.task_id', 'ttl.status', 'ttl.total_time', 'ttl.created_at')
             ->get();
@@ -185,12 +187,14 @@ class TaskService{
         ->joinSub(
             DB::table('task_time_logs')
                 ->select('task_id', DB::raw('MAX(created_at) as latest'))
+                ->where('type', TaskTimeLogType::TIME_LOG->value)
                 ->whereIn('task_id', $taskIds)
                 ->groupBy('task_id'),
             'latest_logs',
             fn($join) => $join->on('ttl.task_id', '=', 'latest_logs.task_id')
                               ->on('ttl.created_at', '=', 'latest_logs.latest')
         )
+        ->where('ttl.type', TaskTimeLogType::TIME_LOG->value)
         ->whereIn('ttl.task_id', $taskIds)
         ->select('ttl.task_id', 'ttl.status', 'ttl.total_time', 'ttl.created_at')
         ->get();
