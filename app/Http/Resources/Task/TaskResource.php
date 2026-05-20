@@ -18,6 +18,7 @@ class TaskResource extends JsonResource
         $latestLog = $this->timeLogs()->latest()->first();
         return [
             'taskId' => $this->id,
+            'seqNumber' => $this->seq_number,
             'title' => $this->title,
             'number' => $this->number,
             'status' => $this->status,

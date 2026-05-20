@@ -12,6 +12,7 @@ use Spatie\QueryBuilder\AllowedFilter;
 use App\Filters\Task\FilterTaskDateBetween;
 use App\Filters\Task\FilterTaskStartEndDate;
 use App\Models\Client\ClientServiceDiscount;
+use App\Models\Client\Client;
 use App\Models\ServiceCategory\ServiceCategory;
 use App\Models\Task\TaskTimeLog;
 use Carbon\Carbon;
@@ -124,6 +125,7 @@ class TaskService{
     $startDate = $filters['startDate'] ?? null;
     $endDate = $filters['endDate'] ?? null;
     $pageSize = request()->input('pageSize', 10);
+    $overDueThresholdInSeconds = 10 * 3600;
 
     // Build Query with Filtering
     $query = QueryBuilder::for(Task::class)
@@ -139,6 +141,40 @@ class TaskService{
         ->when($startDate && !$endDate, fn($q) => $q->whereDate('created_at', '=', $startDate))
         ->where('is_new', 1)
         ->orderByDesc('id');
+
+    $filteredTaskIds = (clone $query)->pluck('id');
+
+    $totalOverDuoTasks = 0;
+    if ($filteredTaskIds->isNotEmpty()) {
+        $filteredLatestLogs = DB::table('task_time_logs as ttl')
+            ->joinSub(
+                DB::table('task_time_logs')
+                    ->select('task_id', DB::raw('MAX(created_at) as latest'))
+                    ->whereIn('task_id', $filteredTaskIds)
+                    ->groupBy('task_id'),
+                'latest_logs',
+                fn($join) => $join->on('ttl.task_id', '=', 'latest_logs.task_id')
+                                  ->on('ttl.created_at', '=', 'latest_logs.latest')
+            )
+            ->whereIn('ttl.task_id', $filteredTaskIds)
+            ->select('ttl.task_id', 'ttl.status', 'ttl.total_time', 'ttl.created_at')
+            ->get();
+
+        foreach ($filteredLatestLogs as $log) {
+            if ((int) $log->status !== TaskTimeLogStatus::START->value) {
+                continue;
+            }
+
+            $storedSeconds = ($log->total_time === '00:00:00' || empty($log->total_time))
+                ? 0
+                : $this->timeToSeconds($log->total_time);
+            $elapsedSeconds = Carbon::now()->diffInSeconds(Carbon::parse($log->created_at));
+
+            if (($storedSeconds + $elapsedSeconds) > $overDueThresholdInSeconds) {
+                $totalOverDuoTasks++;
+            }
+        }
+    }
 
     // Get Paginated Data
     $tasks = $query->paginate($pageSize);
@@ -221,14 +257,26 @@ $formattedTotalTime = sprintf(
         'tasks' => $tasks,
         'totalTime' => $formattedTotalTime,
         'total' => $tasks->total(),
+        'totalOverDuoTasks' => $totalOverDuoTasks,
     ];
 }
 
 
     public function createTask(array $taskData){
+        $client = Client::find($taskData['clientId']);
+        $nextSeqNumber = null;
+
+        if ($client && !is_null($client->start_seq_number)) {
+            $currentMaxSeq = Task::where('client_id', $client->id)->max('seq_number');
+            $nextSeqNumber = is_null($currentMaxSeq)
+                ? (int) $client->start_seq_number
+                : ((int) $currentMaxSeq + 1);
+        }
+
         $task = Task::create([
             'title' => $taskData['title']??"",
             'description' => $taskData['description']??"",
+            'seq_number' => $nextSeqNumber,
             'client_id' => $taskData['clientId'],
             'user_id' => $taskData['userId'],
             'service_category_id' => $taskData['serviceCategoryId'],

@@ -51,7 +51,8 @@ class AdminTaskController extends Controller
        return response()->json(
         new AllAdminTaskCollection($allTasks['tasks'], [
             'totalHours' => $allTasks['totalTime'],
-            'totalTasks' => $allTasks['total']
+            'totalTasks' => $allTasks['total'],
+            'totalOverDuoTasks' => $allTasks['totalOverDuoTasks'],
         ])
     );
     }

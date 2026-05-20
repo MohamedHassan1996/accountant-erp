@@ -11,6 +11,7 @@ use Spatie\QueryBuilder\QueryBuilder;
 use Spatie\QueryBuilder\AllowedFilter;
 use App\Filters\Task\FilterTaskDateBetween;
 use App\Filters\Task\FilterTaskStartEndDate;
+use App\Models\Client\Client;
 use App\Models\Client\ClientServiceDiscount;
 use App\Models\ServiceCategory\ServiceCategory;
 use App\Models\Task\TaskTimeLog;
@@ -92,9 +93,20 @@ class ExportTaskService{
 
 
     public function createTask(array $taskData){
+        $client = Client::find($taskData['clientId']);
+        $nextSeqNumber = null;
+
+        if ($client && !is_null($client->start_seq_number)) {
+            $currentMaxSeq = Task::where('client_id', $client->id)->max('seq_number');
+            $nextSeqNumber = is_null($currentMaxSeq)
+                ? (int) $client->start_seq_number
+                : ((int) $currentMaxSeq + 1);
+        }
+
         $task = Task::create([
             'title' => $taskData['title']??"",
             'description' => $taskData['description']??"",
+            'seq_number' => $nextSeqNumber,
             'client_id' => $taskData['clientId'],
             'user_id' => $taskData['userId'],
             'service_category_id' => $taskData['serviceCategoryId'],

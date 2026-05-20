@@ -27,6 +27,7 @@ class Client extends Model
         'price',
         'monthly_price',
         'hours_per_month',
+        'free_phone_assist_hours',
         'payment_type_id' ,
         'pay_steps_id',
         'payment_type_two_id',
@@ -42,6 +43,7 @@ class Client extends Model
         'sdi',
         'proforma',
         'limit_decreto',
+        'start_seq_number',
     ];
     protected $casts = [
         'addable_to_bulk_invoice' => AddableToBulk::class

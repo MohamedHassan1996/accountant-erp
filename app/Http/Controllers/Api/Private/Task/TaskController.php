@@ -40,7 +40,8 @@ class TaskController extends Controller
        return response()->json(
         new AllTaskCollection($allTasks['tasks'], [
             'totalHours' => $allTasks['totalTime'],
-            'totalTasks' => $allTasks['total']
+            'totalTasks' => $allTasks['total'],
+            'totalOverDuoTasks' => $allTasks['totalOverDuoTasks'],
         ])
     );
     }

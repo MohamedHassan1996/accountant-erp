@@ -296,6 +296,7 @@ class InvoiceController extends Controller
                         'discount_type' => $invoiceData['discountType']??null,
                         'discount_amount' => $invoiceData['discountAmount'],
                         'bank_account_id' => $invoiceData['bankAccountId'],
+                        'client_bank_account_id' => $invoiceData['clientBankId'] ?? null,
                     ]);
                 }
 
@@ -442,6 +443,7 @@ class InvoiceController extends Controller
                 'discountType' => $invoice->discount_type??'',
                 'discountAmount' => $invoice->discount_amount??0,
                 'bankAccountId' => $invoice->bank_account_id??'',
+                'clientBankId' => $invoice->client_bank_account_id ?? '',
                 'invoiceDetails' => $invoiceDetailsData
             ]
         ]);
@@ -670,6 +672,7 @@ class InvoiceController extends Controller
             $invoice->discount_type = $request->discountType;
             $invoice->discount_amount = $request->discountAmount;
             $invoice->bank_account_id = $request->bankAccountId;
+            $invoice->client_bank_account_id = $request->clientBankId;
 
             $invoice->save();
 

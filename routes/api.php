@@ -232,7 +232,8 @@ Route::prefix('v1/client-payment-period')->group(function(){
 });
 
 Route::prefix('v1/export-invoice-report')->group(function(){
-    Route::get('', [InvoiceReportExportController::class, 'index']);
+Route::get('', [InvoiceReportExportController::class, 'index']);
+Route::post('xml-zip', [InvoiceReportExportController::class, 'exportMultipleXmlZip']);
 });
 
 Route::prefix('v1/export-client-payment')->group(function(){
@@ -272,5 +273,4 @@ Route::prefix('v1/import-client-bank-accounts')->group(function(){
 Route::prefix('v1/clients/recurring-all-invoices')->group(function(){
     Route::post('create', [RecurringInvoiceToAllClientsController::class, 'create']);
 });
-
 

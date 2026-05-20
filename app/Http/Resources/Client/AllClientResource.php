@@ -24,6 +24,7 @@ class AllClientResource extends JsonResource
             'phone' => $this->phone??"",
             'email' => $this->email??"",
             'paymentTypeId' => $this->payment_type_id??"" ,
+            'freePhoneAssistHours' => $this->free_phone_assist_hours??0,
             'payStepsId'=> $this->pay_steps_id??"",
             'paymentTypeTwoId'=> $this->payment_type_two_id??"",
             'addableToBulkInvoice'=>$this->addable_to_bulk_invoice,
@@ -32,6 +33,7 @@ class AllClientResource extends JsonResource
             'abi'=> $this->abi??"",
             'cab' => $this->cab??"",
             'limitDecreto' => $this->limit_decreto??0,
+            'startSeqNumber' => $this->start_seq_number,
         ];
     }
 }

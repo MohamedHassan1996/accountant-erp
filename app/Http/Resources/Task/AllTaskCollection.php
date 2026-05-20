@@ -62,7 +62,8 @@ class AllTaskCollection extends ResourceCollection
         return [
             "result" => [
                 'tasks' => AllTaskResource::collection($this->collection),
-                "totalHours" => $this->extraData['totalHours'] ?? "0:00"
+                "totalHours" => $this->extraData['totalHours'] ?? "0:00",
+                "totalOverDuoTasks" => $this->extraData['totalOverDuoTasks'] ?? 0,
             ],
             'pagination' => [
                 'total' => $this->resource->total(),
@@ -74,4 +75,3 @@ class AllTaskCollection extends ResourceCollection
         ];
     }
 }
-

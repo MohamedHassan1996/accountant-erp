@@ -34,6 +34,7 @@ class ClientService{
             'email' => $clientData['email']??"",
             'email_f24' => $clientData['emailF24']??"",
             'hours_per_month' => $clientData['hoursPerMonth']??0,
+            'free_phone_assist_hours' => $clientData['freePhoneAssistHours'] ?? 0,
             'price' => $clientData['price']??0,
             'monthly_price' => $clientData['monthlyPrice']??0,
             'payment_type_id'=>$clientData['paymentTypeId']??null,
@@ -52,6 +53,7 @@ class ClientService{
             'sdi' =>$clientData['sdi']??"",
             'proforma' =>$clientData['proforma']??false,
             'limit_decreto' => $clientData['limitDecreto']??0,
+            'start_seq_number' => $clientData['startSeqNumber'] ?? null,
         ]);
 
         return $client;
@@ -78,6 +80,7 @@ class ClientService{
             'email' => $clientData['email']??"",
             'email_f24' => $clientData['emailF24']??"",
             'hours_per_month' => $clientData['hoursPerMonth']??0,
+            'free_phone_assist_hours' => $clientData['freePhoneAssistHours'] ?? 0,
             'price' => $clientData['price']??0,
             'monthly_price' => $clientData['monthlyPrice']??0,
             'payment_type_id'=>$clientData['paymentTypeId']??null,
@@ -97,6 +100,10 @@ class ClientService{
             'proforma' =>$clientData['proforma']??false,
             'limit_decreto' => $clientData['limitDecreto']??0,
         ]);
+
+        if (is_null($client->start_seq_number) && array_key_exists('startSeqNumber', $clientData) && !is_null($clientData['startSeqNumber'])) {
+            $client->start_seq_number = $clientData['startSeqNumber'];
+        }
 
         $client->save();
 

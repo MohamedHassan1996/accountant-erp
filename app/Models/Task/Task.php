@@ -22,6 +22,7 @@ class Task extends Model
 
     protected $fillable = [
         'title',
+        'seq_number',
         'status',
         'description',
         'client_id',
@@ -193,9 +194,41 @@ $total = Client::withTrashed()
         return $this->timeLogs()->where('status', TaskTimeLogStatus::START->value)->latest()->first()->id ?? "";
     }
 
+    public function getIsOverDueAttribute()
+    {
+        $latestTimeLog = $this->timeLogs()
+            ->where('type', TaskTimeLogType::TIME_LOG->value)
+            ->latest()
+            ->first();
+
+        if (!$latestTimeLog || $latestTimeLog->status != TaskTimeLogStatus::START) {
+            return 0;
+        }
+
+        $totalSeconds = $this->parseTimeToSeconds($latestTimeLog->total_time);
+        $elapsedSeconds = Carbon::now()->diffInSeconds($latestTimeLog->created_at);
+
+        return (int) (($totalSeconds + $elapsedSeconds) > (10 * 3600));
+    }
+
     public function invoiceDetails()
     {
         return $this->morphMany(InvoiceDetail::class, 'invoiceable');
+    }
+
+    private function parseTimeToSeconds(?string $time): int
+    {
+        if (empty($time)) {
+            return 0;
+        }
+
+        $parts = explode(':', $time);
+
+        if (count($parts) !== 3) {
+            return 0;
+        }
+
+        return ((int) $parts[0] * 3600) + ((int) $parts[1] * 60) + (int) $parts[2];
     }
 
 }

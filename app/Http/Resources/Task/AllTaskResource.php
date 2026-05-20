@@ -63,6 +63,7 @@ class AllTaskResource extends JsonResource
 
         return [
             'taskId' => $this->id,
+            'seqNumber' => $this->seq_number,
             'title' => $this->title,
             'number' => $this->number,
             'status' => $this->status,
@@ -76,6 +77,7 @@ class AllTaskResource extends JsonResource
             "startTime"=>$this->timeLogs()->first()?Carbon::parse($this->timeLogs()->first()->created_at)->format('d/m/Y H:i:s') : "",
             "endTime"=> $formattedEndTime,
             'quantity' => $this->quantity??0,
+            'isOverDue' => (int) $this->is_over_due,
         ];
     }
 }

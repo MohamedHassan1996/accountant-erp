@@ -63,6 +63,7 @@ class AllAdminTaskResource extends JsonResource
 
         return [
             'taskId' => $this->id,
+            'seqNumber' => $this->seq_number,
             'title' => $this->title,
             'status' => $this->status,
             'number' => $this->number,
@@ -80,6 +81,7 @@ class AllAdminTaskResource extends JsonResource
             //"endTime"=>$this->closed_at?Carbon::parse(time: $this->closed_at)->format('d/m/Y H:i'):"",
             "endTime" => $formattedEndTime,
             'quantity' => $this->quantity??0,
+            'isOverDue' => (int) $this->is_over_due,
         ];
     }
 }

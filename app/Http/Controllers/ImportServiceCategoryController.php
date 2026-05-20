@@ -10,6 +10,14 @@ class ImportServiceCategoryController extends Controller
 {
     public function index(Request $request)
     {
-        Excel::import(new ServiceCategoryImport, $request->path, 'public');
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv',
+        ]);
+
+        Excel::import(new ServiceCategoryImport, $request->file('file'));
+
+        return response()->json([
+            'message' => 'Service categories imported successfully',
+        ], 200);
     }
 }

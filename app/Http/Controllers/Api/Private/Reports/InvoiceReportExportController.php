@@ -21,6 +21,7 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
+use ZipArchive;
 
 
 class InvoiceReportExportController extends Controller
@@ -55,8 +56,61 @@ class InvoiceReportExportController extends Controller
         }
     }
 
+    public function exportMultipleXmlZip(Request $request)
+    {
+        $request->validate([
+            'invoiceIds' => ['required', 'array', 'min:1'],
+            'invoiceIds.*' => ['required', 'integer', 'exists:invoices,id'],
+        ]);
+
+        $xmlFiles = [];
+
+        foreach ($request->invoiceIds as $invoiceId) {
+            $data = $this->getInvoiceDataById($invoiceId);
+
+            if (empty($data['clientBankAccount']['cab']) || empty($data['clientBankAccount']['abi']) || empty($data['clientBankAccount']['bankName'])) {
+                return response()->json([
+                    'message' => 'Questo cliente non ha CAB, ABI e nome banca associati',
+                    'invoiceId' => $invoiceId,
+                ], 401);
+            }
+
+            $xmlFiles[] = $this->buildInvoiceXmlPayload($data);
+        }
+
+        $directory = storage_path('app/public/exportedInvoices');
+        if (!is_dir($directory)) {
+            mkdir($directory, 0777, true);
+        }
+
+        $fileName = 'invoices_xml_' . now()->format('Y_m_d_H_i_s') . '.zip';
+        $fullPath = $directory . DIRECTORY_SEPARATOR . $fileName;
+
+        $zip = new ZipArchive();
+        if ($zip->open($fullPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+            return response()->json([
+                'message' => 'Unable to create zip file',
+            ], 500);
+        }
+
+        foreach ($xmlFiles as $xmlFile) {
+            $zip->addFromString($xmlFile['name'], $xmlFile['content']);
+        }
+
+        $zip->close();
+
+        return response()->json([
+            'path' => env('APP_URL') . parse_url(asset('storage/exportedInvoices/' . $fileName), PHP_URL_PATH),
+            'fileName' => $fileName,
+        ], 200);
+    }
+
         private function getInvoiceData(Request $request){
-        $invoice = Invoice::findOrFail($request->invoiceIds[0]);
+        return $this->getInvoiceDataById($request->invoiceIds[0]);
+    }
+
+    private function getInvoiceDataById(int $invoiceId){
+        $invoice = Invoice::findOrFail($invoiceId);
 
         $invoiceItems = DB::table('invoice_details')
             ->where('invoice_details.invoice_id', $invoice->id)
@@ -426,6 +480,18 @@ $data['stampAmount'] = 2.00;
 
 public function generateInvoiceXml(array $data)
 {
+    $xmlFile = $this->buildInvoiceXmlPayload($data);
+
+    return response()->json([
+        'data' => [
+            'name' => $xmlFile['name'],
+            'content' => mb_convert_encoding($xmlFile['content'], 'UTF-8', 'WINDOWS-1252'),
+        ]
+    ]);
+}
+
+private function buildInvoiceXmlPayload(array $data): array
+{
     // Function to sanitize text by removing accents and special characters
     $removeAccents = function($string) {
         $accents = [
@@ -794,12 +860,10 @@ if ($aliquota == 0) {
         Invoice::where('id', $data['invoice']['id'])->update(['invoice_xml_number' => $invoiceNewNumber]);
     }
 
-    return response()->json([
-        'data' => [
-            'name' => $fileName,
-            'content' => mb_convert_encoding($xmlContent, 'UTF-8', 'WINDOWS-1252'),
-        ]
-    ]);
+    return [
+        'name' => $fileName,
+        'content' => $xmlContent,
+    ];
 }
 
 }
