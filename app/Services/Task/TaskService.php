@@ -124,6 +124,7 @@ class TaskService{
     $filters = request()->input('filter', []);
     $startDate = $filters['startDate'] ?? null;
     $endDate = $filters['endDate'] ?? null;
+    $overDueFilter = isset($filters['overDue']) ? (int) $filters['overDue'] : null;
     $pageSize = request()->input('pageSize', 10);
     $overDueThresholdInSeconds = 10 * 3600;
 
@@ -141,6 +142,50 @@ class TaskService{
         ->when($startDate && !$endDate, fn($q) => $q->whereDate('created_at', '=', $startDate))
         ->where('is_new', 1)
         ->orderByDesc('id');
+
+    if (in_array($overDueFilter, [0, 1], true)) {
+        $baseTaskIds = (clone $query)->pluck('id');
+        $overDueTaskIds = collect();
+
+        if ($baseTaskIds->isNotEmpty()) {
+            $latestLogsForFilter = DB::table('task_time_logs as ttl')
+                ->joinSub(
+                    DB::table('task_time_logs')
+                        ->select('task_id', DB::raw('MAX(created_at) as latest'))
+                        ->where('type', TaskTimeLogType::TIME_LOG->value)
+                        ->whereIn('task_id', $baseTaskIds)
+                        ->groupBy('task_id'),
+                    'latest_logs',
+                    fn($join) => $join->on('ttl.task_id', '=', 'latest_logs.task_id')
+                                      ->on('ttl.created_at', '=', 'latest_logs.latest')
+                )
+                ->where('ttl.type', TaskTimeLogType::TIME_LOG->value)
+                ->where('ttl.status', TaskTimeLogStatus::START->value)
+                ->whereIn('ttl.task_id', $baseTaskIds)
+                ->select('ttl.task_id', 'ttl.total_time', 'ttl.created_at')
+                ->get();
+
+            $overDueTaskIds = $latestLogsForFilter
+                ->filter(function ($log) use ($overDueThresholdInSeconds) {
+                    $storedSeconds = ($log->total_time === '00:00:00' || empty($log->total_time))
+                        ? 0
+                        : $this->timeToSeconds($log->total_time);
+                    $elapsedSeconds = Carbon::now()->diffInSeconds(Carbon::parse($log->created_at));
+
+                    return ($storedSeconds + $elapsedSeconds) > $overDueThresholdInSeconds;
+                })
+                ->pluck('task_id')
+                ->values();
+        }
+
+        if ($overDueFilter === 1) {
+            $query->whereIn('id', $overDueTaskIds->isNotEmpty() ? $overDueTaskIds : [0]);
+        } else {
+            if ($overDueTaskIds->isNotEmpty()) {
+                $query->whereNotIn('id', $overDueTaskIds);
+            }
+        }
+    }
 
     $filteredTaskIds = (clone $query)->pluck('id');
 
