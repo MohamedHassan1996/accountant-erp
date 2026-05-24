@@ -29,7 +29,6 @@ class ClientResource extends JsonResource
             'price' => $this->price??0,
             'monthlyPrice' => $this->monthly_price??0,
             'hoursPerMonth' => $this->hours_per_month??0,
-            'freePhoneAssistHours' => $this->free_phone_assist_hours??0,
             'paymentTypeId' => $this->payment_type_id??"" ,
             'payStepsId'=> $this->pay_steps_id??"",
             'paymentTypeTwoId'=> $this->payment_type_two_id??"",
@@ -48,7 +47,6 @@ class ClientResource extends JsonResource
             'sdi' => $this->sdi??"",
             'proforma' => $this->proforma??false,
             'limitDecreto' => $this->limit_decreto??0,
-            'startSeqNumber' => $this->start_seq_number,
         ];
     }
 }

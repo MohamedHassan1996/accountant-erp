@@ -34,7 +34,6 @@ class UpdateClientRequest extends FormRequest
             'phone' => ['nullable'],
             'email' => ['nullable'],
             'hoursPerMonth' => ['nullable'],
-            'freePhoneAssistHours' => ['nullable', 'numeric'],
             'price' => ['nullable'],
             'monthlyPrice' => ['nullable'],
             'addableToBulkInvoice'=>['nullable',new Enum(AddableToBulk::class) ],
@@ -53,7 +52,6 @@ class UpdateClientRequest extends FormRequest
             'sdi' => ['nullable'],
             'proforma' => ['nullable', 'boolean'],
             'limitDecreto' => ['nullable', 'numeric'],
-            'startSeqNumber' => ['nullable', 'integer', 'min:0'],
         ];
     }
 

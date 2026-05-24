@@ -11,9 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('clients', function (Blueprint $table) {
-            $table->decimal('free_phone_assist_hours', 8, 2)->nullable()->after('hours_per_month');
-        });
     }
 
     /**

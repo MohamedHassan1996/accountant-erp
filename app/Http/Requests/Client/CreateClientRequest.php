@@ -34,7 +34,6 @@ class CreateClientRequest extends FormRequest
             'phone' => ['nullable'],
             'email' => ['nullable'],
             'hoursPerMonth' => ['nullable'],
-            'freePhoneAssistHours' => ['nullable', 'numeric'],
             'price' => ['nullable'],
             'monthlyPrice' => ['nullable'],
             'addresses' => ['nullable'],
@@ -57,7 +56,6 @@ class CreateClientRequest extends FormRequest
             'sdi' => ['nullable'],
             'proforma' => ['nullable', 'boolean'],
             'limitDecreto' => ['nullable', 'numeric'],
-            'startSeqNumber' => ['nullable', 'integer', 'min:0'],
         ];
     }
 

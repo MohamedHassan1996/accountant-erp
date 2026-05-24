@@ -11,10 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('clients', function (Blueprint $table) {
-            $table->unsignedBigInteger('start_seq_number')->nullable()->after('limit_decreto');
-        });
-
         Schema::table('tasks', function (Blueprint $table) {
             $table->unsignedBigInteger('seq_number')->nullable()->after('number');
         });
@@ -29,8 +25,5 @@ return new class extends Migration
             $table->dropColumn('seq_number');
         });
 
-        Schema::table('clients', function (Blueprint $table) {
-            $table->dropColumn('start_seq_number');
-        });
     }
 };
