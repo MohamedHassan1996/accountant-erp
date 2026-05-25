@@ -311,13 +311,9 @@ $formattedTotalTime = sprintf(
 
 
     public function createTask(array $taskData){
-        $currentMaxSeq = Task::max('seq_number');
-        $nextSeqNumber = is_null($currentMaxSeq) ? 1 : ((int) $currentMaxSeq + 1);
-
         $task = Task::create([
             'title' => $taskData['title']??"",
             'description' => $taskData['description']??"",
-            'seq_number' => $nextSeqNumber,
             'client_id' => $taskData['clientId'],
             'user_id' => $taskData['userId'],
             'service_category_id' => $taskData['serviceCategoryId'],

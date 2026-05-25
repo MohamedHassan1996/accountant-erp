@@ -63,7 +63,6 @@ class AllAdminTaskResource extends JsonResource
 
         return [
             'taskId' => $this->id,
-            'seqNumber' => $this->seq_number,
             'title' => $this->title,
             'status' => $this->status,
             'number' => $this->number,

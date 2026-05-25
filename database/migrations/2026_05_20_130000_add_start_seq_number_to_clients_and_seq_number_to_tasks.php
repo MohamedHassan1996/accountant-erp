@@ -11,9 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('tasks', function (Blueprint $table) {
-            $table->unsignedBigInteger('seq_number')->nullable()->after('number');
-        });
     }
 
     /**
@@ -21,9 +18,5 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('tasks', function (Blueprint $table) {
-            $table->dropColumn('seq_number');
-        });
-
     }
 };

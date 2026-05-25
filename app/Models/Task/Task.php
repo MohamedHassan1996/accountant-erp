@@ -22,7 +22,6 @@ class Task extends Model
 
     protected $fillable = [
         'title',
-        'seq_number',
         'status',
         'description',
         'client_id',
