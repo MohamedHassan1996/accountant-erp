@@ -7,78 +7,100 @@ use App\Models\Client\Client;
 use App\Models\Client\ClientAddress;
 use App\Models\Client\ClientBankAccount;
 use App\Models\Parameter\ParameterValue;
-use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Concerns\ToCollection;
+use Maatwebsite\Excel\Concerns\OnEachRow;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Maatwebsite\Excel\Concerns\WithStartRow;
+use Maatwebsite\Excel\Row;
 
-class ClientImport implements ToCollection
+class ClientImport implements OnEachRow, WithChunkReading, WithStartRow
 {
     private array $paymentTypeCache = [];
     private array $bankCache = [];
+    private array $clientCacheByName = [];
+    private array $clientCacheByVat = [];
+    private array $clientCacheByCf = [];
 
-    public function collection(Collection $rows): void
+    public function startRow(): int
     {
-        foreach ($rows as $index => $row) {
-            if ($index < 10) {
-                continue;
-            }
+        return 11;
+    }
 
-            $ragioneSociale = $this->normalizeString($row[1] ?? null);
+    public function chunkSize(): int
+    {
+        return 100;
+    }
 
-            if ($ragioneSociale === null) {
-                continue;
-            }
+    public function onRow(Row $importRow): void
+    {
+        $row = $importRow->toArray();
+        $ragioneSociale = $this->normalizeString($row[1] ?? null);
 
-            $iva = $this->normalizeVat($row[2] ?? null);
-            $cf = $this->normalizeTaxCode($row[3] ?? null) ?? $iva;
-            $paymentTypeId = $this->resolvePaymentTypeId(
-                $row[12] ?? null,
-                $row[13] ?? null
-            );
-            $clientImportData = $this->buildClientImportData($row, $ragioneSociale, $iva, $cf, $paymentTypeId);
+        if ($ragioneSociale === null) {
+            return;
+        }
 
-            $client = $this->findExistingClient($ragioneSociale, $iva, $cf);
+        $iva = $this->normalizeVat($row[2] ?? null);
+        $cf = $this->normalizeTaxCode($row[3] ?? null) ?? $iva;
+        $paymentTypeId = $this->resolvePaymentTypeId(
+            $row[12] ?? null,
+            $row[13] ?? null
+        );
+        $clientImportData = $this->buildClientImportData($row, $ragioneSociale, $iva, $cf, $paymentTypeId);
 
-            $clientChanged = false;
+        $client = $this->findExistingClient($ragioneSociale, $iva, $cf);
 
-            if (!$client) {
-                $client = Client::create(array_merge($clientImportData, [
-                    'addable_to_bulk_invoice' => AddableToBulk::ADDABLE->value,
-                    'allowed_days_to_pay' => 0,
-                    'is_company' => $iva !== null,
-                    'price' => 0,
-                    'monthly_price' => 0,
-                    'hours_per_month' => 0,
-                    'total_tax' => 0,
-                    'limit_decreto' => 0,
-                    'proforma' => false,
-                ]));
-                $clientChanged = true;
-            } else {
-                $clientChanged = $this->fillMissingClientData($client, $clientImportData);
-            }
+        if (!$client) {
+            $client = Client::create(array_merge($clientImportData, [
+                'addable_to_bulk_invoice' => AddableToBulk::ADDABLE->value,
+                'allowed_days_to_pay' => 0,
+                'is_company' => $iva !== null,
+                'price' => 0,
+                'monthly_price' => 0,
+                'hours_per_month' => 0,
+                'total_tax' => 0,
+                'limit_decreto' => 0,
+                'proforma' => false,
+            ]));
+        } else {
+            $this->fillMissingClientData($client, $clientImportData);
+        }
 
-            $addressChanged = $this->syncClientAddress($client, $row);
-            $bankAccountChanged = $this->syncClientBankAccount($client, $row);
+        $this->rememberClient($client);
 
-            if (!$client->wasRecentlyCreated && ($addressChanged || $bankAccountChanged)) {
-                $client->touch();
-            }
+        $addressChanged = $this->syncClientAddress($client, $row);
+        $bankAccountChanged = $this->syncClientBankAccount($client, $row);
+
+        if (!$client->wasRecentlyCreated && ($addressChanged || $bankAccountChanged)) {
+            $client->touch();
         }
     }
 
     private function findExistingClient(?string $ragioneSociale, ?string $iva, ?string $cf): ?Client
     {
+        if ($ragioneSociale !== null && array_key_exists($ragioneSociale, $this->clientCacheByName)) {
+            return $this->clientCacheByName[$ragioneSociale];
+        }
+
+        if ($iva !== null && array_key_exists($iva, $this->clientCacheByVat)) {
+            return $this->clientCacheByVat[$iva];
+        }
+
+        if ($cf !== null && array_key_exists($cf, $this->clientCacheByCf)) {
+            return $this->clientCacheByCf[$cf];
+        }
+
         if ($ragioneSociale !== null) {
             $clientByName = Client::query()
                 ->where('ragione_sociale', $ragioneSociale)
                 ->first();
 
             if ($clientByName) {
+                $this->rememberClient($clientByName);
                 return $clientByName;
             }
         }
 
-        return Client::query()
+        $client = Client::query()
             ->where(function ($query) use ($ragioneSociale, $iva, $cf) {
                 if ($iva !== null) {
                     $query->orWhere('iva', $iva);
@@ -93,6 +115,12 @@ class ClientImport implements ToCollection
                 }
             })
             ->first();
+
+        if ($client) {
+            $this->rememberClient($client);
+        }
+
+        return $client;
     }
 
     private function fillMissingClientData(Client $client, array $data): bool
@@ -118,7 +146,7 @@ class ClientImport implements ToCollection
     }
 
     private function buildClientImportData(
-        Collection|array $row,
+        array $row,
         string $ragioneSociale,
         ?string $iva,
         ?string $cf,
@@ -139,7 +167,7 @@ class ClientImport implements ToCollection
         ];
     }
 
-    private function syncClientAddress(Client $client, Collection|array $row): bool
+    private function syncClientAddress(Client $client, array $row): bool
     {
         $address = $this->normalizeString($row[5] ?? null);
         $cap = $this->normalizeString($row[6] ?? null);
@@ -175,7 +203,7 @@ class ClientImport implements ToCollection
         return true;
     }
 
-    private function syncClientBankAccount(Client $client, Collection|array $row): bool
+    private function syncClientBankAccount(Client $client, array $row): bool
     {
         $bankName = $this->normalizeString($row[14] ?? null);
         $abi = $this->normalizeBankCode($row[15] ?? null);
@@ -301,6 +329,21 @@ class ClientImport implements ToCollection
         }
 
         return $this->bankCache[$bankName] = $bank->id;
+    }
+
+    private function rememberClient(Client $client): void
+    {
+        if (!empty($client->ragione_sociale)) {
+            $this->clientCacheByName[$client->ragione_sociale] = $client;
+        }
+
+        if (!empty($client->iva)) {
+            $this->clientCacheByVat[$client->iva] = $client;
+        }
+
+        if (!empty($client->cf)) {
+            $this->clientCacheByCf[$client->cf] = $client;
+        }
     }
 
     private function normalizeVat(mixed $value): ?string
