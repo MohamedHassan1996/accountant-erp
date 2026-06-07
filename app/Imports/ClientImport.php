@@ -42,21 +42,12 @@ class ClientImport implements ToCollection, WithHeadingRow
                 $row['cod_pag'] ?? null,
                 $row['pagamento'] ?? null
             );
+            $clientImportData = $this->buildClientImportData($row, $ragioneSociale, $iva, $cf, $paymentTypeId);
 
             $client = $this->findExistingClient($ragioneSociale, $iva, $cf);
 
             if (!$client) {
-                $client = Client::create([
-                    'ragione_sociale' => $ragioneSociale,
-                    'iva' => $iva,
-                    'cf' => $cf,
-                    'phone' => $this->normalizeString($row['telefono'] ?? null),
-                    'email' => $this->normalizeEmail($row['email'] ?? null),
-                    'email_f24' => $this->normalizeEmail($row['pec'] ?? null),
-                    'payment_type_two_id' => $paymentTypeId,
-                    'abi' => $this->normalizeString($row['abi'] ?? null),
-                    'cab' => $this->normalizeString($row['cab'] ?? null),
-                    'sdi' => $this->normalizeSdi($row['codice_sdi'] ?? null),
+                $client = Client::create(array_merge($clientImportData, [
                     'addable_to_bulk_invoice' => AddableToBulk::ADDABLE->value,
                     'allowed_days_to_pay' => 0,
                     'is_company' => $iva !== null,
@@ -66,20 +57,9 @@ class ClientImport implements ToCollection, WithHeadingRow
                     'total_tax' => 0,
                     'limit_decreto' => 0,
                     'proforma' => false,
-                ]);
+                ]));
             } else {
-                $this->fillMissingClientData($client, [
-                    'iva' => $iva,
-                    'cf' => $cf,
-                    'phone' => $this->normalizeString($row['telefono'] ?? null),
-                    'email' => $this->normalizeEmail($row['email'] ?? null),
-                    'email_f24' => $this->normalizeEmail($row['pec'] ?? null),
-                    'payment_type_two_id' => $paymentTypeId,
-                    'abi' => $this->normalizeString($row['abi'] ?? null),
-                    'cab' => $this->normalizeString($row['cab'] ?? null),
-                    'sdi' => $this->normalizeSdi($row['codice_sdi'] ?? null),
-                    'is_company' => $iva !== null ? 1 : null,
-                ]);
+                $this->fillMissingClientData($client, $clientImportData);
             }
 
             $this->syncClientAddress($client, $row);
@@ -98,6 +78,16 @@ class ClientImport implements ToCollection, WithHeadingRow
 
     private function findExistingClient(?string $ragioneSociale, ?string $iva, ?string $cf): ?Client
     {
+        if ($ragioneSociale !== null) {
+            $clientByName = Client::query()
+                ->where('ragione_sociale', $ragioneSociale)
+                ->first();
+
+            if ($clientByName) {
+                return $clientByName;
+            }
+        }
+
         return Client::query()
             ->where(function ($query) use ($ragioneSociale, $iva, $cf) {
                 if ($iva !== null) {
@@ -124,9 +114,7 @@ class ClientImport implements ToCollection, WithHeadingRow
                 continue;
             }
 
-            $currentValue = $client->{$field};
-
-            if ($currentValue === null || $currentValue === '') {
+            if ($client->{$field} !== $value) {
                 $client->{$field} = $value;
                 $dirty = true;
             }
@@ -135,6 +123,28 @@ class ClientImport implements ToCollection, WithHeadingRow
         if ($dirty) {
             $client->save();
         }
+    }
+
+    private function buildClientImportData(
+        array $row,
+        string $ragioneSociale,
+        ?string $iva,
+        ?string $cf,
+        ?int $paymentTypeId
+    ): array {
+        return [
+            'ragione_sociale' => $ragioneSociale,
+            'iva' => $iva,
+            'cf' => $cf,
+            'phone' => $this->normalizeString($row['telefono'] ?? null),
+            'email' => $this->normalizeEmail($row['email'] ?? null),
+            'email_f24' => $this->normalizeEmail($row['pec'] ?? null),
+            'payment_type_two_id' => $paymentTypeId,
+            'abi' => $this->normalizeBankCode($row['abi'] ?? null),
+            'cab' => $this->normalizeBankCode($row['cab'] ?? null),
+            'sdi' => $this->normalizeSdi($row['codice_sdi'] ?? null),
+            'is_company' => $iva !== null ? 1 : null,
+        ];
     }
 
     private function syncClientAddress(Client $client, array $row): void
