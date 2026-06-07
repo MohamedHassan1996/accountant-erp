@@ -5,6 +5,7 @@ namespace App\Imports;
 use App\Enums\Client\AddableToBulk;
 use App\Models\Client\Client;
 use App\Models\Client\ClientAddress;
+use App\Models\Client\ClientBankAccount;
 use App\Models\Parameter\ParameterValue;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
@@ -13,6 +14,7 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 class ClientImport implements ToCollection, WithHeadingRow
 {
     private array $paymentTypeCache = [];
+    private array $bankCache = [];
 
     public function headingRow(): int
     {
@@ -81,6 +83,7 @@ class ClientImport implements ToCollection, WithHeadingRow
             }
 
             $this->syncClientAddress($client, $row);
+            $this->syncClientBankAccount($client, $row);
         }
     }
 
@@ -168,6 +171,59 @@ class ClientImport implements ToCollection, WithHeadingRow
         ]);
     }
 
+    private function syncClientBankAccount(Client $client, array $row): void
+    {
+        $bankName = $this->normalizeString($row['banca_di_appoggio'] ?? null);
+        $abi = $this->normalizeBankCode($row['abi'] ?? null);
+        $cab = $this->normalizeBankCode($row['cab'] ?? null);
+
+        if ($bankName === null && $abi === null && $cab === null) {
+            return;
+        }
+
+        $bankId = $this->resolveBankId($bankName);
+
+        $existingAccount = ClientBankAccount::query()
+            ->where('client_id', $client->id)
+            ->where('bank_id', $bankId)
+            ->where('abi', $abi)
+            ->where('cab', $cab)
+            ->where(function ($query) {
+                $query->whereNull('iban')->orWhere('iban', '');
+            })
+            ->first();
+
+        if ($existingAccount) {
+            if (!$client->abi && $abi !== null) {
+                $client->abi = $abi;
+            }
+
+            if (!$client->cab && $cab !== null) {
+                $client->cab = $cab;
+            }
+
+            if ($client->isDirty(['abi', 'cab'])) {
+                $client->save();
+            }
+
+            if (!$client->bankAccounts()->where('is_main', true)->exists()) {
+                $existingAccount->is_main = true;
+                $existingAccount->save();
+            }
+
+            return;
+        }
+
+        ClientBankAccount::create([
+            'client_id' => $client->id,
+            'bank_id' => $bankId,
+            'iban' => null,
+            'abi' => $abi,
+            'cab' => $cab,
+            'is_main' => !$client->bankAccounts()->exists(),
+        ]);
+    }
+
     private function resolvePaymentTypeId(mixed $paymentCode, mixed $paymentDescription): ?int
     {
         $normalizedCode = $this->normalizeString($paymentCode);
@@ -200,6 +256,39 @@ class ClientImport implements ToCollection, WithHeadingRow
         }
 
         return $this->paymentTypeCache[$cacheKey] = $paymentType?->id;
+    }
+
+    private function resolveBankId(?string $bankName): ?int
+    {
+        if ($bankName === null) {
+            return null;
+        }
+
+        if (array_key_exists($bankName, $this->bankCache)) {
+            return $this->bankCache[$bankName];
+        }
+
+        $bank = ParameterValue::query()
+            ->where('parameter_id', 10)
+            ->where(function ($query) use ($bankName) {
+                $query->where('parameter_value', $bankName)
+                    ->orWhere('description', $bankName);
+            })
+            ->first();
+
+        if (!$bank) {
+            $nextOrder = ((int) ParameterValue::query()->where('parameter_id', 10)->max('parameter_order')) + 1;
+
+            $bank = ParameterValue::create([
+                'parameter_id' => 10,
+                'parameter_value' => $bankName,
+                'description' => $bankName,
+                'parameter_order' => $nextOrder,
+                'is_default' => 0,
+            ]);
+        }
+
+        return $this->bankCache[$bankName] = $bank->id;
     }
 
     private function normalizeVat(mixed $value): ?string
@@ -250,6 +339,19 @@ class ClientImport implements ToCollection, WithHeadingRow
         }
 
         return strtolower($value);
+    }
+
+    private function normalizeBankCode(mixed $value): ?string
+    {
+        $value = $this->normalizeString($value);
+
+        if ($value === null) {
+            return null;
+        }
+
+        $digits = preg_replace('/\D+/', '', $value);
+
+        return $digits !== '' ? str_pad($digits, 5, '0', STR_PAD_LEFT) : null;
     }
 
     private function normalizeString(mixed $value): ?string

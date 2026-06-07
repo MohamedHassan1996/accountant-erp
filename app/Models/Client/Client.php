@@ -56,6 +56,11 @@ class Client extends Model
         return $this->hasMany(ClientContact::class, 'client_id');
     }
 
+    public function bankAccounts()
+    {
+        return $this->hasMany(ClientBankAccount::class, 'client_id');
+    }
+
     public function getClientDiscount($serviceId)
     {
         $discount = ClientServiceDiscount::where('client_id', $this->id)

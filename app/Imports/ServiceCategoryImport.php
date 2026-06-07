@@ -3,26 +3,46 @@
 namespace App\Imports;
 
 use App\Models\ServiceCategory\ServiceCategory;
-use Maatwebsite\Excel\Concerns\ToModel;
-use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Illuminate\Support\Collection;
+use Maatwebsite\Excel\Concerns\ToCollection;
 
-class ServiceCategoryImport implements ToModel, WithHeadingRow
+class ServiceCategoryImport implements ToCollection
 {
-    /**
-    * @param array $row
-    *
-    * @return \Illuminate\Database\Eloquent\Model|null
-    */
-    public function model(array $row)
+    public function collection(Collection $rows): void
     {
+        $existingNames = ServiceCategory::query()
+            ->pluck('name')
+            ->map(fn ($name) => $this->normalizeName($name))
+            ->filter()
+            ->flip();
 
-        return new ServiceCategory([
-            'name' => $row['name'],
-            'description' => null,
-            'price' => $row['price'],
-            'add_to_invoice' => 0,
-            'service_type_id' => null
-        ]);
+        foreach ($rows as $row) {
+            $name = $this->normalizeName($row[0] ?? null);
+
+            if ($name === null || isset($existingNames[$name])) {
+                continue;
+            }
+
+            ServiceCategory::create([
+                'name' => $name,
+                'description' => null,
+                'price' => 0,
+                'add_to_invoice' => 0,
+                'service_type_id' => null,
+            ]);
+
+            $existingNames[$name] = true;
+        }
     }
 
+    private function normalizeName(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $value = trim((string) $value);
+
+        return $value !== '' ? $value : null;
+    }
 }
