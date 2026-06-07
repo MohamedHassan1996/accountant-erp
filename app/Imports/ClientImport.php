@@ -9,32 +9,30 @@ use App\Models\Client\ClientBankAccount;
 use App\Models\Parameter\ParameterValue;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
-use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
-class ClientImport implements ToCollection, WithHeadingRow
+class ClientImport implements ToCollection
 {
     private array $paymentTypeCache = [];
     private array $bankCache = [];
 
-    public function headingRow(): int
-    {
-        return 10;
-    }
-
     public function collection(Collection $rows): void
     {
-        foreach ($rows as $row) {
-            $ragioneSociale = $this->normalizeString($row['ragione_sociale'] ?? null);
+        foreach ($rows as $index => $row) {
+            if ($index < 10) {
+                continue;
+            }
+
+            $ragioneSociale = $this->normalizeString($row[1] ?? null);
 
             if ($ragioneSociale === null) {
                 continue;
             }
 
-            $iva = $this->normalizeVat($row['partita_iva'] ?? null);
-            $cf = $this->normalizeTaxCode($row['codice_fiscale'] ?? null) ?? $iva;
+            $iva = $this->normalizeVat($row[2] ?? null);
+            $cf = $this->normalizeTaxCode($row[3] ?? null) ?? $iva;
             $paymentTypeId = $this->resolvePaymentTypeId(
-                $row['cod_pag'] ?? null,
-                $row['pagamento'] ?? null
+                $row[12] ?? null,
+                $row[13] ?? null
             );
             $clientImportData = $this->buildClientImportData($row, $ragioneSociale, $iva, $cf, $paymentTypeId);
 
@@ -120,7 +118,7 @@ class ClientImport implements ToCollection, WithHeadingRow
     }
 
     private function buildClientImportData(
-        array $row,
+        Collection|array $row,
         string $ragioneSociale,
         ?string $iva,
         ?string $cf,
@@ -130,24 +128,24 @@ class ClientImport implements ToCollection, WithHeadingRow
             'ragione_sociale' => $ragioneSociale,
             'iva' => $iva,
             'cf' => $cf,
-            'phone' => $this->normalizeString($row['telefono'] ?? null),
-            'email' => $this->normalizeEmail($row['email'] ?? null),
-            'email_f24' => $this->normalizeEmail($row['pec'] ?? null),
+            'phone' => $this->normalizeString($row[11] ?? null),
+            'email' => $this->normalizeEmail($row[19] ?? null),
+            'email_f24' => $this->normalizeEmail($row[20] ?? null),
             'payment_type_two_id' => $paymentTypeId,
-            'abi' => $this->normalizeBankCode($row['abi'] ?? null),
-            'cab' => $this->normalizeBankCode($row['cab'] ?? null),
-            'sdi' => $this->normalizeSdi($row['codice_sdi'] ?? null),
+            'abi' => $this->normalizeBankCode($row[15] ?? null),
+            'cab' => $this->normalizeBankCode($row[16] ?? null),
+            'sdi' => $this->normalizeSdi($row[10] ?? null),
             'is_company' => $iva !== null ? 1 : null,
         ];
     }
 
-    private function syncClientAddress(Client $client, array $row): bool
+    private function syncClientAddress(Client $client, Collection|array $row): bool
     {
-        $address = $this->normalizeString($row['indirizzo'] ?? null);
-        $cap = $this->normalizeString($row['cap'] ?? null);
-        $city = $this->normalizeString($row['localita'] ?? null);
-        $province = $this->normalizeString($row['prov'] ?? null);
-        $region = $this->normalizeString($row['nazione'] ?? null);
+        $address = $this->normalizeString($row[5] ?? null);
+        $cap = $this->normalizeString($row[6] ?? null);
+        $city = $this->normalizeString($row[7] ?? null);
+        $province = $this->normalizeString($row[8] ?? null);
+        $region = $this->normalizeString($row[9] ?? null);
 
         if ($address === null && $cap === null && $city === null && $province === null) {
             return false;
@@ -177,11 +175,11 @@ class ClientImport implements ToCollection, WithHeadingRow
         return true;
     }
 
-    private function syncClientBankAccount(Client $client, array $row): bool
+    private function syncClientBankAccount(Client $client, Collection|array $row): bool
     {
-        $bankName = $this->normalizeString($row['banca_di_appoggio'] ?? null);
-        $abi = $this->normalizeBankCode($row['abi'] ?? null);
-        $cab = $this->normalizeBankCode($row['cab'] ?? null);
+        $bankName = $this->normalizeString($row[14] ?? null);
+        $abi = $this->normalizeBankCode($row[15] ?? null);
+        $cab = $this->normalizeBankCode($row[16] ?? null);
 
         if ($bankName === null && $abi === null && $cab === null) {
             return false;
