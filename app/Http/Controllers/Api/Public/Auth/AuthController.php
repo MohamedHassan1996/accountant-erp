@@ -15,7 +15,7 @@ class AuthController extends Controller
 
     public function __construct(AuthService $authService)
     {
-        $this->middleware('auth:api', ['except' => ['login', 'register']]);
+        $this->middleware('auth:api', ['except' => ['login', 'register', 'refresh']]);
         $this->authService = $authService;
     }
 
@@ -38,6 +38,11 @@ class AuthController extends Controller
     public function login(LoginRequest $loginReq)
     {
         return $this->authService->login($loginReq->validated());
+    }
+
+    public function refresh(Request $request)
+    {
+        return $this->authService->refresh($request->input('refreshToken'));
     }
 
     
