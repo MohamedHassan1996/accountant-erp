@@ -60,6 +60,7 @@ use App\Http\Controllers\Api\Private\Invoice\RecurringInvoiceToAllClientsControl
 
 Route::prefix('v1/auth')->group(function(){
     Route::post('login', [AuthController::class, 'login']);
+    Route::post('refresh', [AuthController::class, 'refresh']);
     Route::post('logout', [AuthController::class, 'logout']);
 });
 
@@ -273,4 +274,3 @@ Route::prefix('v1/import-client-bank-accounts')->group(function(){
 Route::prefix('v1/clients/recurring-all-invoices')->group(function(){
     Route::post('create', [RecurringInvoiceToAllClientsController::class, 'create']);
 });
-

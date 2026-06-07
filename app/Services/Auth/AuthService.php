@@ -55,29 +55,17 @@ class AuthService
 
             if(!$userToken){
                 return response()->json([
-                    'message' => 'يوجد خطأ فى الاسم او الرقم السرى!',
+                    'message' => 'Nome utente o password non validi!',
                 ], 401);
             }
 
             if($userToken && Auth::user()->status->value == 0){
                 return response()->json([
-                    'message' => 'هذا الحساب غير مفعل!',
+                    'message' => 'Questo account non e attivo!',
                 ], 401);
             }
 
-
-            $user = Auth::user();
-            $userRoles = $user->getRoleNames();
-            $role = Role::findByName($userRoles[0]);
-            $roleWithPermissions = $role->permissions;
-
-
-            return response()->json([
-                'token' => $userToken,
-                'profile' => new UserResource($user),
-                'role' => new RoleResource($role),
-                'permissions' => $this->userPermissionService->getUserPermissions($user),
-            ], 200)->header('Authorization', $userToken);
+            return $this->buildAuthResponse($userToken);
 
 
         } catch (\Throwable $th) {
@@ -88,11 +76,56 @@ class AuthService
 
     }
 
+    public function refresh(string $refreshToken)
+    {
+        try {
+            if (!$refreshToken) {
+                return response()->json([
+                    'message' => 'Refresh token mancante o non valido!',
+                ], 401);
+            }
+
+            $newToken = Auth::setToken($refreshToken)->refresh();
+
+            return $this->buildAuthResponse($newToken);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Impossibile aggiornare il token!',
+            ], 401);
+        }
+    }
+
     public function logout()
     {
         Auth::logout();
 
         return response()->json(['message' => 'you have logged out']);
+    }
+
+    protected function buildAuthResponse(string $userToken)
+    {
+        Auth::setToken($userToken);
+
+        $user = Auth::user();
+
+        if ($user->status->value == 0) {
+            return response()->json([
+                'message' => 'Questo account non e attivo!',
+            ], 401);
+        }
+
+        $userRoles = $user->getRoleNames();
+        $role = Role::findByName($userRoles[0]);
+        $expiresIn = Auth::factory()->getTTL() * 60;
+
+        return response()->json([
+            'token' => $userToken,
+            'refreshToken' => $userToken,
+            'expiresIn' => $expiresIn,
+            'profile' => new UserResource($user),
+            'role' => new RoleResource($role),
+            'permissions' => $this->userPermissionService->getUserPermissions($user),
+        ], 200)->header('Authorization', $userToken);
     }
 
 }
