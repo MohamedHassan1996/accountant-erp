@@ -24,12 +24,6 @@ class ClientImport implements ToCollection, WithHeadingRow
     public function collection(Collection $rows): void
     {
         foreach ($rows as $row) {
-            $accountCode = $this->normalizeString($row['conto'] ?? null);
-
-            if (!$this->shouldImportRow($accountCode)) {
-                continue;
-            }
-
             $ragioneSociale = $this->normalizeString($row['ragione_sociale'] ?? null);
 
             if ($ragioneSociale === null) {
@@ -72,15 +66,6 @@ class ClientImport implements ToCollection, WithHeadingRow
                 $client->touch();
             }
         }
-    }
-
-    private function shouldImportRow(?string $accountCode): bool
-    {
-        if ($accountCode === null) {
-            return false;
-        }
-
-        return str_starts_with($accountCode, '501.');
     }
 
     private function findExistingClient(?string $ragioneSociale, ?string $iva, ?string $cf): ?Client
