@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Imports\ServiceCategoryImport;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ImportServiceCategoryController extends Controller
@@ -14,7 +15,19 @@ class ImportServiceCategoryController extends Controller
             'file' => 'required|file|mimes:xlsx,xls,csv',
         ]);
 
-        Excel::import(new ServiceCategoryImport, $request->file('file'));
+        DB::beginTransaction();
+
+        try {
+            Excel::import(new ServiceCategoryImport, $request->file('file'));
+            DB::commit();
+        } catch (\Throwable $throwable) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Service categories import failed',
+                'error' => $throwable->getMessage(),
+            ], 422);
+        }
 
         return response()->json([
             'message' => 'Service categories imported successfully',

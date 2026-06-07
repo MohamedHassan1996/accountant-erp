@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Api\Private\Client;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Imports\ClientBankAccountImport;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
-
 
 class ImportClientBankAccountController extends Controller
 {
@@ -20,7 +20,19 @@ class ImportClientBankAccountController extends Controller
             'file' => 'required|mimes:xlsx,xls,csv',
         ]);
 
-        Excel::import(new ClientBankAccountImport, $request->file('file'));
+        DB::beginTransaction();
+
+        try {
+            Excel::import(new ClientBankAccountImport, $request->file('file'));
+            DB::commit();
+        } catch (\Throwable $throwable) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Bank accounts import failed',
+                'error' => $throwable->getMessage(),
+            ], 422);
+        }
 
         return response()->json([
             'message' => 'Bank accounts imported successfully',
