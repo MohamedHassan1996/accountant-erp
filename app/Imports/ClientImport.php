@@ -46,6 +46,8 @@ class ClientImport implements ToCollection, WithHeadingRow
 
             $client = $this->findExistingClient($ragioneSociale, $iva, $cf);
 
+            $clientChanged = false;
+
             if (!$client) {
                 $client = Client::create(array_merge($clientImportData, [
                     'addable_to_bulk_invoice' => AddableToBulk::ADDABLE->value,
@@ -58,12 +60,17 @@ class ClientImport implements ToCollection, WithHeadingRow
                     'limit_decreto' => 0,
                     'proforma' => false,
                 ]));
+                $clientChanged = true;
             } else {
-                $this->fillMissingClientData($client, $clientImportData);
+                $clientChanged = $this->fillMissingClientData($client, $clientImportData);
             }
 
-            $this->syncClientAddress($client, $row);
-            $this->syncClientBankAccount($client, $row);
+            $addressChanged = $this->syncClientAddress($client, $row);
+            $bankAccountChanged = $this->syncClientBankAccount($client, $row);
+
+            if (!$client->wasRecentlyCreated && ($addressChanged || $bankAccountChanged)) {
+                $client->touch();
+            }
         }
     }
 
@@ -105,7 +112,7 @@ class ClientImport implements ToCollection, WithHeadingRow
             ->first();
     }
 
-    private function fillMissingClientData(Client $client, array $data): void
+    private function fillMissingClientData(Client $client, array $data): bool
     {
         $dirty = false;
 
@@ -123,6 +130,8 @@ class ClientImport implements ToCollection, WithHeadingRow
         if ($dirty) {
             $client->save();
         }
+
+        return $dirty;
     }
 
     private function buildClientImportData(
@@ -147,7 +156,7 @@ class ClientImport implements ToCollection, WithHeadingRow
         ];
     }
 
-    private function syncClientAddress(Client $client, array $row): void
+    private function syncClientAddress(Client $client, array $row): bool
     {
         $address = $this->normalizeString($row['indirizzo'] ?? null);
         $cap = $this->normalizeString($row['cap'] ?? null);
@@ -156,7 +165,7 @@ class ClientImport implements ToCollection, WithHeadingRow
         $region = $this->normalizeString($row['nazione'] ?? null);
 
         if ($address === null && $cap === null && $city === null && $province === null) {
-            return;
+            return false;
         }
 
         $exists = ClientAddress::query()
@@ -168,7 +177,7 @@ class ClientImport implements ToCollection, WithHeadingRow
             ->exists();
 
         if ($exists) {
-            return;
+            return false;
         }
 
         ClientAddress::create([
@@ -179,16 +188,18 @@ class ClientImport implements ToCollection, WithHeadingRow
             'province' => $province,
             'region' => $region,
         ]);
+
+        return true;
     }
 
-    private function syncClientBankAccount(Client $client, array $row): void
+    private function syncClientBankAccount(Client $client, array $row): bool
     {
         $bankName = $this->normalizeString($row['banca_di_appoggio'] ?? null);
         $abi = $this->normalizeBankCode($row['abi'] ?? null);
         $cab = $this->normalizeBankCode($row['cab'] ?? null);
 
         if ($bankName === null && $abi === null && $cab === null) {
-            return;
+            return false;
         }
 
         $bankId = $this->resolveBankId($bankName);
@@ -204,24 +215,30 @@ class ClientImport implements ToCollection, WithHeadingRow
             ->first();
 
         if ($existingAccount) {
+            $clientChanged = false;
+            $bankAccountChanged = false;
+
             if (!$client->abi && $abi !== null) {
                 $client->abi = $abi;
+                $clientChanged = true;
             }
 
             if (!$client->cab && $cab !== null) {
                 $client->cab = $cab;
+                $clientChanged = true;
             }
 
-            if ($client->isDirty(['abi', 'cab'])) {
+            if ($clientChanged) {
                 $client->save();
             }
 
             if (!$client->bankAccounts()->where('is_main', true)->exists()) {
                 $existingAccount->is_main = true;
                 $existingAccount->save();
+                $bankAccountChanged = true;
             }
 
-            return;
+            return $clientChanged || $bankAccountChanged;
         }
 
         ClientBankAccount::create([
@@ -232,6 +249,8 @@ class ClientImport implements ToCollection, WithHeadingRow
             'cab' => $cab,
             'is_main' => !$client->bankAccounts()->exists(),
         ]);
+
+        return true;
     }
 
     private function resolvePaymentTypeId(mixed $paymentCode, mixed $paymentDescription): ?int
