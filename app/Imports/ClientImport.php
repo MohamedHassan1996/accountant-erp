@@ -21,7 +21,7 @@ class ClientImport implements OnEachRow, WithChunkReading, WithStartRow
 
     public function startRow(): int
     {
-        return 11;
+        return 2;
     }
 
     public function chunkSize(): int
