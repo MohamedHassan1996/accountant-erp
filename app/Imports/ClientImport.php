@@ -16,9 +16,8 @@ class ClientImport implements OnEachRow, WithChunkReading, WithStartRow
 {
     private array $paymentTypeCache = [];
     private array $bankCache = [];
-    private array $clientCacheByName = [];
-    private array $clientCacheByVat = [];
-    private array $clientCacheByCf = [];
+    private array $clientCacheByNameAndVat = [];
+    private array $clientCacheByNameAndCf = [];
 
     public function startRow(): int
     {
@@ -77,41 +76,34 @@ class ClientImport implements OnEachRow, WithChunkReading, WithStartRow
 
     private function findExistingClient(?string $ragioneSociale, ?string $iva, ?string $cf): ?Client
     {
-        if ($ragioneSociale !== null && array_key_exists($ragioneSociale, $this->clientCacheByName)) {
-            return $this->clientCacheByName[$ragioneSociale];
+        $nameAndVatKey = $this->buildClientCompositeKey($ragioneSociale, $iva);
+        $nameAndCfKey = $this->buildClientCompositeKey($ragioneSociale, $cf);
+
+        if ($nameAndVatKey !== null && array_key_exists($nameAndVatKey, $this->clientCacheByNameAndVat)) {
+            return $this->clientCacheByNameAndVat[$nameAndVatKey];
         }
 
-        if ($iva !== null && array_key_exists($iva, $this->clientCacheByVat)) {
-            return $this->clientCacheByVat[$iva];
+        if ($nameAndCfKey !== null && array_key_exists($nameAndCfKey, $this->clientCacheByNameAndCf)) {
+            return $this->clientCacheByNameAndCf[$nameAndCfKey];
         }
 
-        if ($cf !== null && array_key_exists($cf, $this->clientCacheByCf)) {
-            return $this->clientCacheByCf[$cf];
+        if ($ragioneSociale === null) {
+            return null;
         }
 
-        if ($ragioneSociale !== null) {
-            $clientByName = Client::query()
-                ->where('ragione_sociale', $ragioneSociale)
-                ->first();
-
-            if ($clientByName) {
-                $this->rememberClient($clientByName);
-                return $clientByName;
-            }
+        if ($iva === null && $cf === null) {
+            return null;
         }
 
         $client = Client::query()
-            ->where(function ($query) use ($ragioneSociale, $iva, $cf) {
+            ->where('ragione_sociale', $ragioneSociale)
+            ->where(function ($query) use ($iva, $cf) {
                 if ($iva !== null) {
                     $query->orWhere('iva', $iva);
                 }
 
                 if ($cf !== null) {
                     $query->orWhere('cf', $cf);
-                }
-
-                if ($ragioneSociale !== null) {
-                    $query->orWhere('ragione_sociale', $ragioneSociale);
                 }
             })
             ->first();
@@ -333,17 +325,25 @@ class ClientImport implements OnEachRow, WithChunkReading, WithStartRow
 
     private function rememberClient(Client $client): void
     {
-        if (!empty($client->ragione_sociale)) {
-            $this->clientCacheByName[$client->ragione_sociale] = $client;
+        $nameAndVatKey = $this->buildClientCompositeKey($client->ragione_sociale, $client->iva);
+        $nameAndCfKey = $this->buildClientCompositeKey($client->ragione_sociale, $client->cf);
+
+        if ($nameAndVatKey !== null) {
+            $this->clientCacheByNameAndVat[$nameAndVatKey] = $client;
         }
 
-        if (!empty($client->iva)) {
-            $this->clientCacheByVat[$client->iva] = $client;
+        if ($nameAndCfKey !== null) {
+            $this->clientCacheByNameAndCf[$nameAndCfKey] = $client;
+        }
+    }
+
+    private function buildClientCompositeKey(?string $ragioneSociale, ?string $value): ?string
+    {
+        if ($ragioneSociale === null || $value === null) {
+            return null;
         }
 
-        if (!empty($client->cf)) {
-            $this->clientCacheByCf[$client->cf] = $client;
-        }
+        return $ragioneSociale . '|' . $value;
     }
 
     private function normalizeVat(mixed $value): ?string
