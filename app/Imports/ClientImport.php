@@ -18,6 +18,8 @@ class ClientImport implements OnEachRow, WithChunkReading, WithStartRow
     private array $bankCache = [];
     private array $clientCacheByNameAndVat = [];
     private array $clientCacheByNameAndCf = [];
+    private array $clientCacheByVat = [];
+    private array $clientCacheByCf = [];
 
     public function startRow(): int
     {
@@ -76,28 +78,38 @@ class ClientImport implements OnEachRow, WithChunkReading, WithStartRow
 
     private function findExistingClient(?string $ragioneSociale, ?string $iva, ?string $cf): ?Client
     {
+        $cachedCandidates = [];
         $nameAndVatKey = $this->buildClientCompositeKey($ragioneSociale, $iva);
         $nameAndCfKey = $this->buildClientCompositeKey($ragioneSociale, $cf);
 
         if ($nameAndVatKey !== null && array_key_exists($nameAndVatKey, $this->clientCacheByNameAndVat)) {
-            return $this->clientCacheByNameAndVat[$nameAndVatKey];
+            $cachedCandidates[] = $this->clientCacheByNameAndVat[$nameAndVatKey];
         }
 
         if ($nameAndCfKey !== null && array_key_exists($nameAndCfKey, $this->clientCacheByNameAndCf)) {
-            return $this->clientCacheByNameAndCf[$nameAndCfKey];
+            $cachedCandidates[] = $this->clientCacheByNameAndCf[$nameAndCfKey];
+        }
+
+        if ($iva !== null && array_key_exists($iva, $this->clientCacheByVat)) {
+            $cachedCandidates[] = $this->clientCacheByVat[$iva];
+        }
+
+        if ($cf !== null && array_key_exists($cf, $this->clientCacheByCf)) {
+            $cachedCandidates[] = $this->clientCacheByCf[$cf];
+        }
+
+        if ($cachedCandidates !== []) {
+            return $this->selectBestMatchingClient(collect($cachedCandidates), $ragioneSociale, $iva, $cf);
         }
 
         if ($ragioneSociale === null) {
             return null;
         }
 
-        if ($iva === null && $cf === null) {
-            return null;
-        }
+        $clients = Client::query()
+            ->where(function ($query) use ($ragioneSociale, $iva, $cf) {
+                $query->where('ragione_sociale', $ragioneSociale);
 
-        $client = Client::query()
-            ->where('ragione_sociale', $ragioneSociale)
-            ->where(function ($query) use ($iva, $cf) {
                 if ($iva !== null) {
                     $query->orWhere('iva', $iva);
                 }
@@ -106,11 +118,9 @@ class ClientImport implements OnEachRow, WithChunkReading, WithStartRow
                     $query->orWhere('cf', $cf);
                 }
             })
-            ->first();
+            ->get();
 
-        if (!$client) {
-            $client = $this->findClientByNameForCompletion($ragioneSociale, $iva, $cf);
-        }
+        $client = $this->selectBestMatchingClient($clients, $ragioneSociale, $iva, $cf);
 
         if ($client) {
             $this->rememberClient($client);
@@ -128,7 +138,7 @@ class ClientImport implements OnEachRow, WithChunkReading, WithStartRow
                 continue;
             }
 
-            if ($client->{$field} !== $value) {
+            if ($this->shouldReplaceClientField($client, $field, $value)) {
                 $client->{$field} = $value;
                 $dirty = true;
             }
@@ -333,11 +343,31 @@ class ClientImport implements OnEachRow, WithChunkReading, WithStartRow
         $nameAndCfKey = $this->buildClientCompositeKey($client->ragione_sociale, $client->cf);
 
         if ($nameAndVatKey !== null) {
-            $this->clientCacheByNameAndVat[$nameAndVatKey] = $client;
+            $this->clientCacheByNameAndVat[$nameAndVatKey] = $this->pickMoreCompleteClient(
+                $this->clientCacheByNameAndVat[$nameAndVatKey] ?? null,
+                $client
+            );
         }
 
         if ($nameAndCfKey !== null) {
-            $this->clientCacheByNameAndCf[$nameAndCfKey] = $client;
+            $this->clientCacheByNameAndCf[$nameAndCfKey] = $this->pickMoreCompleteClient(
+                $this->clientCacheByNameAndCf[$nameAndCfKey] ?? null,
+                $client
+            );
+        }
+
+        if (!empty($client->iva)) {
+            $this->clientCacheByVat[$client->iva] = $this->pickMoreCompleteClient(
+                $this->clientCacheByVat[$client->iva] ?? null,
+                $client
+            );
+        }
+
+        if (!empty($client->cf)) {
+            $this->clientCacheByCf[$client->cf] = $this->pickMoreCompleteClient(
+                $this->clientCacheByCf[$client->cf] ?? null,
+                $client
+            );
         }
     }
 
@@ -350,27 +380,101 @@ class ClientImport implements OnEachRow, WithChunkReading, WithStartRow
         return $ragioneSociale . '|' . $value;
     }
 
-    private function findClientByNameForCompletion(string $ragioneSociale, ?string $iva, ?string $cf): ?Client
+    private function selectBestMatchingClient($clients, ?string $ragioneSociale, ?string $iva, ?string $cf): ?Client
     {
-        if ($iva === null && $cf === null) {
+        $clients = collect($clients)
+            ->filter(fn (Client $client) => $this->isCandidateMatch($client, $ragioneSociale, $iva, $cf))
+            ->unique('id')
+            ->values();
+
+        if ($clients->isEmpty()) {
             return null;
         }
 
-        return Client::query()
-            ->where('ragione_sociale', $ragioneSociale)
-            ->where(function ($query) use ($iva, $cf) {
-                if ($iva !== null) {
-                    $query->whereNull('iva')
-                        ->orWhere('iva', '');
-                }
-
-                if ($cf !== null) {
-                    $query->orWhereNull('cf')
-                        ->orWhere('cf', '');
-                }
-            })
-            ->orderByDesc('updated_at')
+        return $clients
+            ->sortByDesc(fn (Client $client) => $this->clientCompletenessScore($client))
             ->first();
+    }
+
+    private function isCandidateMatch(Client $client, ?string $ragioneSociale, ?string $iva, ?string $cf): bool
+    {
+        $sameName = $ragioneSociale !== null && $client->ragione_sociale === $ragioneSociale;
+        $sameVat = $iva !== null && $client->iva === $iva;
+        $sameCf = $cf !== null && $client->cf === $cf;
+
+        if ($sameName && ($sameVat || $sameCf)) {
+            return true;
+        }
+
+        if ($sameVat || $sameCf) {
+            return true;
+        }
+
+        if ($sameName && (
+            ($iva !== null && empty($client->iva)) ||
+            ($cf !== null && empty($client->cf))
+        )) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private function clientCompletenessScore(Client $client): int
+    {
+        $score = 0;
+
+        foreach ([
+            'iva',
+            'cf',
+            'email',
+            'email_f24',
+            'phone',
+            'payment_type_two_id',
+            'abi',
+            'cab',
+            'sdi',
+        ] as $field) {
+            if (!empty($client->{$field})) {
+                $score += 10;
+            }
+        }
+
+        if (!empty($client->ragione_sociale)) {
+            $score += mb_strlen($client->ragione_sociale);
+        }
+
+        return $score;
+    }
+
+    private function pickMoreCompleteClient(?Client $current, Client $candidate): Client
+    {
+        if ($current === null) {
+            return $candidate;
+        }
+
+        return $this->clientCompletenessScore($candidate) > $this->clientCompletenessScore($current)
+            ? $candidate
+            : $current;
+    }
+
+    private function shouldReplaceClientField(Client $client, string $field, mixed $value): bool
+    {
+        $currentValue = $client->{$field};
+
+        if ($currentValue === $value) {
+            return false;
+        }
+
+        if ($currentValue === null || $currentValue === '') {
+            return true;
+        }
+
+        if ($field === 'ragione_sociale') {
+            return mb_strlen((string) $value) > mb_strlen((string) $currentValue);
+        }
+
+        return false;
     }
 
     private function normalizeVat(mixed $value): ?string
