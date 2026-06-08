@@ -169,6 +169,7 @@ class ClientImport implements OnEachRow, WithChunkReading, WithStartRow
             'phone' => $this->normalizeString($row[11] ?? null),
             'email' => $this->normalizeEmail($row[19] ?? null),
             'email_f24' => $this->normalizeEmail($row[20] ?? null),
+            'payment_type_id' => $paymentTypeId,
             'payment_type_two_id' => $paymentTypeId,
             'abi' => $this->normalizeBankCode($row[15] ?? null),
             'cab' => $this->normalizeBankCode($row[16] ?? null),
