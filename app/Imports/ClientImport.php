@@ -39,7 +39,7 @@ class ClientImport implements OnEachRow, WithChunkReading, WithStartRow
         }
 
         $iva = $this->normalizeVat($row[2] ?? null);
-        $cf = $this->normalizeTaxCode($row[3] ?? null) ?? $iva;
+        $cf = $this->normalizeTaxCode($row[3] ?? null);
         $paymentTypeId = $this->resolvePaymentTypeId(
             $row[12] ?? null,
             $row[13] ?? null
@@ -107,6 +107,10 @@ class ClientImport implements OnEachRow, WithChunkReading, WithStartRow
                 }
             })
             ->first();
+
+        if (!$client) {
+            $client = $this->findClientByNameForCompletion($ragioneSociale, $iva, $cf);
+        }
 
         if ($client) {
             $this->rememberClient($client);
@@ -344,6 +348,29 @@ class ClientImport implements OnEachRow, WithChunkReading, WithStartRow
         }
 
         return $ragioneSociale . '|' . $value;
+    }
+
+    private function findClientByNameForCompletion(string $ragioneSociale, ?string $iva, ?string $cf): ?Client
+    {
+        if ($iva === null && $cf === null) {
+            return null;
+        }
+
+        return Client::query()
+            ->where('ragione_sociale', $ragioneSociale)
+            ->where(function ($query) use ($iva, $cf) {
+                if ($iva !== null) {
+                    $query->whereNull('iva')
+                        ->orWhere('iva', '');
+                }
+
+                if ($cf !== null) {
+                    $query->orWhereNull('cf')
+                        ->orWhere('cf', '');
+                }
+            })
+            ->orderByDesc('updated_at')
+            ->first();
     }
 
     private function normalizeVat(mixed $value): ?string
