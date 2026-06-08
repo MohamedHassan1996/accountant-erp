@@ -290,21 +290,7 @@ class ClientImport implements OnEachRow, WithChunkReading, WithStartRow
             return $this->paymentTypeCache[$cacheKey];
         }
 
-        $paymentType = null;
-
-        if ($normalizedDescription !== null) {
-            $paymentType = ParameterValue::query()
-                ->where('parameter_id', self::PAYMENT_TYPE_PARAMETER_ID)
-                ->where('parameter_value', $normalizedDescription)
-                ->first();
-        }
-
-        if (!$paymentType && $normalizedCode !== null) {
-            $paymentType = ParameterValue::query()
-                ->where('parameter_id', self::PAYMENT_TYPE_PARAMETER_ID)
-                ->where('description', $normalizedCode)
-                ->first();
-        }
+        $paymentType = $this->findExistingPaymentType($normalizedCode, $normalizedDescription);
 
         if (!$paymentType && $normalizedDescription !== null) {
             $nextOrder = ((int) ParameterValue::query()
@@ -314,13 +300,49 @@ class ClientImport implements OnEachRow, WithChunkReading, WithStartRow
             $paymentType = ParameterValue::create([
                 'parameter_id' => self::PAYMENT_TYPE_PARAMETER_ID,
                 'parameter_value' => $normalizedDescription,
-                'description' => $normalizedCode,
+                'description' => null,
+                'code' => $normalizedCode,
                 'parameter_order' => $nextOrder,
                 'is_default' => 0,
             ]);
         }
 
         return $this->paymentTypeCache[$cacheKey] = $paymentType?->id;
+    }
+
+    private function findExistingPaymentType(?string $normalizedCode, ?string $normalizedDescription): ?ParameterValue
+    {
+        if ($normalizedCode !== null) {
+            $paymentTypeByCode = ParameterValue::query()
+                ->where('parameter_id', self::PAYMENT_TYPE_PARAMETER_ID)
+                ->where(function ($query) use ($normalizedCode) {
+                    $query->where('code', $normalizedCode)
+                        ->orWhere('description', $normalizedCode);
+                })
+                ->first();
+
+            if ($paymentTypeByCode) {
+                return $paymentTypeByCode;
+            }
+        }
+
+        if ($normalizedDescription === null) {
+            return null;
+        }
+
+        $paymentTypes = ParameterValue::query()
+            ->where('parameter_id', self::PAYMENT_TYPE_PARAMETER_ID)
+            ->get();
+
+        $descriptionCanonical = $this->normalizePaymentTypeLabel($normalizedDescription);
+
+        foreach ($paymentTypes as $paymentType) {
+            if ($this->normalizePaymentTypeLabel($paymentType->parameter_value) === $descriptionCanonical) {
+                return $paymentType;
+            }
+        }
+
+        return null;
     }
 
     private function resolveBankId(?string $bankName): ?int
@@ -559,6 +581,27 @@ class ClientImport implements OnEachRow, WithChunkReading, WithStartRow
         $digits = preg_replace('/\D+/', '', $value);
 
         return $digits !== '' ? str_pad($digits, 5, '0', STR_PAD_LEFT) : null;
+    }
+
+    private function normalizePaymentTypeLabel(?string $value): ?string
+    {
+        $value = $this->normalizeString($value);
+
+        if ($value === null) {
+            return null;
+        }
+
+        $value = strtoupper($value);
+        $value = str_replace(['.', ',', '-', '_'], ' ', $value);
+        $value = preg_replace('/\s+/', ' ', $value);
+        $value = trim($value);
+
+        $aliases = [
+            'BONIFICO BANCARIO' => 'BONIFICO',
+            'BONIFICO' => 'BONIFICO',
+        ];
+
+        return $aliases[$value] ?? $value;
     }
 
     private function normalizeString(mixed $value): ?string
