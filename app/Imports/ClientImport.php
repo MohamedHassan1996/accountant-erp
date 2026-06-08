@@ -14,6 +14,10 @@ use Maatwebsite\Excel\Row;
 
 class ClientImport implements OnEachRow, WithChunkReading, WithStartRow
 {
+    private const WORK_ADDRESS_TYPE_ID = 2;
+    private const PAYMENT_TYPE_PARAMETER_ID = 4;
+    private const BANK_PARAMETER_ID = 10;
+
     private array $paymentTypeCache = [];
     private array $bankCache = [];
     private array $clientCacheByNameAndVat = [];
@@ -199,6 +203,7 @@ class ClientImport implements OnEachRow, WithChunkReading, WithStartRow
 
         ClientAddress::create([
             'client_id' => $client->id,
+            'parameter_value_id' => self::WORK_ADDRESS_TYPE_ID,
             'address' => $address,
             'cap' => $cap,
             'city' => $city,
@@ -289,16 +294,30 @@ class ClientImport implements OnEachRow, WithChunkReading, WithStartRow
 
         if ($normalizedDescription !== null) {
             $paymentType = ParameterValue::query()
+                ->where('parameter_id', self::PAYMENT_TYPE_PARAMETER_ID)
                 ->where('parameter_value', $normalizedDescription)
-                ->orWhere('description', $normalizedDescription)
                 ->first();
         }
 
         if (!$paymentType && $normalizedCode !== null) {
             $paymentType = ParameterValue::query()
-                ->where('parameter_value', $normalizedCode)
-                ->orWhere('description', $normalizedCode)
+                ->where('parameter_id', self::PAYMENT_TYPE_PARAMETER_ID)
+                ->where('description', $normalizedCode)
                 ->first();
+        }
+
+        if (!$paymentType && $normalizedDescription !== null) {
+            $nextOrder = ((int) ParameterValue::query()
+                ->where('parameter_id', self::PAYMENT_TYPE_PARAMETER_ID)
+                ->max('parameter_order')) + 1;
+
+            $paymentType = ParameterValue::create([
+                'parameter_id' => self::PAYMENT_TYPE_PARAMETER_ID,
+                'parameter_value' => $normalizedDescription,
+                'description' => $normalizedCode,
+                'parameter_order' => $nextOrder,
+                'is_default' => 0,
+            ]);
         }
 
         return $this->paymentTypeCache[$cacheKey] = $paymentType?->id;
@@ -315,7 +334,7 @@ class ClientImport implements OnEachRow, WithChunkReading, WithStartRow
         }
 
         $bank = ParameterValue::query()
-            ->where('parameter_id', 10)
+            ->where('parameter_id', self::BANK_PARAMETER_ID)
             ->where(function ($query) use ($bankName) {
                 $query->where('parameter_value', $bankName)
                     ->orWhere('description', $bankName);
@@ -323,10 +342,12 @@ class ClientImport implements OnEachRow, WithChunkReading, WithStartRow
             ->first();
 
         if (!$bank) {
-            $nextOrder = ((int) ParameterValue::query()->where('parameter_id', 10)->max('parameter_order')) + 1;
+            $nextOrder = ((int) ParameterValue::query()
+                ->where('parameter_id', self::BANK_PARAMETER_ID)
+                ->max('parameter_order')) + 1;
 
             $bank = ParameterValue::create([
-                'parameter_id' => 10,
+                'parameter_id' => self::BANK_PARAMETER_ID,
                 'parameter_value' => $bankName,
                 'description' => $bankName,
                 'parameter_order' => $nextOrder,
