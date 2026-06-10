@@ -53,7 +53,7 @@ class InvoiceController extends Controller
 
         $paymentPeriodFilter = $this->resolvePaymentPeriodFilter($filters);
         $targetMonth = $this->resolveTargetMonth($filters);
-        $allowedPaymentDescriptions = $this->resolveAllowedPaymentDescriptions($paymentPeriodFilter);
+        $allowedPayStepIds = $this->resolveAllowedPayStepIds($paymentPeriodFilter);
 
         $allInvoices = DB::table('tasks')
             ->leftJoin('invoices', 'invoices.id', '=', 'tasks.invoice_id')
@@ -66,16 +66,16 @@ class InvoiceController extends Controller
             ->when(isset($filters['unassigned']), function ($query) use ($filters) {
                 return $query->where('tasks.invoice_id', $filters['unassigned'] == 1 ? '=' : '!=', null);
             })
-            ->when($unassignedFilter == 1 && !empty($allowedPaymentDescriptions), function ($query) use ($allowedPaymentDescriptions, $targetMonth) {
+            ->when($unassignedFilter == 1 && !empty($allowedPayStepIds), function ($query) use ($allowedPayStepIds, $targetMonth) {
                 return $query
-                    ->whereIn('pay_steps_parameter.description', $allowedPaymentDescriptions)
+                    ->whereIn('clients.pay_steps_id', $allowedPayStepIds)
                     ->where(function ($payStepQuery) use ($targetMonth) {
-                        foreach ([30, 60, 90] as $period) {
+                        foreach ([15 => 30, 7 => 60, 8 => 90] as $payStepId => $period) {
                             $monthStep = (int) ceil($period / 30);
 
-                            $payStepQuery->orWhere(function ($periodQuery) use ($period, $monthStep, $targetMonth) {
+                            $payStepQuery->orWhere(function ($periodQuery) use ($payStepId, $monthStep, $targetMonth) {
                                 $periodQuery
-                                    ->where('pay_steps_parameter.description', (string) $period)
+                                    ->where('clients.pay_steps_id', $payStepId)
                                     ->whereRaw('? % ? = 0', [$targetMonth, $monthStep]);
                             });
                         }
@@ -296,12 +296,12 @@ class InvoiceController extends Controller
         return null;
     }
 
-    private function resolveAllowedPaymentDescriptions(?int $paymentPeriodFilter): array
+    private function resolveAllowedPayStepIds(?int $paymentPeriodFilter): array
     {
         return match ($paymentPeriodFilter) {
-            0 => ['30'],
-            1 => ['30', '60'],
-            2 => ['30', '60', '90'],
+            0 => [15],
+            1 => [15, 7],
+            2 => [15, 7, 8],
             default => [],
         };
     }
