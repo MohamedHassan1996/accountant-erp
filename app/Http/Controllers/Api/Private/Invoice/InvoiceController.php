@@ -315,7 +315,7 @@ class InvoiceController extends Controller
         }
 
         $selectedPayStep = ParameterValue::query()
-            ->where('parameter_id', 4)
+            ->where('parameter_id', 5)
             ->where('id', $paymentPeriodFilter)
             ->first();
 
@@ -326,7 +326,7 @@ class InvoiceController extends Controller
         }
 
         return ParameterValue::query()
-            ->where('parameter_id', 4)
+            ->where('parameter_id', 5)
             ->get()
             ->map(function (ParameterValue $parameterValue) {
                 $period = (int) preg_replace('/\D+/', '', (string) $parameterValue->description);
