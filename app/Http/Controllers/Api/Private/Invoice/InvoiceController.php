@@ -56,6 +56,7 @@ class InvoiceController extends Controller
         $targetMonth = $this->resolveTargetMonth($filters);
         $allowedPaySteps = $this->resolveAllowedPaySteps($paymentPeriodFilter);
         $allowedPayStepIds = array_keys($allowedPaySteps);
+        $hasPayStepsFilter = $paymentPeriodFilter !== null;
 
         $allInvoices = DB::table('tasks')
             ->leftJoin('invoices', 'invoices.id', '=', 'tasks.invoice_id')
@@ -67,6 +68,9 @@ class InvoiceController extends Controller
             })
             ->when(isset($filters['unassigned']), function ($query) use ($filters) {
                 return $query->where('tasks.invoice_id', $filters['unassigned'] == 1 ? '=' : '!=', null);
+            })
+            ->when($unassignedFilter == 1 && $hasPayStepsFilter && empty($allowedPayStepIds), function ($query) {
+                return $query->whereRaw('1 = 0');
             })
             ->when($unassignedFilter == 1 && !empty($allowedPayStepIds), function ($query) use ($allowedPayStepIds, $allowedPaySteps, $targetMonth) {
                 return $query
