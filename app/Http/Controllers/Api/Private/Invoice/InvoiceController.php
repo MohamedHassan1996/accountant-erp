@@ -23,6 +23,7 @@ use App\Models\Client\ClientAddress;
 use App\Models\Client\ClientPayInstallment;
 use App\Models\Client\ClientPayInstallmentSubData;
 use App\Models\Invoice\InvoiceDetail;
+use App\Models\Parameter\ParameterValue;
 use App\Models\ServiceCategory\ServiceCategory;
 use Carbon\Carbon;
 
@@ -53,7 +54,8 @@ class InvoiceController extends Controller
 
         $paymentPeriodFilter = $this->resolvePaymentPeriodFilter($filters);
         $targetMonth = $this->resolveTargetMonth($filters);
-        $allowedPayStepIds = $this->resolveAllowedPayStepIds($paymentPeriodFilter);
+        $allowedPaySteps = $this->resolveAllowedPaySteps($paymentPeriodFilter);
+        $allowedPayStepIds = array_keys($allowedPaySteps);
 
         $allInvoices = DB::table('tasks')
             ->leftJoin('invoices', 'invoices.id', '=', 'tasks.invoice_id')
@@ -66,11 +68,11 @@ class InvoiceController extends Controller
             ->when(isset($filters['unassigned']), function ($query) use ($filters) {
                 return $query->where('tasks.invoice_id', $filters['unassigned'] == 1 ? '=' : '!=', null);
             })
-            ->when($unassignedFilter == 1 && !empty($allowedPayStepIds), function ($query) use ($allowedPayStepIds, $targetMonth) {
+            ->when($unassignedFilter == 1 && !empty($allowedPayStepIds), function ($query) use ($allowedPayStepIds, $allowedPaySteps, $targetMonth) {
                 return $query
                     ->whereIn('clients.pay_steps_id', $allowedPayStepIds)
-                    ->where(function ($payStepQuery) use ($targetMonth) {
-                        foreach ([15 => 30, 7 => 60, 8 => 90] as $payStepId => $period) {
+                    ->where(function ($payStepQuery) use ($allowedPaySteps, $targetMonth) {
+                        foreach ($allowedPaySteps as $payStepId => $period) {
                             $monthStep = (int) ceil($period / 30);
 
                             $payStepQuery->orWhere(function ($periodQuery) use ($payStepId, $monthStep, $targetMonth) {
@@ -296,14 +298,38 @@ class InvoiceController extends Controller
         return null;
     }
 
-    private function resolveAllowedPayStepIds(?int $paymentPeriodFilter): array
+    private function resolveAllowedPaySteps(?int $paymentPeriodFilter): array
     {
-        return match ($paymentPeriodFilter) {
-            0 => [15],
-            1 => [15, 7],
-            2 => [15, 7, 8],
-            default => [],
-        };
+        if (!$paymentPeriodFilter) {
+            return [];
+        }
+
+        $selectedPayStep = ParameterValue::query()
+            ->where('parameter_id', 4)
+            ->where('id', $paymentPeriodFilter)
+            ->first();
+
+        $selectedPeriod = (int) preg_replace('/\D+/', '', (string) $selectedPayStep?->description);
+
+        if ($selectedPeriod <= 0) {
+            return [];
+        }
+
+        return ParameterValue::query()
+            ->where('parameter_id', 4)
+            ->get()
+            ->map(function (ParameterValue $parameterValue) {
+                $period = (int) preg_replace('/\D+/', '', (string) $parameterValue->description);
+
+                return [
+                    'id' => $parameterValue->id,
+                    'period' => $period,
+                ];
+            })
+            ->filter(fn (array $item) => $item['period'] > 0 && $item['period'] <= $selectedPeriod)
+            ->sortBy('period')
+            ->mapWithKeys(fn (array $item) => [$item['id'] => $item['period']])
+            ->toArray();
     }
 
     private function resolveTargetMonth(array $filters): int
