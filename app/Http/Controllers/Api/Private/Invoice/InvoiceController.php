@@ -382,7 +382,7 @@ class InvoiceController extends Controller
                         'payment_type_id' => $invoiceData['paymentTypeId'],
                         'discount_type' => $invoiceData['discountType']??null,
                         'discount_amount' => $invoiceData['discountAmount'],
-                        'bank_account_id' => $invoiceData['bankAccountId'],
+                        'bank_account_id' => explode('##', $invoiceData['bankAccountId'] ?? '')[0] ?? null,
                         'client_bank_account_id' => $invoiceData['clientBankId'] ?? null,
                     ]);
                 }
