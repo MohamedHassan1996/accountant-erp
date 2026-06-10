@@ -318,8 +318,8 @@ class InvoiceReportExportController extends Controller
             'description' => 'Rivalsa 4%',
             'price' => $invoiceFourPercentAmount,
             'priceAfterDiscount' => $invoiceFourPercentAmount,
-            'additionalTaxPercentage' => 22,
-            'serviceCode' => '00000001',
+            'additionalTaxPercentage' => 0,
+            'serviceCode' => 'N1',
             'quantity' => 1,
             'unitPrice' => $invoiceFourPercentAmount,
             'total' => $invoiceFourPercentAmount,
@@ -328,7 +328,6 @@ class InvoiceReportExportController extends Controller
         ];
 
         $invoiceTotal += $invoiceFourPercentAmount;
-        $invoiceTaxableTotal += $invoiceFourPercentAmount;
 
         $clientAddressFormatted = ClientAddress::where('client_id', $client->id)->first()?->address ?? "";
 
