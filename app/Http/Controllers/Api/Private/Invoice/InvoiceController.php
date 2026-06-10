@@ -217,14 +217,20 @@ class InvoiceController extends Controller
                 }
 
                 $taskQty = ($invoice->taskQuantity && $invoice->taskQuantity > 0) ? $invoice->taskQuantity : 1;
-                $formattedData[$search]['totalPrice'] += $servicePrice * $taskQty;
-                $formattedData[$search]['totalPriceAfterDiscount'] += $servicePriceAfterDiscount * $taskQty;
+                $resolvedTaskPrice = $this->resolvePositiveAmount($invoice->taskPrice, $servicePrice);
+                $resolvedTaskPriceAfterDiscount = $this->resolvePositiveAmount($invoice->taskPriceAfterDiscount, $servicePriceAfterDiscount);
+
+                $formattedData[$search]['totalPrice'] += $resolvedTaskPrice * $taskQty;
+                $formattedData[$search]['totalPriceAfterDiscount'] += $resolvedTaskPriceAfterDiscount * $taskQty;
 
 
             } else {
                 $taskQty = ($invoice->taskQuantity && $invoice->taskQuantity > 0) ? $invoice->taskQuantity : 1;
-                $formattedData[$search]['totalPrice'] += $servicePrice * $taskQty;
-                $formattedData[$search]['totalPriceAfterDiscount'] += $servicePrice * $taskQty;
+                $resolvedTaskPrice = $this->resolvePositiveAmount($invoice->taskPrice, $servicePrice);
+                $resolvedTaskPriceAfterDiscount = $this->resolvePositiveAmount($invoice->taskPriceAfterDiscount, $resolvedTaskPrice);
+
+                $formattedData[$search]['totalPrice'] += $resolvedTaskPrice * $taskQty;
+                $formattedData[$search]['totalPriceAfterDiscount'] += $resolvedTaskPriceAfterDiscount * $taskQty;
 
             }
 
@@ -241,13 +247,13 @@ class InvoiceController extends Controller
                 'description' => $invoice->serviceCategoryName,
                 'serviceCategoryCode' => $invoice->serviceCategoryCode ?? '',
                 'taskStatus' => $invoice->taskStatus,
-                'price' =>$invoice->taskPrice ?? $servicePrice,
-                'priceAfterDiscount' =>$invoice->taskPriceAfterDiscount??$servicePriceAfterDiscount,
+                'price' => $resolvedTaskPrice,
+                'priceAfterDiscount' => $resolvedTaskPriceAfterDiscount,
                 'extraPrice' => $invoice->extraPrice??0,
                 'taskCreatedAt' => Carbon::parse($invoice->taskCreatedAt)->format('d/m/Y'),
                 'quantity' => $taskQty,
-                'unitPrice' => $servicePrice,
-                'total' => $taskQty * $servicePriceAfterDiscount,
+                'unitPrice' => $resolvedTaskPrice,
+                'total' => $taskQty * $resolvedTaskPriceAfterDiscount,
             ];
 
 
@@ -665,12 +671,15 @@ class InvoiceController extends Controller
 
 
             $qty = ($invoice->invoiceDetailQuantity && $invoice->invoiceDetailQuantity > 0) ? $invoice->invoiceDetailQuantity : 1;
-            $unitPrice = ($invoice->invoiceDetailUnitPrice && $invoice->invoiceDetailUnitPrice > 0) ? $invoice->invoiceDetailUnitPrice : $invoice->invoiceDetailPrice;
-            $formattedData[$search]['totalPrice'] += $invoice->invoiceDetailPrice * $qty;
-            $formattedData[$search]['totalPriceAfterDiscount'] += $invoice->invoiceDetailPriceAfterDiscount * $qty;
-            $formattedData[$search]['totalCosts'] += $invoice->invoiceDetailExtraPrice??0;
-
             $task = $invoice->invoiceableType == Task::class ? Task::with('serviceCategory')->find($invoice->invoiceableId) : "";
+            $taskServiceCategoryPrice = $task?->serviceCategory?->price ?? 0;
+            $resolvedInvoicePrice = $this->resolvePositiveAmount($invoice->invoiceDetailPrice, $invoice->invoiceDetailUnitPrice, $taskServiceCategoryPrice);
+            $resolvedInvoicePriceAfterDiscount = $this->resolvePositiveAmount($invoice->invoiceDetailPriceAfterDiscount, $resolvedInvoicePrice);
+            $unitPrice = $this->resolvePositiveAmount($invoice->invoiceDetailUnitPrice, $resolvedInvoicePrice, $taskServiceCategoryPrice);
+
+            $formattedData[$search]['totalPrice'] += $resolvedInvoicePrice * $qty;
+            $formattedData[$search]['totalPriceAfterDiscount'] += $resolvedInvoicePriceAfterDiscount * $qty;
+            $formattedData[$search]['totalCosts'] += $invoice->invoiceDetailExtraPrice??0;
 
             $description = "";
 
@@ -694,12 +703,12 @@ class InvoiceController extends Controller
                 'taskNumber' => $task->number??"",
                 'serviceCategoryName' => $description??'',
                 'description' => $description??'',
-                'price' =>$invoice->invoiceDetailPrice,
-                'priceAfterDiscount' =>$invoice->invoiceDetailPriceAfterDiscount,
+                'price' => $resolvedInvoicePrice,
+                'priceAfterDiscount' => $resolvedInvoicePriceAfterDiscount,
                 'extraPrice' => $invoice->invoiceDetailExtraPrice??0,
                 'quantity' => $qty,
                 'unitPrice' => $unitPrice,
-                'total' => $qty * $invoice->invoiceDetailPriceAfterDiscount,
+                'total' => $qty * $resolvedInvoicePriceAfterDiscount,
             ];
 
 
@@ -733,6 +742,17 @@ class InvoiceController extends Controller
         $paginatedData = PaginateCollection::paginate(collect($formattedData), $pageSize);
 
         return response()->json(new AllInvoiceCollection($paginatedData), 200);
+    }
+
+    private function resolvePositiveAmount(...$values): float
+    {
+        foreach ($values as $value) {
+            if ($value !== null && $value !== '' && (float) $value > 0) {
+                return (float) $value;
+            }
+        }
+
+        return 0.0;
     }
 
     public function update(Request $request)
