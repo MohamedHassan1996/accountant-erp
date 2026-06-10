@@ -114,6 +114,7 @@ class InvoiceReportExportController extends Controller
 
         $invoiceItems = DB::table('invoice_details')
             ->where('invoice_details.invoice_id', $invoice->id)
+            ->whereNull('invoice_details.deleted_at')
             ->select([
                 'invoice_details.price',
                 'invoice_details.price_after_discount',
@@ -130,7 +131,9 @@ class InvoiceReportExportController extends Controller
         $invoiceTotal = 0;
         $invoiceTaxableTotal = 0;
 
-        $invoiceStartAt = Carbon::parse($invoice->created_at)->format('d/m/Y');
+        $invoiceStartAt = !empty($invoice->start_date)
+            ? Carbon::parse($invoice->start_date)->format('d/m/Y')
+            : Carbon::parse($invoice->created_at)->format('d/m/Y');
 
         foreach ($invoiceItems as $invoiceItem) {
             $invoiceItemData = match ($invoiceItem->invoiceable_type) {
@@ -141,17 +144,15 @@ class InvoiceReportExportController extends Controller
             };
 
 
-            $description = $invoiceItem->invoiceable_type == Task::class
-                ? $invoiceItemData->serviceCategory->name
-                : $invoiceItemData->parameterValue?->description ?? $invoiceItem->description;
+            $description = !empty($invoiceItem->description)
+                ? $invoiceItem->description
+                : ($invoiceItem->invoiceable_type == Task::class
+                    ? $invoiceItemData->serviceCategory->name
+                    : $invoiceItemData->parameterValue?->description ?? '');
 
-            $invoiceStartAt = $invoiceItem->invoiceable_type == ClientPayInstallment::class
+            $invoiceStartAt = ($invoiceItem->invoiceable_type == ClientPayInstallment::class && empty($invoice->start_date))
                 ? Carbon::parse(ClientPayInstallment::find($invoiceItem->invoiceable_id)->start_at)->format('d/m/Y')
                 : $invoiceStartAt;
-
-            if($invoiceItem->description != null){
-                $description = $invoiceItem->description;
-            }
 
             // Get service code from Task's ServiceCategory or ParameterValue
             $serviceCode = '..'; // Default value
@@ -167,6 +168,44 @@ class InvoiceReportExportController extends Controller
             $qty = ($invoiceItem->quantity && $invoiceItem->quantity > 0) ? (float)$invoiceItem->quantity : 1;
             $unitPrice = ($invoiceItem->unit_price && $invoiceItem->unit_price > 0) ? (float)$invoiceItem->unit_price : (float)$invoiceItem->price;
 
+            if ($invoiceItem->invoiceable_type == Task::class && $invoiceItemData && $invoiceItemData->serviceCategory) {
+                if ($invoiceItem->price_after_discount == 0 && $invoiceItem->price == 0) {
+                    if ($invoiceItemData->serviceCategory->extra_is_pricable) {
+                        $extraPrice = $invoiceItemData->serviceCategory->extra_price;
+
+                        $invoiceItemsData[] = [
+                            'description' => $invoiceItemData->serviceCategory->extra_price_description,
+                            'price' => $extraPrice,
+                            'priceAfterDiscount' => $extraPrice,
+                            'additionalTaxPercentage' => 0,
+                            'serviceCode' => $invoiceItemData->serviceCategory->extra_code ?? 'N1',
+                            'quantity' => 1,
+                            'unitPrice' => $extraPrice,
+                            'total' => $extraPrice,
+                            'is_descriptive_only' => false,
+                            'is_discount' => false,
+                        ];
+
+                        $invoiceTotal += $extraPrice;
+                    } else {
+                        $invoiceItemsData[] = [
+                            'description' => $description,
+                            'price' => 0,
+                            'priceAfterDiscount' => 0,
+                            'additionalTaxPercentage' => 22,
+                            'serviceCode' => $serviceCode,
+                            'quantity' => 1,
+                            'unitPrice' => 0,
+                            'total' => 0,
+                            'is_descriptive_only' => true,
+                            'is_discount' => false,
+                        ];
+                    }
+
+                    continue;
+                }
+            }
+
             $invoiceItemsData[] = [
                 'description' => $description,
                 'price' => $invoiceItem->price,
@@ -176,6 +215,8 @@ class InvoiceReportExportController extends Controller
                 'quantity' => $qty,
                 'unitPrice' => $unitPrice,
                 'total' => $qty * (float)$invoiceItem->price_after_discount,
+                'is_descriptive_only' => false,
+                'is_discount' => false,
             ];
 
             $invoiceTotal += $invoiceItem->price_after_discount * $qty;
@@ -195,14 +236,18 @@ class InvoiceReportExportController extends Controller
 
                 $extraPrice = $invoiceItemData->serviceCategory->extra_price;
 
-$invoiceItemsData[] = [
-    'description' => $invoiceItemData->serviceCategory->extra_price_description,
-    'price' => $extraPrice,
-    'priceAfterDiscount' => $extraPrice,
-    'additionalTaxPercentage' => 0,
-    'serviceCode' => $invoiceItemData->serviceCategory->extra_code ?? '..',
-    'test' => 'test'
-];
+                $invoiceItemsData[] = [
+                    'description' => $invoiceItemData->serviceCategory->extra_price_description,
+                    'price' => $extraPrice,
+                    'priceAfterDiscount' => $extraPrice,
+                    'additionalTaxPercentage' => 0,
+                    'serviceCode' => $invoiceItemData->serviceCategory->extra_code ?? 'N1',
+                    'quantity' => 1,
+                    'unitPrice' => $extraPrice,
+                    'total' => $extraPrice,
+                    'is_descriptive_only' => false,
+                    'is_discount' => false,
+                ];
 
                 $invoiceTotal += $invoiceItemData->serviceCategory->extra_price;
             }
@@ -250,7 +295,12 @@ $invoiceItemsData[] = [
         'price' => $clientTaxAmount,
         'priceAfterDiscount' => $clientTaxAmount,
         'additionalTaxPercentage' => 22,
-        'serviceCode' => '00000001'
+        'serviceCode' => '00000001',
+        'quantity' => 1,
+        'unitPrice' => $clientTaxAmount,
+        'total' => $clientTaxAmount,
+        'is_descriptive_only' => false,
+        'is_discount' => false,
     ];
 
     $invoiceTotal += $clientTaxAmount;
@@ -261,6 +311,24 @@ $invoiceItemsData[] = [
 
     $invoiceTaxableTotal += $clientTaxAmount;
 }
+
+        $invoiceFourPercentAmount = $invoiceTaxableTotal * 0.04;
+
+        $invoiceItemsData[] = [
+            'description' => 'Rivalsa 4%',
+            'price' => $invoiceFourPercentAmount,
+            'priceAfterDiscount' => $invoiceFourPercentAmount,
+            'additionalTaxPercentage' => 22,
+            'serviceCode' => '00000001',
+            'quantity' => 1,
+            'unitPrice' => $invoiceFourPercentAmount,
+            'total' => $invoiceFourPercentAmount,
+            'is_descriptive_only' => false,
+            'is_discount' => false,
+        ];
+
+        $invoiceTotal += $invoiceFourPercentAmount;
+        $invoiceTaxableTotal += $invoiceFourPercentAmount;
 
         $clientAddressFormatted = ClientAddress::where('client_id', $client->id)->first()?->address ?? "";
 
@@ -294,12 +362,19 @@ $invoiceItemsData[] = [
                 'description' => "sconto",
                 'price' => $discountValue,
                 'priceAfterDiscount' => $discountValue,
-                'additionalTaxPercentage' => 0
+                'additionalTaxPercentage' => 22,
+                'serviceCode' => '..',
+                'quantity' => 1,
+                'unitPrice' => $discountValue,
+                'total' => $discountValue,
+                'is_descriptive_only' => false,
+                'is_discount' => true,
             ];
 
             $invoiceTotal -= $discountValue;
 
             $invoiceTotalToCalcTax -= $discountValue;
+            $invoiceTaxableTotal -= $discountValue;
 
         }
 
@@ -322,7 +397,7 @@ $invoiceItemsData[] = [
 
         return [
             'invoice' => $invoice,
-            'clientAddressData' => $clientAddressData->toArray(),
+            'clientAddressData' => $clientAddressData?->toArray() ?? [],
             'invoiceStartAt' => $invoiceStartAt,
             'invoiceItems' => $invoiceItemsData,
             'invoiceTotalTax' => $invoiceTotalToCalcTax,
@@ -443,9 +518,9 @@ $data['stampAmount'] = 2.00;
             $sheet
                 ->setCellValue('A' . $row, $data['client']->ragione_sociale ?? '')
                 ->setCellValue('B' . $row, $entry['description'] ?? '')
-                ->setCellValue('C' . $row, $entry['priceAfterDiscount'] ?? 0)
-                ->setCellValue('D' . $row, $entry['quantita'] ?? 1)
-                ->setCellValue('E' . $row, ($entry['priceAfterDiscount'] ?? 0) * ($entry['quantita'] ?? 1))
+                ->setCellValue('C' . $row, $entry['unitPrice'] ?? $entry['priceAfterDiscount'] ?? 0)
+                ->setCellValue('D' . $row, $entry['quantity'] ?? 1)
+                ->setCellValue('E' . $row, $entry['total'] ?? (($entry['priceAfterDiscount'] ?? 0) * ($entry['quantity'] ?? 1)))
                 ->setCellValue('F' . $row, Carbon::parse($data['invoice']->created_at)->format('d/m/Y'));
             $row++;
         }
@@ -644,16 +719,45 @@ $trasm->addChild('CodiceDestinatario', $safe($data['client']['sdi'] ?? '0000000'
     /* --- CessionarioCommittente --- */
     $cess = $header->addChild('CessionarioCommittente');
     $datiCess = $cess->addChild('DatiAnagrafici');
-    if (!empty($data['client']['iva'])) {
+
+    $ivaRaw = trim((string)($data['client']['iva'] ?? ''));
+    $cfRaw  = trim((string)($data['client']['cf']  ?? ''));
+
+    $isValidPIva = $ivaRaw !== '' && preg_match('/^\d{11}$/', $ivaRaw);
+    $isCfPersonaFisica = $cfRaw !== '' && preg_match('/^[A-Z0-9]{16}$/i', $cfRaw);
+
+    if ($isValidPIva) {
         $ivaCess = $datiCess->addChild('IdFiscaleIVA');
         $ivaCess->addChild('IdPaese', 'IT');
-        $ivaCess->addChild('IdCodice', $safe($data['client']['iva']));
+        $ivaCess->addChild('IdCodice', $safe($ivaRaw));
+
+        if ($cfRaw !== '') {
+            $datiCess->addChild('CodiceFiscale', $safe(strtoupper($cfRaw)));
+        }
+
+        $anaCess = $datiCess->addChild('Anagrafica');
+        $anaCess->addChild('Denominazione', $safe($data['client']['ragione_sociale']));
+    } else {
+        if ($cfRaw !== '') {
+            $datiCess->addChild('CodiceFiscale', $safe(strtoupper($cfRaw)));
+        }
+
+        $anaCess = $datiCess->addChild('Anagrafica');
+
+        if ($isCfPersonaFisica) {
+            $ragSoc = trim((string)$data['client']['ragione_sociale']);
+            $parts = preg_split('/\s+/', $ragSoc, 2);
+
+            if (count($parts) === 2) {
+                $anaCess->addChild('Nome', $safe($parts[1]));
+                $anaCess->addChild('Cognome', $safe($parts[0]));
+            } else {
+                $anaCess->addChild('Denominazione', $safe($ragSoc));
+            }
+        } else {
+            $anaCess->addChild('Denominazione', $safe($data['client']['ragione_sociale']));
+        }
     }
-    if (!empty($data['client']['cf'])) {
-        $datiCess->addChild('CodiceFiscale', $safe($data['client']['cf']));
-    }
-    $anaCess = $datiCess->addChild('Anagrafica');
-    $anaCess->addChild('Denominazione', $safe($data['client']['ragione_sociale']));
 
     $provRaw = $data['clientAddressData']['province'] ?? '';
     $prov = strtoupper(substr(trim($provRaw), 0, 2)) ?: 'XX';
@@ -703,8 +807,12 @@ if ($applyStamp) {
     $datiBollo->addChild('ImportoBollo', number_format($stampAmount, 2, '.', ''));
 }
 
-    // Causale from first item
+    // Causale from first positive item excluding discounts
     foreach ($data['invoiceItems'] as $item) {
+        if (!empty($item['is_discount'])) {
+            continue;
+        }
+
         if ((float)($item['priceAfterDiscount'] ?? 0) > 0 && !empty($item['description'])) {
             $doc->addChild('Causale', $safe($item['description']));
             break;
@@ -714,47 +822,49 @@ if ($applyStamp) {
     $beni = $body->addChild('DatiBeniServizi');
     $line = 1;
     foreach (array_values($data['invoiceItems']) as $item) {
-        if ((float)($item['priceAfterDiscount'] ?? 0) <= 0) continue;
-/*
+        $prezzo = (float)($item['priceAfterDiscount'] ?? 0);
+        $isDescriptive = !empty($item['is_descriptive_only']);
+        $isDiscount = !empty($item['is_discount']);
 
-        $det = $beni->addChild('DettaglioLinee');
-        $det->addChild('NumeroLinea', (string)$line);
-        $codArt = $det->addChild('CodiceArticolo');
-        $codArt->addChild('CodiceTipo', 'PRESTAZIONE');
-        $codArt->addChild('CodiceValore', $item['serviceCode'] ?? '..');
-        $det->addChild('Descrizione', $safe($item['description'] ?? 'Senza descrizione'));
-        $det->addChild('Quantita', '1.00');
-        $det->addChild('UnitaMisura', 'NR');
-        $det->addChild('PrezzoUnitario', number_format((float)$item['priceAfterDiscount'], 2, '.', ''));
-        $det->addChild('PrezzoTotale', number_format((float)$item['priceAfterDiscount'], 2, '.', ''));
-        $det->addChild('AliquotaIVA', number_format((float)($item['additionalTaxPercentage'] ?? 22), 2, '.', ''));
-        */
+        if ($isDiscount) {
+            $prezzo = -abs($prezzo);
+        }
+
+        if ($prezzo <= 0 && !$isDescriptive && !$isDiscount) continue;
+
         $aliquota = (float)($item['additionalTaxPercentage'] ?? 22);
         $det = $beni->addChild('DettaglioLinee');
-$det->addChild('NumeroLinea', (string)$line);
-if ($aliquota != 0) {
-    // per servizi normali manteniamo CodiceArticolo
-    $codArt = $det->addChild('CodiceArticolo');
-    $codArt->addChild('CodiceTipo', 'PRESTAZIONE');
-    $codArt->addChild('CodiceValore', $item['serviceCode'] ?? '..');
-}
+        $det->addChild('NumeroLinea', (string)$line);
 
-$det->addChild('Descrizione', $safe($item['description'] ?? 'Senza descrizione'));
-$itemQty = ($item['quantity'] ?? 1) > 0 ? (float)($item['quantity'] ?? 1) : 1;
-$itemUnitPrice = ($item['unitPrice'] ?? 0) > 0 ? (float)$item['unitPrice'] : (float)$item['priceAfterDiscount'];
-$det->addChild('Quantita', number_format($itemQty, 2, '.', ''));
-$det->addChild('UnitaMisura', 'NR');
+        if ($aliquota != 0 && $prezzo > 0) {
+            $codArt = $det->addChild('CodiceArticolo');
+            $codArt->addChild('CodiceTipo', 'PRESTAZIONE');
+            $codArt->addChild('CodiceValore', $item['serviceCode'] ?? '..');
+        }
 
-$det->addChild('PrezzoUnitario', number_format($itemUnitPrice, 6, '.', ''));
-$det->addChild('PrezzoTotale', number_format($itemQty * (float)$item['priceAfterDiscount'], 2, '.', ''));
+        $det->addChild('Descrizione', $safe($item['description'] ?? 'Senza descrizione'));
+        $itemQty = ($item['quantity'] ?? 1) > 0 ? (float)($item['quantity'] ?? 1) : 1;
+        $itemUnitPrice = ($item['unitPrice'] ?? 0) > 0 ? (float)$item['unitPrice'] : (float)$item['priceAfterDiscount'];
 
+        if ($isDiscount) {
+            $itemUnitPrice = -abs($itemUnitPrice);
+        }
 
-$det->addChild('AliquotaIVA', number_format($aliquota, 2, '.', ''));
+        $det->addChild('Quantita', number_format($itemQty, 2, '.', ''));
+        $det->addChild('UnitaMisura', 'NR');
+        $det->addChild('PrezzoUnitario', number_format($itemUnitPrice, 6, '.', ''));
+        $det->addChild('PrezzoTotale', number_format($prezzo * $itemQty, 2, '.', ''));
+        $det->addChild('AliquotaIVA', number_format($aliquota, 2, '.', ''));
 
-if ($aliquota == 0) {
-    // per IVA 0% serve Natura
-    $det->addChild('Natura', $item['serviceCode'] ?? 'N1');
-}
+        if ($aliquota == 0 && $prezzo > 0) {
+            $natura = $item['serviceCode'] ?? 'N1';
+
+            if (!preg_match('/^N[1-7](\.[0-9])?$/', $natura)) {
+                $natura = 'N1';
+            }
+
+            $det->addChild('Natura', $natura);
+        }
 
 
 

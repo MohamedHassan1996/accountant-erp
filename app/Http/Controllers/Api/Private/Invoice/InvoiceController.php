@@ -44,21 +44,42 @@ class InvoiceController extends Controller
 
     public function index(Request $request)
     {
-        $filters = $request->filter ?? null;
+        $filters = $request->filter ?? [];
+        $unassignedFilter = $filters['unassigned'] ?? null;
 
-        if($filters['unassigned'] == 0){
+        if($unassignedFilter == 0){
             return $this->assignedInvoices($request);
         }
+
+        $paymentPeriodFilter = $this->resolvePaymentPeriodFilter($filters);
+        $targetMonth = $this->resolveTargetMonth($filters);
+        $allowedPaymentDescriptions = $this->resolveAllowedPaymentDescriptions($paymentPeriodFilter);
 
         $allInvoices = DB::table('tasks')
             ->leftJoin('invoices', 'invoices.id', '=', 'tasks.invoice_id')
             ->leftJoin('clients', 'tasks.client_id', '=', 'clients.id')
+            ->leftJoin('parameter_values as pay_steps_parameter', 'clients.pay_steps_id', '=', 'pay_steps_parameter.id')
             ->leftJoin('service_categories', 'tasks.service_category_id', '=', 'service_categories.id')
             ->when(isset($filters['clientId']), function ($query) use ($filters) {
                 return $query->where('tasks.client_id', $filters['clientId']);
             })
             ->when(isset($filters['unassigned']), function ($query) use ($filters) {
                 return $query->where('tasks.invoice_id', $filters['unassigned'] == 1 ? '=' : '!=', null);
+            })
+            ->when($unassignedFilter == 1 && !empty($allowedPaymentDescriptions), function ($query) use ($allowedPaymentDescriptions, $targetMonth) {
+                return $query
+                    ->whereIn('pay_steps_parameter.description', $allowedPaymentDescriptions)
+                    ->where(function ($payStepQuery) use ($targetMonth) {
+                        foreach ([30, 60, 90] as $period) {
+                            $monthStep = (int) ceil($period / 30);
+
+                            $payStepQuery->orWhere(function ($periodQuery) use ($period, $monthStep, $targetMonth) {
+                                $periodQuery
+                                    ->where('pay_steps_parameter.description', (string) $period)
+                                    ->whereRaw('? % ? = 0', [$targetMonth, $monthStep]);
+                            });
+                        }
+                    });
             })
             ->when(isset($filters['hasProforma']), function ($query) use ($filters) {
                 if ($filters['hasProforma'] == 1) {
@@ -83,6 +104,8 @@ class InvoiceController extends Controller
                 'clients.total_tax as clientTotalTax',
                 'clients.ragione_sociale as clientName',
                 'clients.addable_to_bulk_invoice as clientAddableToBulkInvoice',
+                'clients.pay_steps_id as clientPayStepsId',
+                'pay_steps_parameter.description as clientPayStepsDescription',
                 'invoices.number as invoiceNumber',
                 'invoices.discount_type as invoiceDiscountType',
                 'invoices.discount_amount as invoiceDiscountAmount',
@@ -260,6 +283,34 @@ class InvoiceController extends Controller
         $paginatedData = PaginateCollection::paginate(collect($formattedData), $pageSize);
 
         return response()->json(new AllInvoiceCollection($paginatedData), 200);
+    }
+
+    private function resolvePaymentPeriodFilter(array $filters): ?int
+    {
+        foreach (['paymentPeriod', 'payStepFilter', 'payStepsFilter'] as $key) {
+            if (isset($filters[$key]) && $filters[$key] !== '') {
+                return (int) $filters[$key];
+            }
+        }
+
+        return null;
+    }
+
+    private function resolveAllowedPaymentDescriptions(?int $paymentPeriodFilter): array
+    {
+        return match ($paymentPeriodFilter) {
+            0 => ['30'],
+            1 => ['30', '60'],
+            2 => ['30', '60', '90'],
+            default => [],
+        };
+    }
+
+    private function resolveTargetMonth(array $filters): int
+    {
+        $referenceDate = $filters['endAt'] ?? $filters['startAt'] ?? now()->toDateString();
+
+        return Carbon::parse($referenceDate)->month;
     }
 
 
