@@ -9,6 +9,7 @@ use App\Filters\TaskTimeLog\FilterTaskTimeLog;
 use App\Models\Task\Task;
 use App\Models\Task\TaskTimeLog;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -65,6 +66,82 @@ class TaskTimeLogService{
 
         return $taskTimeLog;
 
+    }
+
+    public function createCompletedTimeLogs(Task $task, string $totalTime, ?string $comment = null): TaskTimeLog
+    {
+        $startLog = $this->createTaskTimeLog([
+            'taskId' => $task->id,
+            'userId' => $task->user_id,
+            'type' => TaskTimeLogType::TIME_LOG->value,
+            'status' => TaskTimeLogStatus::START->value,
+            'currentTime' => '00:00:00',
+            'comment' => null,
+        ]);
+        $stopLog = $this->createTaskTimeLog([
+            'taskId' => $task->id,
+            'userId' => $task->user_id,
+            'type' => TaskTimeLogType::TIME_LOG->value,
+            'status' => TaskTimeLogStatus::STOP->value,
+            'currentTime' => $totalTime,
+            'comment' => $comment,
+        ]);
+
+        // Readers order logs by created_at, which has second precision.
+        // Backdate the manual start so STOP remains latest, even for zero time.
+        [$hours, $minutes, $seconds] = array_map('intval', explode(':', $totalTime));
+        $duration = ($hours * 3600) + ($minutes * 60) + $seconds;
+        $startLog->created_at = $stopLog->created_at->copy()->subSeconds(max(1, $duration));
+        $startLog->save();
+
+        $task->refresh();
+
+        return $stopLog;
+    }
+
+    public function completeTicket(int $ticketId, string $totalTime, ?string $note = null): TaskTimeLog
+    {
+        return DB::transaction(function () use ($ticketId, $totalTime, $note) {
+            $task = Task::lockForUpdate()->findOrFail($ticketId);
+            $latestLog = $task->timeLogs()
+                ->where('type', TaskTimeLogType::TIME_LOG->value)
+                ->latest('id')
+                ->lockForUpdate()
+                ->first();
+
+            if (!$latestLog) {
+                return $this->createCompletedTimeLogs($task, $totalTime, $note);
+            }
+
+            if ($latestLog->status === TaskTimeLogStatus::STOP) {
+                $latestLog->update(['total_time' => $totalTime, 'comment' => $note]);
+                $task->update(['status' => TaskStatus::DONE->value]);
+
+                return $latestLog;
+            }
+
+            // Preserve the START event and close its open session before recording STOP.
+            if ($latestLog->status === TaskTimeLogStatus::START && $latestLog->end_at === null) {
+                $latestLog->update(['end_at' => now()]);
+            }
+
+            $stopLog = $this->createTaskTimeLog([
+                'taskId' => $task->id,
+                'userId' => $task->user_id,
+                'type' => TaskTimeLogType::TIME_LOG->value,
+                'status' => TaskTimeLogStatus::STOP->value,
+                'currentTime' => $totalTime,
+                'comment' => $note,
+            ]);
+
+            // Existing readers use created_at alone, so avoid ties on immediate completion.
+            if ($stopLog->created_at->lessThanOrEqualTo($latestLog->created_at)) {
+                $stopLog->created_at = $latestLog->created_at->copy()->addSecond();
+                $stopLog->save();
+            }
+
+            return $stopLog;
+        });
     }
 
     public function editTaskTimeLog(string $taskTimeLogId){

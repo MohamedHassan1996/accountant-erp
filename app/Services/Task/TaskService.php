@@ -19,6 +19,10 @@ use Illuminate\Support\Facades\DB;
 
 class TaskService{
 
+    public function __construct(protected TaskTimeLogService $taskTimeLogService)
+    {
+    }
+
     /*public function allTasks()
     {
         $filters = request()->input('filter', []);
@@ -324,6 +328,10 @@ $formattedTotalTime = sprintf(
             'end_date' => $taskData['endDate']??null,
             'quantity' => $taskData['quantity']??null,
         ]);
+
+        if (isset($taskData['totalTime']) && $taskData['totalTime'] !== '') {
+            $this->taskTimeLogService->createCompletedTimeLogs($task, $taskData['totalTime'], $taskData['note'] ?? null);
+        }
 
         return $task;
 

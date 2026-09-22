@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Private\Client\ClientPaymentTypeController;
 use App\Http\Controllers\Api\Private\Task\ChangeTaskTimeLogController;
+use App\Http\Controllers\Api\Private\Task\CompleteTaskTimeLogController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Models\Parameter\ParameterValue;
@@ -157,6 +158,7 @@ Route::prefix('v1/admin-tasks')->group(function(){
 
 Route::prefix('v1/task-time-logs')->group(function(){
     Route::get('', [TaskTimeLogController::class, 'index']);
+    Route::post('complete-ticket', [CompleteTaskTimeLogController::class, 'store']);
     Route::post('create', [TaskTimeLogController::class, 'create']);
     Route::get('edit', [TaskTimeLogController::class, 'edit']);
     Route::put('update', [TaskTimeLogController::class, 'update']);

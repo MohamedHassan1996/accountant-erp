@@ -35,7 +35,9 @@ class CreateTaskRequest extends FormRequest
             'connectionTypeId' => ['nullable'],
             'startDate' => ['nullable'],
             'endDate' => ['nullable'],
-            'quantity' => ['nullable', 'numeric']
+            'quantity' => ['nullable', 'numeric'],
+            'note' => ['nullable', 'string'],
+            'totalTime' => ['nullable', 'required_with:note', 'string', 'regex:/\A[0-9]{2,4}:[0-5][0-9]:[0-5][0-9]\z/'],
         ];
     }
 
