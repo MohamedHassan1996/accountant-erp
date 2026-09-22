@@ -25,6 +25,7 @@ class AllTaskTimeLogResource extends JsonResource
             'type' => $this->type,
             'currentTime' => $this->total_time,
             'comment' => $this->comment??"",
+            'note' => $this->comment ?? '',
             'status' => $this->status
         ];
     }

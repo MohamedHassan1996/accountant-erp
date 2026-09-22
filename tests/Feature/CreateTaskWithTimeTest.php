@@ -23,7 +23,8 @@ class CreateTaskWithTimeTest extends TaskTimeLogTestCase
         ]))->assertOk()
             ->assertJsonPath('data.status', TaskStatus::DONE->value)
             ->assertJsonPath('data.currentTime', '01:01:01')
-            ->assertJsonPath('data.timeLogStatus', TaskTimeLogStatus::STOP->value);
+            ->assertJsonPath('data.timeLogStatus', TaskTimeLogStatus::STOP->value)
+            ->assertJsonPath('data.note', 'Completed during the client meeting');
 
         $task = Task::findOrFail($response->json('data.taskId'));
         $logs = $task->timeLogs()->orderBy('id')->get();
@@ -43,6 +44,9 @@ class CreateTaskWithTimeTest extends TaskTimeLogTestCase
         }
         $this->assertSame(TaskStatus::DONE, $task->status);
         $this->assertSame($stopLog->id, $response->json('data.latestTimeLogId'));
+        $this->getJson('/api/v1/tasks/edit?taskId='.$task->id)->assertOk()
+            ->assertJsonPath('data.note', 'Completed during the client meeting')
+            ->assertJsonPath('data.latestTimeLogId', $stopLog->id);
         $this->assertSame(0, DB::transactionLevel());
     }
 
@@ -53,7 +57,8 @@ class CreateTaskWithTimeTest extends TaskTimeLogTestCase
                 ->assertOk()
                 ->assertJsonPath('data.status', TaskStatus::TO_WORK->value)
                 ->assertJsonPath('data.currentTime', '00:00:00')
-                ->assertJsonPath('data.latestTimeLogId', '');
+                ->assertJsonPath('data.latestTimeLogId', '')
+                ->assertJsonPath('data.note', '');
         }
 
         $this->assertSame(3, Task::count());

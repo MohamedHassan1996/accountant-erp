@@ -42,6 +42,17 @@ class CompleteTicketTimeTest extends TaskTimeLogTestCase
         $this->assertSame($logs[1]->id, $response->json('data.taskTimeLogId'));
         $this->assertSame(TaskStatus::DONE, $task->fresh()->status);
 
+        $this->getJson('/api/v1/tasks/edit?taskId='.$task->id)->assertOk()
+            ->assertJsonPath('data.note', 'Finished manually')
+            ->assertJsonPath('data.latestTimeLogId', $logs[1]->id);
+        $this->getJson('/api/v1/task-time-logs/edit?taskTimeLogId='.$logs[1]->id)->assertOk()
+            ->assertJsonPath('data.note', 'Finished manually')
+            ->assertJsonPath('data.comment', 'Finished manually');
+        $history = $this->getJson('/api/v1/task-time-logs?taskId='.$task->id)->assertOk();
+        $stopEntry = collect($history->json('data'))->firstWhere('taskTimeLogId', $logs[1]->id);
+        $this->assertSame('Finished manually', $stopEntry['note']);
+        $this->assertSame('Finished manually', $stopEntry['comment']);
+
         $this->postJson(self::ENDPOINT, $payload)->assertOk()
             ->assertJsonPath('data.taskTimeLogId', $logs[1]->id);
         $this->assertSame(2, $task->timeLogs()->count());

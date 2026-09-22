@@ -23,6 +23,7 @@ class TaskTimeLogResource extends JsonResource
             'userId' => $this->user_id,
             'type' => $this->type,
             'comment' => $this->comment??"",
+            'note' => $this->comment ?? '',
             'status' => $this->status
         ];
 
