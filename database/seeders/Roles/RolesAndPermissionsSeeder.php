@@ -68,6 +68,7 @@ class RolesAndPermissionsSeeder extends Seeder
 
             'all_admin_tasks',
 
+            'complete-ticket-with-time',
             'all_task_time_logs',
             'create_task_time_log',
             'edit_task_time_log',

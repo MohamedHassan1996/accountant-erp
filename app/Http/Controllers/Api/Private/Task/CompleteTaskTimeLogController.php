@@ -12,7 +12,7 @@ class CompleteTaskTimeLogController extends Controller
     public function __construct(protected TaskTimeLogService $taskTimeLogService)
     {
         $this->middleware('auth:api');
-        $this->middleware('permission:change_task_time_log');
+        $this->middleware('permission:complete-ticket-with-time');
     }
 
     public function store(Request $request)

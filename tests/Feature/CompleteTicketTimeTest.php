@@ -7,8 +7,11 @@ use App\Enums\Task\TaskTimeLogStatus;
 use App\Enums\Task\TaskTimeLogType;
 use App\Models\Task\Task;
 use App\Models\Task\TaskTimeLog;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Middleware\PermissionMiddleware;
+use Spatie\Permission\Models\Permission;
 use Tests\Support\TaskTimeLogTestCase;
 
 class CompleteTicketTimeTest extends TaskTimeLogTestCase
@@ -190,6 +193,29 @@ class CompleteTicketTimeTest extends TaskTimeLogTestCase
 
         $this->assertSame(0, $task->timeLogs()->count());
         $this->assertSame(TaskStatus::TO_WORK, $task->fresh()->status);
+    }
+
+    public function test_completion_requires_the_dedicated_permission_instead_of_change_time(): void
+    {
+        (require database_path('migrations/2024_12_19_044444_create_permission_tables.php'))->up();
+        $this->withMiddleware(PermissionMiddleware::class);
+        $user = User::findOrFail(1);
+        $this->actingAs($user, 'api');
+        $task = $this->createTask();
+        $payload = ['ticketId' => $task->id, 'totalTime' => '01:01:01'];
+        Permission::create(['name' => 'change_task_time_log', 'guard_name' => 'api']);
+        Permission::create(['name' => 'complete-ticket-with-time', 'guard_name' => 'api']);
+
+        $this->postJson(self::ENDPOINT, $payload)->assertForbidden();
+        $user->givePermissionTo('change_task_time_log');
+        $this->postJson(self::ENDPOINT, $payload)->assertForbidden();
+        $this->assertSame(0, $task->timeLogs()->count());
+        $this->assertSame(TaskStatus::TO_WORK, $task->fresh()->status);
+
+        $user->syncPermissions(['complete-ticket-with-time']);
+        $this->postJson(self::ENDPOINT, $payload)->assertOk()
+            ->assertJsonPath('data.status', TaskStatus::DONE->value);
+        $this->assertSame(2, $task->timeLogs()->count());
     }
 
     private function createTask(TaskStatus $status = TaskStatus::TO_WORK): Task
