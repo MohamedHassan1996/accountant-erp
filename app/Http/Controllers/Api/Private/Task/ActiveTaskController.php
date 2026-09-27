@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Api\Private\Task;
 
 use App\Enums\Task\TaskStatus;
+use App\Enums\Task\TaskTimeLogStatus;
 use App\Enums\Task\TaskTimeLogType;
 use App\Http\Controllers\Controller;
 use App\Models\Task\Task;
 use App\Models\Task\TaskTimeLog;
+use App\Services\Task\TaskTimeLogService;
 use App\Utils\PaginateCollection;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -36,6 +38,7 @@ class ActiveTaskController extends Controller
         $tasks = DB::table('tasks')
         ->join('clients', 'tasks.client_id', '=', 'clients.id')
         ->where('tasks.user_id', $user->id)
+        ->whereNull('tasks.deleted_at')
         ->whereIn('tasks.status', [
             TaskStatus::TO_WORK->value,
             TaskStatus::IN_PROGRESS->value
@@ -58,37 +61,16 @@ class ActiveTaskController extends Controller
             }
 
             if ($task->status == TaskStatus::IN_PROGRESS->value) {
-                $taskTimeLogs = DB::table('task_time_logs')
-                    ->where('task_id', $task->taskId)
-                    ->select([
-                        'task_time_logs.id as taskTimeLogId',
-                        'task_time_logs.start_at as startAt',
-                        'task_time_logs.end_at as endAt',
-                        DB::raw('TIME_TO_SEC(TIMEDIFF(IFNULL(end_at, NOW()), start_at)) as durationInSeconds')
-                    ])
-                    ->where('type', TaskTimeLogType::TIME_LOG->value)
-                    ->get();
-
-
-                // Calculate total time in seconds
-                $totalSeconds = $taskTimeLogs->sum('durationInSeconds');
-
-                // Format total seconds into H:i:s
-                $hours = floor($totalSeconds / 3600);
-                $minutes = floor(($totalSeconds % 3600) / 60);
-                $seconds = $totalSeconds % 60;
-
-                $tasks[$index]->totalTime = $totalSeconds;
-                $tasks[$index]->time = sprintf('%02d:%02d:%02d', $hours, $minutes, $seconds);
-                if($taskTimeLogs->last()->endAt == null) {
-                    $tasks[$index]->timerStatus = 1;
-                }
-
-                if($taskTimeLogs->last()->endAt != null) {
-                    $tasks[$index]->timerStatus = 2;
-                }
-
-                $tasks[$index]->timeLogId = $taskTimeLogs->last()->taskTimeLogId;
+                $taskModel = Task::findOrFail($task->taskId);
+                $latestLog = $taskModel->timeLogs()->where('type', TaskTimeLogType::TIME_LOG->value)
+                    ->latest('id')->first();
+                $time = $taskModel->current_time;
+                [$hours, $minutes, $seconds] = array_map('intval', explode(':', $time));
+                $tasks[$index]->totalTime = ($hours * 3600) + ($minutes * 60) + $seconds;
+                $tasks[$index]->time = $time;
+                $tasks[$index]->timerStatus = !$latestLog ? 0
+                    : ($latestLog->status === TaskTimeLogStatus::START ? 1 : 2);
+                $tasks[$index]->timeLogId = $latestLog?->id ?? '';
             }
 
         }
@@ -139,21 +121,24 @@ class ActiveTaskController extends Controller
     // /**
     //  * Update the specified resource in storage.
     //  */
-    public function update(Request $request)
+    public function update(Request $request, TaskTimeLogService $taskTimeLogService)
     {
 
         try {
 
             DB::beginTransaction();
-            $taskTimeLog = TaskTimeLog::find($request->taskTimeLogId);
-            $taskTimeLog->end_at = $request->endAt;
-            $taskTimeLog->save();
-
-            if($request->taskStatus == TaskStatus::DONE->value) {
-                $task = Task::find($taskTimeLog->task_id);
-                $task->status = TaskStatus::DONE->value;
-                $task->save();
-            }
+            $taskTimeLog = TaskTimeLog::findOrFail($request->taskTimeLogId);
+            $status = $request->taskStatus == TaskStatus::DONE->value
+                ? TaskTimeLogStatus::STOP
+                : ($request->filled('endAt') ? TaskTimeLogStatus::PAUSE : TaskTimeLogStatus::START);
+            $taskTimeLogService->recordTimerEvent([
+                'taskId' => $taskTimeLog->task_id,
+                'userId' => $taskTimeLog->user_id,
+                'type' => TaskTimeLogType::TIME_LOG->value,
+                'status' => $status->value,
+                'currentTime' => $taskTimeLog->total_time,
+                'endAt' => $request->endAt,
+            ]);
 
             DB::commit();
             return response()->json([

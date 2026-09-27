@@ -97,7 +97,7 @@ class Task extends Model
     {
         $latestTimeLog = $this->timeLogs()
             ->where('type', TaskTimeLogType::TIME_LOG->value)
-            ->latest()
+            ->latest('id')
             ->first();
 
         if ($latestTimeLog == null) {
@@ -133,7 +133,7 @@ class Task extends Model
     {
         $latestTimeLog = $this->timeLogs()
             ->where('type', TaskTimeLogType::TIME_LOG->value)
-            ->latest()
+            ->latest('id')
             ->first();
 
         if (empty($latestTimeLog)) {
@@ -185,19 +185,19 @@ $total = Client::withTrashed()
 
     public function getTimeLogStatusAttribute()
     {
-        return $this->timeLogs()->latest()->first()->status->value ?? TaskTimeLogStatus::from(3)->value;
+        return $this->timeLogs()->latest('id')->first()->status->value ?? TaskTimeLogStatus::from(3)->value;
     }
 
     public function getLatestTimeLogIdAttribute()
     {
-        return $this->timeLogs()->where('status', TaskTimeLogStatus::START->value)->latest()->first()->id ?? "";
+        return $this->timeLogs()->where('status', TaskTimeLogStatus::START->value)->latest('id')->first()->id ?? "";
     }
 
     public function getIsOverDueAttribute()
     {
         $latestTimeLog = $this->timeLogs()
             ->where('type', TaskTimeLogType::TIME_LOG->value)
-            ->latest()
+            ->latest('id')
             ->first();
 
         if (!$latestTimeLog || $latestTimeLog->status != TaskTimeLogStatus::START) {

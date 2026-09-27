@@ -154,13 +154,14 @@ class TaskService{
             $latestLogsForFilter = DB::table('task_time_logs as ttl')
                 ->joinSub(
                     DB::table('task_time_logs')
-                        ->select('task_id', DB::raw('MAX(created_at) as latest'))
+                        ->select('task_id', DB::raw('MAX(id) as latest'))
+                        ->whereNull('deleted_at')
                         ->where('type', TaskTimeLogType::TIME_LOG->value)
                         ->whereIn('task_id', $baseTaskIds)
                         ->groupBy('task_id'),
                     'latest_logs',
                     fn($join) => $join->on('ttl.task_id', '=', 'latest_logs.task_id')
-                                      ->on('ttl.created_at', '=', 'latest_logs.latest')
+                                      ->on('ttl.id', '=', 'latest_logs.latest')
                 )
                 ->where('ttl.type', TaskTimeLogType::TIME_LOG->value)
                 ->where('ttl.status', TaskTimeLogStatus::START->value)
@@ -197,13 +198,14 @@ class TaskService{
             $filteredLatestLogs = DB::table('task_time_logs as ttl')
             ->joinSub(
                 DB::table('task_time_logs')
-                    ->select('task_id', DB::raw('MAX(created_at) as latest'))
+                    ->select('task_id', DB::raw('MAX(id) as latest'))
+                    ->whereNull('deleted_at')
                     ->where('type', TaskTimeLogType::TIME_LOG->value)
                     ->whereIn('task_id', $filteredTaskIds)
                     ->groupBy('task_id'),
                 'latest_logs',
                 fn($join) => $join->on('ttl.task_id', '=', 'latest_logs.task_id')
-                                  ->on('ttl.created_at', '=', 'latest_logs.latest')
+                                  ->on('ttl.id', '=', 'latest_logs.latest')
             )
             ->where('ttl.type', TaskTimeLogType::TIME_LOG->value)
             ->whereIn('ttl.task_id', $filteredTaskIds)
@@ -234,13 +236,14 @@ class TaskService{
     $latestLogs = DB::table('task_time_logs as ttl')
         ->joinSub(
             DB::table('task_time_logs')
-                ->select('task_id', DB::raw('MAX(created_at) as latest'))
+                ->select('task_id', DB::raw('MAX(id) as latest'))
+                ->whereNull('deleted_at')
                 ->where('type', TaskTimeLogType::TIME_LOG->value)
                 ->whereIn('task_id', $taskIds)
                 ->groupBy('task_id'),
             'latest_logs',
             fn($join) => $join->on('ttl.task_id', '=', 'latest_logs.task_id')
-                              ->on('ttl.created_at', '=', 'latest_logs.latest')
+                              ->on('ttl.id', '=', 'latest_logs.latest')
         )
         ->where('ttl.type', TaskTimeLogType::TIME_LOG->value)
         ->whereIn('ttl.task_id', $taskIds)

@@ -8,6 +8,7 @@ use App\Enums\Task\TaskTimeLogType;
 use App\Filters\TaskTimeLog\FilterTaskTimeLog;
 use App\Models\Task\Task;
 use App\Models\Task\TaskTimeLog;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -22,6 +23,7 @@ class TaskTimeLogService{
             //AllowedFilter::custom('search', new FilterTaskTimeLog()), // Add a custom search filter
         ])
         ->where('task_id', $filters['taskId'])
+        ->orderBy('id')
         ->get();
         return $taskTimeLogs;
 
@@ -66,6 +68,71 @@ class TaskTimeLogService{
 
         return $taskTimeLog;
 
+    }
+
+    public function recordTimerEvent(array $data): TaskTimeLog
+    {
+        return DB::transaction(function () use ($data) {
+            // Serialize timer switches for the same user, including simultaneous requests.
+            User::whereKey($data['userId'])->lockForUpdate()->firstOrFail();
+            $task = Task::lockForUpdate()->findOrFail($data['taskId']);
+            $status = TaskTimeLogStatus::from((int) $data['status']);
+
+            if ((int) $data['type'] !== TaskTimeLogType::TIME_LOG->value) {
+                return $this->createTaskTimeLog($data);
+            }
+
+            $latestLog = $task->timeLogs()->where('type', TaskTimeLogType::TIME_LOG->value)
+                ->latest('id')->lockForUpdate()->first();
+
+            // Retrying a transition must not reset the clock or duplicate the event.
+            if ($latestLog && $latestLog->status === $status) {
+                if (array_key_exists('comment', $data)) {
+                    $latestLog->update(['comment' => $data['comment']]);
+                }
+                return $latestLog;
+            }
+
+            // Timer transitions carry forward the server total. Manual SET operations
+            // use createCompletedTimeLogs/completeTicket/change-time instead.
+            if ($latestLog) {
+                $data['currentTime'] = $task->current_time;
+                if ($latestLog->status === TaskTimeLogStatus::START && $latestLog->end_at === null) {
+                    $latestLog->update(['end_at' => now()]);
+                }
+            }
+
+            if ($status === TaskTimeLogStatus::START) {
+                $otherTasks = Task::where('user_id', $data['userId'])
+                    ->where('status', TaskStatus::IN_PROGRESS->value)
+                    ->whereKeyNot($task->id)->lockForUpdate()->get();
+
+                foreach ($otherTasks as $otherTask) {
+                    $otherLog = $otherTask->timeLogs()->where('type', TaskTimeLogType::TIME_LOG->value)
+                        ->latest('id')->lockForUpdate()->first();
+                    if (!$otherLog || $otherLog->status !== TaskTimeLogStatus::START) {
+                        continue;
+                    }
+
+                    $otherTime = $otherTask->current_time;
+                    $otherLog->update(['end_at' => now()]);
+                    $this->createTaskTimeLog([
+                        'taskId' => $otherTask->id,
+                        'userId' => $data['userId'],
+                        'type' => TaskTimeLogType::TIME_LOG->value,
+                        'status' => TaskTimeLogStatus::PAUSE->value,
+                        'currentTime' => $otherTime,
+                        'comment' => null,
+                    ]);
+                }
+            }
+
+            $log = $this->createTaskTimeLog($data);
+            $task->update(['status' => $status === TaskTimeLogStatus::STOP
+                ? TaskStatus::DONE->value : TaskStatus::IN_PROGRESS->value]);
+
+            return $log;
+        });
     }
 
     public function createCompletedTimeLogs(Task $task, string $totalTime, ?string $comment = null): TaskTimeLog

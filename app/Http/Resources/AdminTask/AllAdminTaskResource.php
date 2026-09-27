@@ -43,7 +43,7 @@ class AllAdminTaskResource extends JsonResource
                      $totalHours = sprintf('%d:%02d', $hours, $minutes);
                  }*/
 
-        $endTime = $this->timeLogs()->latest()->take(2)->get();
+        $endTime = $this->timeLogs()->latest('id')->take(2)->get();
 
         $formattedEndTime = "";
 

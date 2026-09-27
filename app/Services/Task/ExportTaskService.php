@@ -47,9 +47,9 @@ class ExportTaskService{
     // Fetch Latest Logs for Each Task
     $latestLogs = DB::table('task_time_logs as ttl')
         ->join(
-            DB::raw('(SELECT task_id, MAX(created_at) as latest FROM task_time_logs GROUP BY task_id) as latest_logs'),
+            DB::raw('(SELECT task_id, MAX(id) as latest FROM task_time_logs WHERE deleted_at IS NULL AND type = 0 GROUP BY task_id) as latest_logs'),
             fn($join) => $join->on('ttl.task_id', '=', 'latest_logs.task_id')
-                              ->on('ttl.created_at', '=', 'latest_logs.latest')
+                              ->on('ttl.id', '=', 'latest_logs.latest')
         )
         ->whereIn('ttl.task_id', $taskIds)
         ->get();
